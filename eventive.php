@@ -46,6 +46,14 @@ require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-settings.php';
 $eventive_settings = new Eventive_Settings();
 $eventive_settings->init();
 
+// Load the admin dashboard widget only in admin.
+if ( is_admin() ) {
+	// Load the admin settings page.
+	require_once EVENTIVE_PLUGIN_PATH . 'admin/class-eventive-dashboard.php';
+	$eventive_dashboard = new Eventive_Dashboard();
+	$eventive_dashboard->init();
+}
+
 // Load the front-end functionality.
 require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-blocks.php';
 $eventive_blocks = new Eventive_Blocks();
@@ -55,6 +63,11 @@ $eventive_blocks->init();
 require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-api.php';
 $eventive_api = new Eventive_API();
 $eventive_api->init();
+
+// Load the dashboard widget.
+require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-dashboard.php';
+$eventive_dashboard = new Eventive_Dashboard();
+$eventive_dashboard->init();
 
 /**
  * Run on activate to setup the plugin

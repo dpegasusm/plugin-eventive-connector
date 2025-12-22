@@ -307,19 +307,19 @@ class Eventive_Settings {
 	 * @return void
 	 */
 	function sync_eventive_events_with_wordpress() {
-		// Verify nonce
+		// Verify nonce.
 		if ( ! isset( $_POST['eventive_sync_events_nonce'] ) || ! wp_verify_nonce( $_POST['eventive_sync_events_nonce'], 'eventive_sync_events' ) ) {
 			wp_send_json_error( array( 'message' => 'Security verification failed.' ), 403 );
 			return;
 		}
 
-		// Check user permissions
+		// Check user permissions.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => 'You do not have permission to perform this action.' ), 403 );
 			return;
 		}
 
-		// Get API credentials
+		// Get API credentials.
 		$options      = get_option( 'eventive_admin_options_option_name', array() );
 		$event_bucket = $options['your_eventive_event_bucket_1'] ?? '';
 		$api_key      = $options['your_eventive_secret_key_2'] ?? '';
@@ -329,7 +329,7 @@ class Eventive_Settings {
 			return;
 		}
 
-		// Fetch events from Eventive API
+		// Fetch events from Eventive API.
 		$url = "https://api.eventive.org/event_buckets/$event_bucket/events";
 		
 		$response = wp_remote_get(
@@ -372,7 +372,7 @@ class Eventive_Settings {
 			$visibility        = $event['visibility'] ?? 'hidden';
 			$post_status       = ( $visibility === 'published' ) ? 'publish' : 'draft';
 
-			// Check if event already exists
+			// Check if event already exists.
 			$query = new WP_Query(
 				array(
 					'post_type'      => 'post',
@@ -392,7 +392,7 @@ class Eventive_Settings {
 
 			try {
 				if ( $existing_post_id ) {
-					// Update existing post
+					// Update existing post.
 					$post_data = array(
 						'ID'           => $existing_post_id,
 						'post_title'   => $event_name,
@@ -410,7 +410,7 @@ class Eventive_Settings {
 
 					$updated_count++;
 				} else {
-					// Create new post
+					// Create new post.
 					$post_data = array(
 						'post_title'   => $event_name,
 						'post_content' => $event_description,
@@ -428,7 +428,7 @@ class Eventive_Settings {
 					$created_count++;
 				}
 
-				// Update post meta
+				// Update post meta.
 				update_post_meta( $post_id, '_eventive_event_id', $event_id );
 				update_post_meta( $post_id, '_eventive_loader_override', $event_bucket );
 

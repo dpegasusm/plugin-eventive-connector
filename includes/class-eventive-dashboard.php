@@ -1,110 +1,191 @@
 <?php
-class Eventive_Dashboard {
-	public function __construct() {
-		// Register the AJAX handler
-		add_action( 'wp_ajax_eventive_dashboard_data', array( $this, 'eventive_dashboard_data' ) );
-	}
+/**
+ * Eventive Dashboard Widget
+ *
+ * @package WordPress
+ * @subpackage Eventive
+ * @since 1.0.0
+ */
 
-	public function render_dashboard() {
-		ob_start();
-		?>
-		<div id="eventive-dashboard">
-			<p>Loading dashboard data...</p>
-		</div>
-		<script>
-function animateCount(element, start, end, duration) {
-	let startTime = null;
-
-	function animationStep(currentTime) {
-		if (!startTime) startTime = currentTime;
-		const progress = Math.min((currentTime - startTime) / duration, 1);
-		const value = Math.floor(progress * (end - start) + start);
-		element.textContent = value;
-
-		if (progress < 1) {
-			requestAnimationFrame(animationStep);
-		}
-	}
-
-	requestAnimationFrame(animationStep);
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-	const dashboard = document.getElementById('eventive-dashboard');
+/**
+ * Eventive Dashboard Widget Class
+ *
+ * Displays Eventive analytics data on the WordPress admin dashboard.
+ */
+class Eventive_Dashboard {
+	/**
+	 * Initialize the dashboard widget.
+	 *
+	 * @return void
+	 */
+	public function init() {
+		// Register the AJAX handler.
+		add_action( 'wp_ajax_eventive_dashboard_data', array( $this, 'ajax_get_dashboard_data' ) );
 
-	fetch('<?php echo admin_url( 'admin-ajax.php?action=eventive_dashboard_data' ); ?>')
-		.then(response => response.json())
-		.then(data => {
-			if (data.success) {
-				const { totalVolume, totalNetVolume, totalPaidCount } = data.data;
-				dashboard.innerHTML = `
-					<div class="eventive-dashboard-container">
-						<div class="eventive-dashboard-box"><strong>Total Volume:</strong> $<span class="count" data-count="${totalVolume}">0</span></div>
-						<div class="eventive-dashboard-box"><strong>Net Volume:</strong> $<span class="count" data-count="${totalNetVolume}">0</span></div>
-						<div class="eventive-dashboard-box"><strong>Paid Transactions:</strong> <span class="count" data-count="${totalPaidCount}">0</span></div>
-						<a href="https://admin.eventive.org/" target="_blank"><button>Go to Eventive Dashboard</button></a>
-					</div>
-				`;
+		// Add dashboard widget.
+		add_action( 'wp_dashboard_setup', array( $this, 'register_dashboard_widget' ) );
 
-				// Animate the counts
-				document.querySelectorAll('.eventive-dashboard-box .count').forEach(el => {
-					const endValue = parseFloat(el.getAttribute('data-count'));
-					animateCount(el, 0, endValue, 1500); // 1500ms duration
-				});
-			} else {
-				const errorMessage = data.data?.message || 'Unknown error occurred.';
-				dashboard.innerHTML = `<p>Error loading dashboard data: ${errorMessage}</p>`;
-			}
-		})
-		.catch(error => {
-			dashboard.innerHTML = `<p>Error loading dashboard data: ${error.message}</p>`;
-		});
-});
-		</script>
-		<?php
-		return ob_get_clean();
+		// Enqueue admin scripts.
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_dashboard_scripts' ) );
 	}
 
-	public function eventive_dashboard_data() {
+	/**
+	 * Register the dashboard widget.
+	 *
+	 * @return void
+	 */
+	public function register_dashboard_widget() {
+		wp_add_dashboard_widget(
+			'eventive_dashboard_widget',
+			__( 'Eventive Analytics', 'eventive' ),
+			array( $this, 'render_dashboard_widget' ),
+			null,
+			null,
+			'normal',
+			'high'
+		);
+	}
+
+	/**
+	 * Enqueue dashboard scripts and styles.
+	 *
+	 * @param string $hook The current admin page hook.
+	 * @return void
+	 */
+	public function enqueue_dashboard_scripts( $hook ) {
+		// Only load on the dashboard page.
+		if ( 'index.php' !== $hook ) {
+			return;
+		}
+
+		// Enqueue the dashboard stylesheet.
+		wp_enqueue_style(
+			'eventive-dashboard-style',
+			EVENTIVE_PLUGIN . 'assets/css/eventive-dashboard.css',
+			array(),
+			EVENTIVE_CURRENT_VERSION
+		);
+
+		// Enqueue the dashboard script.
+		wp_enqueue_script(
+			'eventive-dashboard-script',
+			EVENTIVE_PLUGIN . 'assets/js/eventive-dashboard.js',
+			array( 'jquery' ),
+			EVENTIVE_CURRENT_VERSION,
+			true
+		);
+
+		// Localize script with AJAX URL.
+		wp_localize_script(
+			'eventive-dashboard-script',
+			'eventiveDashboard',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'eventive_dashboard_nonce' ),
+			)
+		);
+	}
+
+	/**
+	 * Render the dashboard widget content.
+	 *
+	 * @return void
+	 */
+	public function render_dashboard_widget() {
+		?>
+		<div id="eventive-dashboard-widget-content">
+			<p class="eventive-loading"><?php esc_html_e( 'Loading dashboard data...', 'eventive' ); ?></p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * AJAX handler to get dashboard data.
+	 *
+	 * @return void
+	 */
+	public function ajax_get_dashboard_data() {
+		// Verify nonce.
+		check_ajax_referer( 'eventive_dashboard_nonce', 'nonce' );
+
+		// Check user permissions.
+		if ( ! current_user_can( 'read' ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'You do not have permission to view this data.', 'eventive' ) ),
+				403
+			);
+			return;
+		}
+
+		// Get API credentials.
 		$options         = get_option( 'eventive_admin_options_option_name', array() );
 		$api_key         = $options['your_eventive_secret_key_2'] ?? '';
 		$event_bucket_id = $options['your_eventive_event_bucket_1'] ?? '';
 
-		if ( ! $api_key || ! $event_bucket_id ) {
-			error_log( 'Error: API Key or Event Bucket ID is missing.' );
-			wp_send_json_error( array( 'message' => 'API Key or Event Bucket ID is missing' ), 400 );
+		// Check if credentials are set.
+		if ( empty( $api_key ) || empty( $event_bucket_id ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Eventive API credentials are not configured. Please update your settings.', 'eventive' ) ),
+				400
+			);
 			return;
 		}
 
-		$headers = array( 'X-API-KEY' => $api_key );
+		// Prepare API request.
+		$api_url = add_query_arg(
+			'event_bucket',
+			$event_bucket_id,
+			'https://api.eventive.org/charts/overview'
+		);
 
-		// Fetch the overview data
-		$overview_response = wp_remote_get( "https://api.eventive.org/charts/overview?event_bucket=$event_bucket_id", array( 'headers' => $headers ) );
-		if ( is_wp_error( $overview_response ) ) {
-			error_log( 'Error fetching overview data: ' . $overview_response->get_error_message() );
-			wp_send_json_error( array( 'message' => 'Failed to fetch overview data' ), 500 );
+		$response = wp_remote_get(
+			$api_url,
+			array(
+				'headers' => array(
+					'X-API-KEY' => $api_key,
+				),
+				'timeout' => 15,
+			)
+		);
+
+		// Check for errors.
+		if ( is_wp_error( $response ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Failed to fetch dashboard data from Eventive.', 'eventive' ) ),
+				500
+			);
 			return;
 		}
 
-		$overview_data = json_decode( wp_remote_retrieve_body( $overview_response ), true );
-		if ( json_last_error() !== JSON_ERROR_NONE || empty( $overview_data ) ) {
-			error_log( 'Invalid overview response: ' . wp_remote_retrieve_body( $overview_response ) );
-			wp_send_json_error( array( 'message' => 'Invalid overview data' ), 500 );
+		// Parse response.
+		$body = wp_remote_retrieve_body( $response );
+		$data = json_decode( $body, true );
+
+		if ( json_last_error() !== JSON_ERROR_NONE || empty( $data ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Invalid response from Eventive API.', 'eventive' ) ),
+				500
+			);
 			return;
 		}
 
-		$totalVolume    = round( ( $overview_data['total_volume'] ?? 0 ) / 100, 2 ); // Convert to dollars
-		$totalNetVolume = round( ( $overview_data['total_net_volume'] ?? 0 ) / 100, 2 ); // Convert to dollars
-		$totalPaidCount = $overview_data['total_paid_count'] ?? 0;
+		// Extract and format data.
+		$total_volume     = isset( $data['total_volume'] ) ? round( $data['total_volume'] / 100, 2 ) : 0;
+		$total_net_volume = isset( $data['total_net_volume'] ) ? round( $data['total_net_volume'] / 100, 2 ) : 0;
+		$total_paid_count = isset( $data['total_paid_count'] ) ? absint( $data['total_paid_count'] ) : 0;
 
-		// Send the response
+		// Send success response.
 		wp_send_json_success(
 			array(
-				'totalVolume'    => $totalVolume,
-				'totalNetVolume' => $totalNetVolume,
-				'totalPaidCount' => $totalPaidCount,
+				'totalVolume'    => $total_volume,
+				'totalNetVolume' => $total_net_volume,
+				'totalPaidCount' => $total_paid_count,
 			)
 		);
 	}
 }
-?>
