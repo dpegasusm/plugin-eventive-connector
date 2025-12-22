@@ -24,7 +24,7 @@ class Eventive {
 	 * @return void
 	 */
 	public function init() {
-		// Admin init for adding a notice about the API key being needed if not there. 
+		// Admin init for adding a notice about the API key being needed if not there.
 		add_action( 'admin_init', array( $this, 'eventive_admin_init' ) );
 	}
 
@@ -40,7 +40,7 @@ class Eventive {
 		if ( empty( $api_key ) ) {
 			add_action(
 				'admin_notices',
-				function() {
+				function () {
 					echo '<div class="notice notice-warning is-dismissible">
 						<p><strong>Eventive:</strong> API Key is not set. Please set it in the <a href="' . esc_url( admin_url( 'options-general.php?page=eventive-film-settings' ) ) . '">settings page</a> to enable integration.</p>
 					</div>';

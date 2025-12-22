@@ -1,5 +1,13 @@
 <?php
 /**
+ * Eventive Plugin
+ *
+ * @package WordPress
+ * @subpackage Eventive
+ * @since 1.0.0
+ */
+
+/**
  * Plugin Name: EventiveWP
  * Plugin URI: https://eventive.org/
  * Description: Seamlessly integrate Eventive's Event and Ticketing Services into your WordPress site. Includes dynamic event loaders, shortcode support, event bucket overrides, and Gutenberg blocks.
@@ -70,7 +78,7 @@ $eventive_dashboard = new Eventive_Dashboard();
 $eventive_dashboard->init();
 
 /**
- * Run on activate to setup the plugin
+ * Run on activate to setup the plugin.
  *
  * @since Harvard Arnold Arboretum 1.0
  */
@@ -88,7 +96,3 @@ function eventive_deactivate() {
 	// flush the rewrite rules in the plugin so that our old rules are removed.
 	flush_rewrite_rules();
 }
-
-
-
-

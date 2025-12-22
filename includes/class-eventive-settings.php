@@ -30,7 +30,7 @@ class Eventive_Settings {
 		// Register the actual settings.
 		add_action( 'admin_init', array( $this, 'eventive_register_settings' ) );
 
-		// Register AJAX handler for syncing events
+		// Register AJAX handler for syncing events.
 		add_action( 'wp_ajax_sync_eventive_events', array( $this, 'sync_eventive_events_with_wordpress' ) );
 
 		// Enqueue scripts for the Eventive options page.
@@ -113,7 +113,7 @@ class Eventive_Settings {
 					'label_for' => 'eventive_event_bucket_id',
 					'label'     => esc_html__( 'Text to go in the callout box on the bottom of the nav menu.', 'eventive' ),
 					'default'   => '',
-					'values'    => array(), // This will be populated via JS on the front. 
+					'values'    => array(), // This will be populated via JS on the front.
 				)
 			);
 		}
@@ -158,9 +158,8 @@ class Eventive_Settings {
 
 	/**
 	 * Section info callback.
-	 * 
+	 *
 	 * @return void
-	 * 
 	 */
 	public function eventive_admin_options_section_info() {
 		echo esc_html__( 'Welcome organizers! Use this page to configure the Eventive plugin options below.', 'eventive' );
@@ -306,9 +305,9 @@ class Eventive_Settings {
 	 *
 	 * @return void
 	 */
-	function sync_eventive_events_with_wordpress() {
+	public function sync_eventive_events_with_wordpress() {
 		// Verify nonce.
-		if ( ! isset( $_POST['eventive_sync_events_nonce'] ) || ! wp_verify_nonce( $_POST['eventive_sync_events_nonce'], 'eventive_sync_events' ) ) {
+		if ( ! isset( $_POST['eventive_sync_events_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['eventive_sync_events_nonce'] ) ), 'eventive_sync_events' ) ) {
 			wp_send_json_error( array( 'message' => 'Security verification failed.' ), 403 );
 			return;
 		}
@@ -331,14 +330,14 @@ class Eventive_Settings {
 
 		// Fetch events from Eventive API.
 		$url = "https://api.eventive.org/event_buckets/$event_bucket/events";
-		
+
 		$response = wp_remote_get(
 			$url,
 			array(
 				'headers' => array(
 					'Authorization' => "Bearer $api_key",
 				),
-				'timeout'   => 30,
+				'timeout' => 30,
 			)
 		);
 
@@ -355,8 +354,8 @@ class Eventive_Settings {
 			return;
 		}
 
-		$events       = $events['events'];
-		$synced_count = 0;
+		$events        = $events['events'];
+		$synced_count  = 0;
 		$updated_count = 0;
 		$created_count = 0;
 
@@ -370,7 +369,7 @@ class Eventive_Settings {
 
 			$event_description = $event['description'] ?? '';
 			$visibility        = $event['visibility'] ?? 'hidden';
-			$post_status       = ( $visibility === 'published' ) ? 'publish' : 'draft';
+			$post_status       = ( 'published' === $visibility ) ? 'publish' : 'draft';
 
 			// Check if event already exists.
 			$query = new WP_Query(
@@ -408,7 +407,7 @@ class Eventive_Settings {
 						continue;
 					}
 
-					$updated_count++;
+					++$updated_count;
 				} else {
 					// Create new post.
 					$post_data = array(
@@ -425,14 +424,14 @@ class Eventive_Settings {
 						continue;
 					}
 
-					$created_count++;
+					++$created_count;
 				}
 
 				// Update post meta.
 				update_post_meta( $post_id, '_eventive_event_id', $event_id );
 				update_post_meta( $post_id, '_eventive_loader_override', $event_bucket );
 
-				$synced_count++;
+				++$synced_count;
 
 			} catch ( Exception $e ) {
 				error_log( "Error syncing event $event_name: " . $e->getMessage() );
