@@ -307,6 +307,9 @@ class Provincetown_Film_API {
 		$this->api_url_base = esc_url_raw( 'https://prod1.agileticketing.net/api/sales.svc/json/' );
 
 		add_action( 'init', array( $this, 'provincetown_set_api_endpoints' ) );
+
+		// Register our custom API endpoints.
+		add_action( 'rest_api_init', array( $this, 'register_custom_api_endpoints' ) );
 	}
 
 	/**
