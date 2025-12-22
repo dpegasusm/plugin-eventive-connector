@@ -1,9 +1,9 @@
 <?php
 /**
- * Provincetown Film Plugin
+ * Eventive Plugin
  *
  * @package WordPress
- * @subpackage Provincetown
+ * @subpackage Eventive
  * @since 1.0.0
  */
 
@@ -13,9 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Provincetown_Film_API Class
+ * Eventive_API Class
  */
-class Provincetown_Film_API {
+class Eventive_API {
 	/**
 	 * Base URL for the API.
 	 *
@@ -306,7 +306,7 @@ class Provincetown_Film_API {
 		// Instantiate the base URL for the API.
 		$this->api_url_base = esc_url_raw( $this->api_url_base );
 
-		add_action( 'init', array( $this, 'provincetown_set_api_endpoints' ) );
+		add_action( 'init', array( $this, 'eventive_set_api_endpoints' ) );
 
 		// Register our custom API endpoints.
 		add_action( 'rest_api_init', array( $this, 'register_custom_api_endpoints' ) );
@@ -318,25 +318,25 @@ class Provincetown_Film_API {
 	 * @access public
 	 * @return void
 	 */
-	public function provincetown_set_api_endpoints() {
+	public function eventive_set_api_endpoints() {
 		// Get the required Query Args for the API from the options.
-		$api_app_key       = get_option( 'provincetown_agile_api_app_key', '' );
-		$api_user_key      = get_option( 'provincetown_agile_api_user_key', '' );
-		$api_corp_org_id   = get_option( 'provincetown_agile_api_corp_org_id', '' );
-		$api_item_org_id   = get_option( 'provincetown_agile_api_item_org_id', '' );
-		$api_buyer_type_id = intval( get_option( 'provincetown_agile_api_buyer_type_id', '' ) );
+		$api_app_key       = get_option( 'eventive_agile_api_app_key', '' );
+		$api_user_key      = get_option( 'eventive_agile_api_user_key', '' );
+		$api_corp_org_id   = get_option( 'eventive_agile_api_corp_org_id', '' );
+		$api_item_org_id   = get_option( 'eventive_agile_api_item_org_id', '' );
+		$api_buyer_type_id = intval( get_option( 'eventive_agile_api_buyer_type_id', '' ) );
 
 		// If the user is logged in, extract the Buyer Type ID from the user's memberships.
 		if ( is_user_logged_in() ) {
 			$current_user = wp_get_current_user();
-			$customer_id  = intval( get_user_meta( $current_user->ID, 'provincetown_customer_id', true ) );
+			$customer_id  = intval( get_user_meta( $current_user->ID, 'eventive_customer_id', true ) );
 
 			// we also need ot get the buyer type ID as well as the membership ID.
-			$buyer_type = intval( get_user_meta( $current_user->ID, 'provincetown_buyer_type', true ) );
-			$member_id  = intval( get_user_meta( $current_user->ID, 'provincetown_member_id', true ) );
+			$buyer_type = intval( get_user_meta( $current_user->ID, 'eventive_buyer_type', true ) );
+			$member_id  = intval( get_user_meta( $current_user->ID, 'eventive_member_id', true ) );
 
 			// Lets do a quick sanity check on the Buyer type to verify its in the list of allowed types.
-			$valid_buyer_types = get_option( 'provincetown_agile_api_valid_buyer_type_ids', '' );
+			$valid_buyer_types = get_option( 'eventive_agile_api_valid_buyer_type_ids', '' );
 			$valid_buyer_types = explode( ',', $valid_buyer_types );
 			$valid_buyer_types = array_map( 'trim', $valid_buyer_types );
 			$valid_buyer_types = array_map( 'intval', $valid_buyer_types );
@@ -418,7 +418,7 @@ class Provincetown_Film_API {
 	 * @param array  $args          Optional. Arguments for the API call.
 	 * @return array|WP_Error The response from the API or a WP_Error object on failure.
 	 */
-	public function provincetown_make_api_call( $endpoint, $response_body = '', $args = array() ) {
+	public function eventive_make_api_call( $endpoint, $response_body = '', $args = array() ) {
 		// Set the default arguments for the API call.
 		$default_args = array(
 			'method'      => 'GET',

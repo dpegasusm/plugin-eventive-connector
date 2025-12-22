@@ -1,10 +1,9 @@
 <?php
 /**
- * eventive Film Plugin
- * Registers blocks for the eventive Film Plugin.
+ * Eventive Plugin
  *
  * @package WordPress
- * @subpackage eventive
+ * @subpackage Eventive
  * @since 1.0.0
  */
 
@@ -16,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Register eventive blocks.
  */
-class eventive_Film_Blocks {
+class Eventive_Blocks {
 
 	/**
 	 * Init callback for register.

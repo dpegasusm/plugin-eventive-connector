@@ -1,9 +1,9 @@
 <?php
 /**
- * EventiveWP Plugin
+ * Eventive Plugin
  *
  * @package WordPress
- * @subpackage EventiveWP
+ * @subpackage Eventive
  * @since 1.0.0
  */
 
@@ -30,8 +30,8 @@ class Eventive_Settings {
 		// Register the actual settings.
 		add_action( 'admin_init', array( $this, 'eventive_register_settings' ) );
 
-		// Handle the Sync Films with Eventive button.
-		add_action( 'admin_init', array( $this, 'handle_sync_films_with_eventive' ) );
+		// Register AJAX handler for syncing events
+		add_action( 'wp_ajax_sync_eventive_events', array( $this, 'sync_eventive_events_with_wordpress' ) );
 
 		// Enqueue scripts for the Eventive options page.
 		add_action( 'admin_enqueue_scripts', array( $this, 'eventive_enqueue_admin_scripts' ) );
@@ -138,18 +138,18 @@ class Eventive_Settings {
 				?>
 			</form>
 
-			<h2><?php esc_html_e( 'Sync Films with Eventive', 'eventive' ); ?></h2>
-			<p><?php esc_html_e( 'Click the buttons below to sync the respective films with Eventive.', 'eventive' ); ?></p>
+			<h2><?php esc_html_e( 'Sync with Eventive', 'eventive' ); ?></h2>
+			<p><?php esc_html_e( 'Click the buttons below to sync the events with Eventive.', 'eventive' ); ?></p>
 
-			<!-- Festival Films Button -->
+			<!-- Eventive Events Button -->
 			<form method="post" action="">
 				<?php wp_nonce_field( 'eventive_sync_events', 'eventive_sync_events_nonce' ); ?>
 				<button type="submit" name="eventive_sync_events" class="button button-primary">
-					<?php esc_html_e( 'Sync Films with Eventive', 'eventive' ); ?>
+					<?php esc_html_e( 'Sync with Eventive', 'eventive' ); ?>
 				</button>
 				<br>
 				<div class='eventive-sync-progress' id='eventive-sync-events-progress' style='margin-top:10px; display:none;'>
-					<?php esc_html_e( 'Syncing films, please wait...', 'eventive' ); ?>
+					<?php esc_html_e( 'Syncing events, please wait...', 'eventive' ); ?>
 				</div>
 			</form>
 		</div>
@@ -302,61 +302,160 @@ class Eventive_Settings {
 	}
 
 	/**
-	 * Sync films by type.
+	 * AJAX handler for syncing events with Eventive.
 	 *
-	 * @param string $type  The type of films to sync.
-	 * @param string $label The label for the admin notice.
 	 * @return void
 	 */
-	private function sync_films_by_type( $type, $label ) {
-		global $class_eventive_film;
-
-		switch ( $type ) {
-			case 'festival':
-				$post_type = 'films';
-				break;
-			case 'cinema':
-				$post_type = 'cinema_films';
-				break;
-			case 'event':
-				$post_type = 'event_films';
-				break;
-			default:
-				return;
+	function sync_eventive_events_with_wordpress() {
+		// Verify nonce
+		if ( ! isset( $_POST['eventive_sync_events_nonce'] ) || ! wp_verify_nonce( $_POST['eventive_sync_events_nonce'], 'eventive_sync_events' ) ) {
+			wp_send_json_error( array( 'message' => 'Security verification failed.' ), 403 );
+			return;
 		}
 
-		// Get all published films of the specified type.
-		$films = get_posts(
+		// Check user permissions
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => 'You do not have permission to perform this action.' ), 403 );
+			return;
+		}
+
+		// Get API credentials
+		$options      = get_option( 'eventive_admin_options_option_name', array() );
+		$event_bucket = $options['your_eventive_event_bucket_1'] ?? '';
+		$api_key      = $options['your_eventive_secret_key_2'] ?? '';
+
+		if ( empty( $event_bucket ) || empty( $api_key ) ) {
+			wp_send_json_error( array( 'message' => 'Eventive API credentials are missing. Please configure them in the settings.' ), 400 );
+			return;
+		}
+
+		// Fetch events from Eventive API
+		$url = "https://api.eventive.org/event_buckets/$event_bucket/events";
+		
+		$response = wp_remote_get(
+			$url,
 			array(
-				'post_type'   => $post_type,
-				'post_status' => 'publish',
-				'numberposts' => -1,
+				'headers' => array(
+					'Authorization' => "Bearer $api_key",
+				),
+				'timeout'   => 30,
 			)
 		);
 
-		if ( ! empty( $films ) ) {
-			foreach ( $films as $film ) {
-				// Call the eventive_update_agile_film_data function for each film.
-				$class_eventive_film->eventive_update_agile_film_data( null, $film->ID, 'eventive_film_agile_id', null );
+		if ( is_wp_error( $response ) ) {
+			wp_send_json_error( array( 'message' => 'Failed to fetch events from Eventive: ' . $response->get_error_message() ), 500 );
+			return;
+		}
+
+		$body   = wp_remote_retrieve_body( $response );
+		$events = json_decode( $body, true );
+
+		if ( empty( $events['events'] ) ) {
+			wp_send_json_error( array( 'message' => 'No events found in the Eventive API response.' ), 404 );
+			return;
+		}
+
+		$events       = $events['events'];
+		$synced_count = 0;
+		$updated_count = 0;
+		$created_count = 0;
+
+		foreach ( $events as $event ) {
+			$event_id   = $event['id'] ?? null;
+			$event_name = $event['name'] ?? 'Untitled Event';
+
+			if ( empty( $event_id ) ) {
+				continue;
 			}
 
-			// Add an admin notice to confirm the sync.
-			add_action(
-				'admin_notices',
-				function () use ( $label ) {
-					// Translators: %s is the label of the films synced.
-					echo '<div class="notice notice-success is-dismissible"><p>' . sprintf( esc_html__( '%s successfully synced with Eventive.', 'eventive' ), esc_html( $label ) ) . '</p></div>';
-				}
+			$event_description = $event['description'] ?? '';
+			$visibility        = $event['visibility'] ?? 'hidden';
+			$post_status       = ( $visibility === 'published' ) ? 'publish' : 'draft';
+
+			// Check if event already exists
+			$query = new WP_Query(
+				array(
+					'post_type'      => 'post',
+					'post_status'    => array( 'publish', 'draft', 'pending', 'private' ),
+					'posts_per_page' => 1,
+					'meta_query'     => array(
+						array(
+							'key'     => '_eventive_event_id',
+							'value'   => $event_id,
+							'compare' => '=',
+						),
+					),
+				)
 			);
-		} else {
-			// Add an admin notice if no films were found.
-			add_action(
-				'admin_notices',
-				function () use ( $label ) {
-					// Translators: %s is the label of the films synced.
-					echo '<div class="notice notice-warning is-dismissible"><p>' . sprintf( esc_html__( 'No %s found to sync.', 'eventive' ), esc_html( $label ) ) . '</p></div>';
+
+			$existing_post_id = ! empty( $query->posts ) ? $query->posts[0] : null;
+
+			try {
+				if ( $existing_post_id ) {
+					// Update existing post
+					$post_data = array(
+						'ID'           => $existing_post_id,
+						'post_title'   => $event_name,
+						'post_content' => $event_description,
+						'post_status'  => $post_status,
+						'post_type'    => 'post',
+					);
+
+					$post_id = wp_update_post( $post_data );
+
+					if ( is_wp_error( $post_id ) ) {
+						error_log( "Failed to update event: $event_name - " . $post_id->get_error_message() );
+						continue;
+					}
+
+					$updated_count++;
+				} else {
+					// Create new post
+					$post_data = array(
+						'post_title'   => $event_name,
+						'post_content' => $event_description,
+						'post_status'  => $post_status,
+						'post_type'    => 'post',
+					);
+
+					$post_id = wp_insert_post( $post_data );
+
+					if ( is_wp_error( $post_id ) ) {
+						error_log( "Failed to create event: $event_name - " . $post_id->get_error_message() );
+						continue;
+					}
+
+					$created_count++;
 				}
-			);
+
+				// Update post meta
+				update_post_meta( $post_id, '_eventive_event_id', $event_id );
+				update_post_meta( $post_id, '_eventive_loader_override', $event_bucket );
+
+				$synced_count++;
+
+			} catch ( Exception $e ) {
+				error_log( "Error syncing event $event_name: " . $e->getMessage() );
+			}
 		}
+
+		$message = sprintf(
+			'Successfully synced %d events (%d created, %d updated).',
+			$synced_count,
+			$created_count,
+			$updated_count
+		);
+
+		wp_send_json_success(
+			array(
+				'message'       => $message,
+				'synced_count'  => $synced_count,
+				'created_count' => $created_count,
+				'updated_count' => $updated_count,
+			)
+		);
 	}
 }
+
+
+
