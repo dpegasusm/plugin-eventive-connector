@@ -17,18 +17,18 @@ export default function Edit() {
 	const blockProps = useBlockProps();
 
 	return (
-		<div {...blockProps}>
+		<div { ...blockProps }>
 			<Placeholder
 				icon="location-alt"
-				label={__('Eventive Venues', 'eventive')}
-				instructions={__(
+				label={ __( 'Eventive Venues', 'eventive' ) }
+				instructions={ __(
 					'This block displays a list of venues from your Eventive account. The venues will be loaded dynamically on the frontend.',
 					'eventive'
-				)}
+				) }
 			>
-				<div style={{ padding: '20px', textAlign: 'center' }}>
+				<div style={ { padding: '20px', textAlign: 'center' } }>
 					<div
-						style={{
+						style={ {
 							display: 'flex',
 							alignItems: 'center',
 							justifyContent: 'center',
@@ -36,16 +36,31 @@ export default function Edit() {
 							border: '2px dashed #ddd',
 							borderRadius: '4px',
 							backgroundColor: '#f9f9f9',
-						}}
+						} }
 					>
 						<span
 							className="dashicons dashicons-location-alt"
-							style={{ fontSize: '48px', color: '#666', marginRight: '10px' }}
+							style={ {
+								fontSize: '48px',
+								color: '#666',
+								marginRight: '10px',
+							} }
 						></span>
-						<div style={{ textAlign: 'left' }}>
-							<strong>{__('Eventive Venues Block', 'eventive')}</strong>
-							<p style={{ margin: '5px 0 0', color: '#666', fontSize: '14px' }}>
-								{__('Venues will be displayed here on the frontend', 'eventive')}
+						<div style={ { textAlign: 'left' } }>
+							<strong>
+								{ __( 'Eventive Venues Block', 'eventive' ) }
+							</strong>
+							<p
+								style={ {
+									margin: '5px 0 0',
+									color: '#666',
+									fontSize: '14px',
+								} }
+							>
+								{ __(
+									'Venues will be displayed here on the frontend',
+									'eventive'
+								) }
 							</p>
 						</div>
 					</div>

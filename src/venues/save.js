@@ -13,7 +13,6 @@ import { __ } from '@wordpress/i18n';
  *
  * @return {Element} Element to render.
  */
-export default function Save( { } ) {
+export default function Save( {} ) {
 	return null;
 }
-
