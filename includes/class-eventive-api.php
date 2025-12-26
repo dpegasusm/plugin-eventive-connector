@@ -181,18 +181,29 @@ class Eventive_API {
 		}
 
 		// Set the API endpoints with the mandatory query args.
-		$this->api_endpoint_event_buckets        = apply_filters( 'api_endpoint_event_buckets', esc_url_raw( $this->api_endpoint_event_buckets ) );
-		$this->api_endpoint_event_buckets_active = apply_filters( 'api_endpoint_event_buckets_active', esc_url_raw( $this->api_endpoint_event_buckets_active ) );
-		$this->api_endpoint_events               = apply_filters( 'api_endpoint_events', esc_url_raw( $this->api_endpoint_events ) );
-		$this->api_endpoint_films                = apply_filters( 'api_endpoint_films', esc_url_raw( $this->api_endpoint_films ) );
-		$this->api_endpoint_item_buckets         = apply_filters( 'api_endpoint_item_buckets', esc_url_raw( $this->api_endpoint_item_buckets ) );
-		$this->api_endpoint_items                = apply_filters( 'api_endpoint_items', esc_url_raw( $this->api_endpoint_items ) );
-		$this->api_endpoint_ledger               = apply_filters( 'api_endpoint_ledger', esc_url_raw( $this->api_endpoint_ledger ) );
-		$this->api_endpoint_order                = apply_filters( 'api_endpoint_order', esc_url_raw( $this->api_endpoint_order ) );
-		$this->api_endpoint_passes               = apply_filters( 'api_endpoint_passes', esc_url_raw( $this->api_endpoint_passes ) );
-		$this->api_endpoint_people               = apply_filters( 'api_endpoint_people', esc_url_raw( $this->api_endpoint_people ) );
-		$this->api_endpoint_tags                 = apply_filters( 'api_endpoint_tags', esc_url_raw( $this->api_endpoint_tags ) );
-		$this->api_endpoint_tickets              = apply_filters( 'api_endpoint_tickets', esc_url_raw( $this->api_endpoint_tickets ) );
+		$this->api_endpoint_event_buckets        = apply_filters( 'api_endpoint_event_buckets', esc_attr( $this->api_endpoint_event_buckets ) );
+		$this->api_endpoint_event_buckets_active = apply_filters( 'api_endpoint_event_buckets_active', esc_attr( $this->api_endpoint_event_buckets_active ) );
+		$this->api_endpoint_events               = apply_filters( 'api_endpoint_events', esc_attr( $this->api_endpoint_events ) );
+		$this->api_endpoint_films                = apply_filters( 'api_endpoint_films', esc_attr( $this->api_endpoint_films ) );
+		$this->api_endpoint_item_buckets         = apply_filters( 'api_endpoint_item_buckets', esc_attr( $this->api_endpoint_item_buckets ) );
+		$this->api_endpoint_items                = apply_filters( 'api_endpoint_items', esc_attr( $this->api_endpoint_items ) );
+		$this->api_endpoint_ledger               = apply_filters( 'api_endpoint_ledger', esc_attr( $this->api_endpoint_ledger ) );
+		$this->api_endpoint_order                = apply_filters( 'api_endpoint_order', esc_attr( $this->api_endpoint_order ) );
+		$this->api_endpoint_passes               = apply_filters( 'api_endpoint_passes', esc_attr( $this->api_endpoint_passes ) );
+		$this->api_endpoint_people               = apply_filters( 'api_endpoint_people', esc_attr( $this->api_endpoint_people ) );
+		$this->api_endpoint_tags                 = apply_filters( 'api_endpoint_tags', esc_attr( $this->api_endpoint_tags ) );
+		$this->api_endpoint_tickets              = apply_filters( 'api_endpoint_tickets', esc_attr( $this->api_endpoint_tickets ) );
+	}
+
+	/**
+	 * Get the API base endpoint.
+	 * Helper function to get the API base endpoint.
+	 *
+	 * @access public
+	 * @return string The API base endpoint URL.
+	 */
+	public function get_api_base_endpoint() {
+		return rest_url( 'eventive/v1/' );
 	}
 
 	/**

@@ -160,9 +160,10 @@ const TagPill = ( { tag, isActive, onClick, resetUrl } ) => {
  * @param          props.display
  * @param          props.hideEmpty
  * @param          props.excludeTags
+ * @param          props.bucket
  * @return {JSX.Element} Tags container
  */
-const TagsContainer = ( { view, display, hideEmpty, excludeTags } ) => {
+const TagsContainer = ( { view, display, hideEmpty, excludeTags, bucket } ) => {
 	const [ tags, setTags ] = React.useState( [] );
 	const [ loading, setLoading ] = React.useState( true );
 	const [ error, setError ] = React.useState( null );
@@ -203,22 +204,26 @@ const TagsContainer = ( { view, display, hideEmpty, excludeTags } ) => {
 	React.useEffect( () => {
 		const loadTags = async () => {
 			try {
-				// Get event bucket from localized data
 				const eventBucket =
-					window.EventiveBlockData?.eventBucket || '';
+					bucket || window.EventiveBlockData?.eventBucket || '';
 				if ( ! eventBucket ) {
 					setError( 'Event bucket not configured.' );
 					setLoading( false );
 					return;
 				}
 
-				// Get REST API URL and nonce from localized data
-				const restUrl = window.EventiveBlockData?.restUrl || '/wp-json/eventive/v1/';
-				const nonce = window.EventiveBlockData?.restNonce || '';
+				// Create nonce for API requests
+				const nonce =
+					wp?.data
+						?.select( 'core/editor' )
+						?.getEditedPostAttribute( 'meta' )
+						?._eventive_api_nonce ||
+					document.getElementById( 'eventive-api-nonce' )?.value ||
+					'';
 
 				// Fetch tags from WordPress REST API
 				const tagsResponse = await fetch(
-					`${ restUrl }event_buckets?bucket_id=${ eventBucket }&endpoint=tags&eventive_nonce=${ nonce }`
+					`/wp-json/eventive/v1/event_buckets?bucket_id=${ eventBucket }&endpoint=tags&eventive_nonce=${ nonce }`
 				);
 
 				if ( ! tagsResponse.ok ) {
@@ -232,7 +237,7 @@ const TagsContainer = ( { view, display, hideEmpty, excludeTags } ) => {
 				let allowed = null;
 				if ( display === 'films' ) {
 					const filmsResponse = await fetch(
-						`${ restUrl }event_buckets?bucket_id=${ eventBucket }&endpoint=films&eventive_nonce=${ nonce }`
+						`/wp-json/eventive/v1/event_buckets?bucket_id=${ eventBucket }&endpoint=films&eventive_nonce=${ nonce }`
 					);
 					if ( filmsResponse.ok ) {
 						const filmsData = await filmsResponse.json();
@@ -240,7 +245,7 @@ const TagsContainer = ( { view, display, hideEmpty, excludeTags } ) => {
 					}
 				} else if ( display === 'events' ) {
 					const eventsResponse = await fetch(
-						`${ restUrl }event_buckets?bucket_id=${ eventBucket }&endpoint=events&eventive_nonce=${ nonce }`
+						`/wp-json/eventive/v1/event_buckets?bucket_id=${ eventBucket }&endpoint=events&eventive_nonce=${ nonce }`
 					);
 					if ( eventsResponse.ok ) {
 						const eventsData = await eventsResponse.json();
@@ -259,7 +264,7 @@ const TagsContainer = ( { view, display, hideEmpty, excludeTags } ) => {
 		};
 
 		loadTags();
-	}, [ display ] );
+	}, [ display, bucket ] );
 
 	const handleTagClick = ( tagId ) => {
 		const url = new URL( window.location.href );
@@ -404,8 +409,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const display = container.getAttribute( 'data-display' ) || 'both';
 		const hideEmpty =
 			container.getAttribute( 'data-hide-empty' ) === 'true';
-		const excludeTags =
-			container.getAttribute( 'data-exclude-tags' ) || '';
+		const excludeTags = container.getAttribute( 'data-exclude-tags' ) || '';
+		const bucket = container.getAttribute( 'data-bucket' ) || '';
 
 		const root = createRoot( container );
 		root.render(
@@ -414,6 +419,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				display={ display }
 				hideEmpty={ hideEmpty }
 				excludeTags={ excludeTags }
+				bucket={ bucket }
 			/>
 		);
 	} );

@@ -35,6 +35,9 @@ class Eventive_Blocks {
 
 		// Enqueue the block editor to handle these.
 		add_action( 'enqueue_block_editor_assets', array( $this, 'eventive_site_enqueue_block_editor_assets' ) );
+
+		// Localize view scripts for frontend blocks.
+		add_action( 'wp_enqueue_scripts', array( $this, 'localize_block_view_scripts' ) );
 	}
 
 	/**
@@ -142,5 +145,43 @@ class Eventive_Blocks {
 				},
 			)
 		);
+	}
+
+	/**
+	 * Localize view scripts for blocks with frontend JavaScript.
+	 *
+	 * @return void
+	 */
+	public function localize_block_view_scripts() {
+		// Global the API class.
+		global $eventive_api;
+
+		// Get the event bucket from options.
+		$event_bucket = get_option( 'eventive_event_bucket', '' );
+		$api_endpoint = $eventive_api->get_api_base_endpoint();
+
+		// Prepare data to pass to view scripts.
+		$script_data = array(
+			'apiEndpoint'    => $api_endpoint,
+			'eventBucket'    => $event_bucket,
+			'eventive_nonce' => wp_create_nonce( 'eventive_api_nonce' ),
+		);
+
+		// List of blocks with view scripts.
+		$blocks_with_views = array(
+			'eventive-eventive-tags-view-script',
+			'eventive-eventive-venues-view-script',
+		);
+
+		// Localize each view script.
+		foreach ( $blocks_with_views as $script_handle ) {
+			if ( wp_script_is( $script_handle, 'registered' ) ) {
+				wp_localize_script(
+					$script_handle,
+					'EventiveBlockData',
+					$script_data
+				);
+			}
+		}
 	}
 }

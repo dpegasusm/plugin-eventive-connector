@@ -105,13 +105,13 @@ class Eventive_Settings {
 			// add the settings field.
 			add_settings_field(
 				'eventive_event_bucket_id',
-				esc_html__( 'Event Bucket ID', 'eventive' ),
+				esc_html__( 'Event Default Bucket ID', 'eventive' ),
 				array( $this, 'eventive_dropdown_callback' ),
 				'eventive_options',
 				'eventive_info_section',
 				array(
 					'label_for' => 'eventive_event_bucket_id',
-					'label'     => esc_html__( 'Text to go in the callout box on the bottom of the nav menu.', 'eventive' ),
+					'label'     => esc_html__( 'Default bucket to use inside eventive. This can be overridden on a page by page basis.', 'eventive' ),
 					'default'   => '',
 					'values'    => array(), // This will be populated via JS on the front.
 				)

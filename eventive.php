@@ -8,7 +8,7 @@
  */
 
 /**
- * Plugin Name: EventiveWP
+ * Plugin Name: Eventive
  * Plugin URI: https://eventive.org/
  * Description: Seamlessly integrate Eventive's Event and Ticketing Services into your WordPress site. Includes dynamic event loaders, shortcode support, event bucket overrides, and Gutenberg blocks.
  * Version:           0.0.1
@@ -31,7 +31,6 @@ register_activation_hook( __FILE__, 'eventive_activate' );
 register_deactivation_hook( __FILE__, 'eventive_deactivate' );
 
 // Get the plugin data so we can use it here to define props.
-// Get the plugin data so we can use it here to define props.
 $plugin_data = get_file_data(
 	__FILE__,
 	array(
@@ -44,15 +43,20 @@ define( 'EVENTIVE_PLUGIN', plugin_dir_url( __FILE__ ) );
 define( 'EVENTIVE_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'EVENTIVE_CURRENT_VERSION', ( $plugin_data && $plugin_data['Version'] ) ? $plugin_data['Version'] : '1.0.0' );
 
-// Load the front-end functionality.
+// Load the base class and its methods.
 require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive.php';
 $eventive = new Eventive();
 $eventive->init();
 
-// Load the front-end functionality.
+// Load the settings pages and settings.
 require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-settings.php';
 $eventive_settings = new Eventive_Settings();
 $eventive_settings->init();
+
+// Load the event sync functionality.
+require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-sync.php';
+$eventive_sync = new Eventive_Sync();
+$eventive_sync->init();
 
 // Load the admin dashboard widget only in admin.
 if ( is_admin() ) {
@@ -62,25 +66,20 @@ if ( is_admin() ) {
 	$eventive_dashboard->init();
 }
 
-// Load the front-end functionality.
+// Load the front-end blocks functionality.
 require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-blocks.php';
 $eventive_blocks = new Eventive_Blocks();
 $eventive_blocks->init();
 
-// Load the front-end functionality.
+// Load the API functionality.
 require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-api.php';
 $eventive_api = new Eventive_API();
 $eventive_api->init();
 
-// Load the dashboard widget.
-require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-dashboard.php';
-$eventive_dashboard = new Eventive_Dashboard();
-$eventive_dashboard->init();
-
 /**
  * Run on activate to setup the plugin.
  *
- * @since Harvard Arnold Arboretum 1.0
+ * @since Eventive 1.0
  */
 function eventive_activate() {
 	// flush the rewrite rules in the plugin so that our new rules take effect.
@@ -90,7 +89,7 @@ function eventive_activate() {
 /**
  * Run on activate to setup the plugin
  *
- * @since Harvard Arnold Arboretum 1.0
+ * @since Eventive 1.0
  */
 function eventive_deactivate() {
 	// flush the rewrite rules in the plugin so that our old rules are removed.
