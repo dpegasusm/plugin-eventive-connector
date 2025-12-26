@@ -191,6 +191,3 @@ class Eventive_Sync {
 		);
 	}
 }
-
-
-

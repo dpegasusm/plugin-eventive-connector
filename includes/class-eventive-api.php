@@ -208,7 +208,7 @@ class Eventive_API {
 
 	/**
 	 * Get the API endpoints in an array.
-	 * 
+	 *
 	 * @access public
 	 * @return array The API endpoints.
 	 */
