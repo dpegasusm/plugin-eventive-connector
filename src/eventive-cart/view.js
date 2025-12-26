@@ -101,13 +101,19 @@ function CartApp() {
 								data-view-cart="true"
 								data-label="Go To Checkout"
 							></div>
-							<button className="reset-cart-btn" onClick={ handleResetCart }>
+							<button
+								className="reset-cart-btn"
+								onClick={ handleResetCart }
+							>
 								RESET CART
 							</button>
 						</>
 					) }
 					{ cartQuantity === 0 && (
-						<a href="/festival-schedule" className="find-tickets-link">
+						<a
+							href="/festival-schedule"
+							className="find-tickets-link"
+						>
 							Find Tickets to Add
 						</a>
 					) }
@@ -135,7 +141,9 @@ function CartApp() {
 						</tr>
 					) : (
 						cartItems.map( ( item, idx ) => {
-							const name = item.name || ( item.pass_bucket ? 'Pass' : 'Ticket' );
+							const name =
+								item.name ||
+								( item.pass_bucket ? 'Pass' : 'Ticket' );
 							const price = ( item.price || 0 ) / 100;
 							const totalPrice = price * item.quantity;
 

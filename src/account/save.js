@@ -16,8 +16,6 @@ export default function Save() {
 	const blockProps = useBlockProps.save();
 
 	return (
-		<div { ...blockProps }>
-			{/* React will mount here via view.js */}
-		</div>
+		<div { ...blockProps }>{ /* React will mount here via view.js */ }</div>
 	);
 }

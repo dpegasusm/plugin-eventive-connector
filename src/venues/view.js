@@ -5,7 +5,7 @@
  * @since 1.0.0
  */
 
-import { createRoot } from '@wordpress/element';
+import { createRoot, useState, useEffect } from '@wordpress/element';
 
 /**
  * Venue component to render individual venue card
@@ -98,11 +98,11 @@ const VenueCard = ( { venue } ) => {
  * @return {JSX.Element} Venues container component
  */
 const VenuesContainer = () => {
-	const [ venues, setVenues ] = React.useState( [] );
-	const [ loading, setLoading ] = React.useState( true );
-	const [ error, setError ] = React.useState( null );
+	const [ venues, setVenues ] = useState( [] );
+	const [ loading, setLoading ] = useState( true );
+	const [ error, setError ] = useState( null );
 
-	React.useEffect( () => {
+	useEffect( () => {
 		const loadVenues = () => {
 			if ( ! window.Eventive ) {
 				setError( 'Eventive API is not initialized.' );

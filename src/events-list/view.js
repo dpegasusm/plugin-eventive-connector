@@ -25,10 +25,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const shortDescription =
 			block.getAttribute( 'data-short-description' ) === 'true';
 		const image = block.getAttribute( 'data-image' ) || 'cover';
-		const includeVirtual =
-			block.getAttribute( 'data-virtual' ) === 'true';
-		const showFilter =
-			block.getAttribute( 'data-show-filter' ) === 'true';
+		const includeVirtual = block.getAttribute( 'data-virtual' ) === 'true';
+		const showFilter = block.getAttribute( 'data-show-filter' ) === 'true';
 		const view = block.getAttribute( 'data-view' ) || 'list';
 		const showUndated =
 			block.getAttribute( 'data-show-undated' ) === 'true';
@@ -54,8 +52,14 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		block.setAttribute( 'data-virtual', includeVirtual ? 'yes' : 'no' );
 		block.setAttribute( 'data-show-filter', showFilter ? 'yes' : 'no' );
 		block.setAttribute( 'data-view', view );
-		block.setAttribute( 'data-show-undated', showUndated ? 'true' : 'false' );
-		block.setAttribute( 'data-include-past', includePast ? 'true' : 'false' );
+		block.setAttribute(
+			'data-show-undated',
+			showUndated ? 'true' : 'false'
+		);
+		block.setAttribute(
+			'data-include-past',
+			includePast ? 'true' : 'false'
+		);
 		block.setAttribute( 'data-start-date', startDate );
 		block.setAttribute( 'data-end-date', endDate );
 

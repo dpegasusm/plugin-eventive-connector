@@ -158,11 +158,13 @@ class Eventive_Blocks {
 
 		// Get the event bucket from options.
 		$event_bucket = get_option( 'eventive_event_bucket', '' );
-		$api_endpoint = $eventive_api->get_api_base_endpoint();
+		$api_base = $eventive_api->get_api_base();
+		$api_endpoints = $eventive_api->get_api_endpoints();
 
 		// Prepare data to pass to view scripts.
 		$script_data = array(
-			'apiEndpoint'    => $api_endpoint,
+			'apiBase'    => $api_base,
+			'apiEndpoints' => $api_endpoints,
 			'eventBucket'    => $event_bucket,
 			'eventive_nonce' => wp_create_nonce( 'eventive_api_nonce' ),
 		);

@@ -10,7 +10,9 @@ import '../marquee/eventive-marquee.js';
  * Initialize Marquee blocks on page load
  */
 document.addEventListener( 'DOMContentLoaded', () => {
-	const marqueeBlocks = document.querySelectorAll( '.wp-block-eventive-marquee' );
+	const marqueeBlocks = document.querySelectorAll(
+		'.wp-block-eventive-marquee'
+	);
 
 	marqueeBlocks.forEach( ( block ) => {
 		// The existing eventive-marquee.js handles initialization

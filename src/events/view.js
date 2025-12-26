@@ -16,8 +16,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const imageMode = block.getAttribute( 'data-image' ) || 'poster';
 		const showDescription =
 			block.getAttribute( 'data-description' ) === 'true';
-		const showFilter =
-			block.getAttribute( 'data-show-filter' ) === 'true';
+		const showFilter = block.getAttribute( 'data-show-filter' ) === 'true';
 		const preselectEventId = block.getAttribute( 'data-event-id' ) || '';
 		const filmsBase = block.getAttribute( 'data-films-base' ) || '';
 
@@ -40,8 +39,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 						path: `event_buckets/${ eventBucket }/events`,
 						qs: {
 							upcoming_only: true,
-							...(tagId && { 'tag-id': tagId }),
-							...(venueId && { 'venue-id': venueId }),
+							...( tagId && { 'tag-id': tagId } ),
+							...( venueId && { 'venue-id': venueId } ),
 						},
 					} );
 
@@ -76,6 +75,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 	/**
 	 * Render events into the block
+	 * @param container
+	 * @param events
+	 * @param options
 	 */
 	function renderEvents( container, events, options ) {
 		if ( ! events.length ) {
@@ -129,6 +131,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 	/**
 	 * Render a single event card
+	 * @param event
+	 * @param options
 	 */
 	function renderEventCard( event, options ) {
 		const { imageMode, showDescription, filmDetailBaseURL } = options;
@@ -150,7 +154,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 					: event.film.still_url;
 
 			if ( imgSrc ) {
-				imageHTML = `<div class="event-image"><img src="${ imgSrc }" alt="${ event.film.name || event.name }" /></div>`;
+				imageHTML = `<div class="event-image"><img src="${ imgSrc }" alt="${
+					event.film.name || event.name
+				}" /></div>`;
 			}
 		}
 
@@ -167,7 +173,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 					<p class="event-time">${ time }</p>
 					${ event.venue ? `<p class="event-venue">${ event.venue.name }</p>` : '' }
 					${ descriptionHTML }
-					<button class="eventive-button" data-eventive-event-id="${ event.id }">Buy Tickets</button>
+					<button class="eventive-button" data-eventive-event-id="${
+						event.id
+					}">Buy Tickets</button>
 				</div>
 			</div>
 		`;

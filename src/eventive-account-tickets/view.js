@@ -73,7 +73,15 @@ function AccountTicketsApp() {
 
 	if ( isLoading ) {
 		return (
-			<div className="eventive-login-container" style={ { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' } }>
+			<div
+				className="eventive-login-container"
+				style={ {
+					display: 'flex',
+					justifyContent: 'center',
+					alignItems: 'center',
+					height: '100px',
+				} }
+			>
 				<div className="loader"></div>
 			</div>
 		);
@@ -96,23 +104,36 @@ function AccountTicketsApp() {
 				) : (
 					<div className="eventive-tickets-list">
 						{ tickets.map( ( ticket, idx ) => {
-							const filmName = ticket.film_name || ticket.event_name || 'Event';
-							const showTime = ticket.showtime || ticket.start_time;
+							const filmName =
+								ticket.film_name ||
+								ticket.event_name ||
+								'Event';
+							const showTime =
+								ticket.showtime || ticket.start_time;
 
 							return (
-								<div key={ idx } className="eventive-ticket-card">
+								<div
+									key={ idx }
+									className="eventive-ticket-card"
+								>
 									<div className="eventive-ticket-card__body">
-										<div className="eventive-ticket-card__title">{ filmName }</div>
+										<div className="eventive-ticket-card__title">
+											{ filmName }
+										</div>
 										{ showTime && (
 											<div className="eventive-ticket-card__time">
-												{ new Date( showTime ).toLocaleString() }
+												{ new Date(
+													showTime
+												).toLocaleString() }
 											</div>
 										) }
 									</div>
 									<div className="eventive-ticket-card__actions">
 										<button
 											className="eventive-ticket-btn"
-											onClick={ () => handleShowBarcode( ticket ) }
+											onClick={ () =>
+												handleShowBarcode( ticket )
+											}
 										>
 											View Ticket
 										</button>
@@ -128,14 +149,24 @@ function AccountTicketsApp() {
 			{ showBarcodeModal && selectedTicket && (
 				<div
 					className="eventive-ticket-barcode-modal"
-					onClick={ ( e ) => e.target.classList.contains( 'eventive-ticket-barcode-modal' ) && closeModal() }
+					onClick={ ( e ) =>
+						e.target.classList.contains(
+							'eventive-ticket-barcode-modal'
+						) && closeModal()
+					}
 				>
 					<div className="barcode-modal-inner">
-						<button className="modal-close-btn" onClick={ closeModal }>
+						<button
+							className="modal-close-btn"
+							onClick={ closeModal }
+						>
 							×
 						</button>
 						<div className="barcode-modal-body">
-							<h3>{ selectedTicket.film_name || selectedTicket.event_name }</h3>
+							<h3>
+								{ selectedTicket.film_name ||
+									selectedTicket.event_name }
+							</h3>
 							{ selectedTicket.barcode_url && (
 								<img
 									src={ selectedTicket.barcode_url }
@@ -145,7 +176,9 @@ function AccountTicketsApp() {
 							) }
 							{ selectedTicket.showtime && (
 								<p className="ticket-time">
-									{ new Date( selectedTicket.showtime ).toLocaleString() }
+									{ new Date(
+										selectedTicket.showtime
+									).toLocaleString() }
 								</p>
 							) }
 						</div>
@@ -160,7 +193,9 @@ function AccountTicketsApp() {
  * Initialize block on all matching elements
  */
 document.addEventListener( 'DOMContentLoaded', () => {
-	const blocks = document.querySelectorAll( '.wp-block-eventive-account-tickets' );
+	const blocks = document.querySelectorAll(
+		'.wp-block-eventive-account-tickets'
+	);
 
 	blocks.forEach( ( block ) => {
 		const root = createRoot( block );

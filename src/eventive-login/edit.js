@@ -52,15 +52,10 @@ export default function Edit( { attributes, setAttributes } ) {
 					} }
 				>
 					<p style={ { margin: 0, color: '#666' } }>
-						<strong>
-							{ __( 'Eventive Login', 'eventive' ) }
-						</strong>
+						<strong>{ __( 'Eventive Login', 'eventive' ) }</strong>
 					</p>
 					<p style={ { margin: '8px 0 0', fontSize: '14px' } }>
-						{ __(
-							'Login link text:',
-							'eventive'
-						) }{ ' ' }
+						{ __( 'Login link text:', 'eventive' ) }{ ' ' }
 						{ loginLinkText }
 					</p>
 				</div>

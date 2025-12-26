@@ -25,20 +25,34 @@ export default function Edit( { attributes, setAttributes } ) {
 					<TextControl
 						label={ __( 'Start Date (YYYY-MM-DD)', 'eventive' ) }
 						value={ attributes.startTime }
-						onChange={ ( value ) => setAttributes( { startTime: value } ) }
-						help={ __( 'Start date for donation tracking', 'eventive' ) }
+						onChange={ ( value ) =>
+							setAttributes( { startTime: value } )
+						}
+						help={ __(
+							'Start date for donation tracking',
+							'eventive'
+						) }
 					/>
 					<TextControl
 						label={ __( 'End Date (YYYY-MM-DD)', 'eventive' ) }
 						value={ attributes.endTime }
-						onChange={ ( value ) => setAttributes( { endTime: value } ) }
-						help={ __( 'End date for donation tracking', 'eventive' ) }
+						onChange={ ( value ) =>
+							setAttributes( { endTime: value } )
+						}
+						help={ __(
+							'End date for donation tracking',
+							'eventive'
+						) }
 					/>
 					<TextControl
 						label={ __( 'Goal Amount ($)', 'eventive' ) }
 						value={ attributes.goalAmount }
 						type="number"
-						onChange={ ( value ) => setAttributes( { goalAmount: parseFloat( value ) || 1000 } ) }
+						onChange={ ( value ) =>
+							setAttributes( {
+								goalAmount: parseFloat( value ) || 1000,
+							} )
+						}
 						help={ __( 'Fundraising goal in dollars', 'eventive' ) }
 					/>
 				</PanelBody>
@@ -48,15 +62,21 @@ export default function Edit( { attributes, setAttributes } ) {
 				<div className="eventive-block-placeholder">
 					<h3>{ __( 'Eventive Fundraiser', 'eventive' ) }</h3>
 					<p>
-						{ __( 'Fundraiser progress will display on the frontend.', 'eventive' ) }
+						{ __(
+							'Fundraiser progress will display on the frontend.',
+							'eventive'
+						) }
 					</p>
 					{ attributes.startTime && attributes.endTime && (
 						<p>
-							<strong>{ __( 'Period:', 'eventive' ) }</strong> { attributes.startTime } { __( 'to', 'eventive' ) } { attributes.endTime }
+							<strong>{ __( 'Period:', 'eventive' ) }</strong>{ ' ' }
+							{ attributes.startTime } { __( 'to', 'eventive' ) }{ ' ' }
+							{ attributes.endTime }
 						</p>
 					) }
 					<p>
-						<strong>{ __( 'Goal:', 'eventive' ) }</strong> ${ attributes.goalAmount }
+						<strong>{ __( 'Goal:', 'eventive' ) }</strong> $
+						{ attributes.goalAmount }
 					</p>
 				</div>
 			</div>

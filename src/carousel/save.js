@@ -23,8 +23,6 @@ export default function Save( { attributes } ) {
 	} );
 
 	return (
-		<div { ...blockProps }>
-			{/* React will mount here via view.js */}
-		</div>
+		<div { ...blockProps }>{ /* React will mount here via view.js */ }</div>
 	);
 }

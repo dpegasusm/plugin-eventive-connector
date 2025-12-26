@@ -18,8 +18,8 @@ import { useBlockProps } from '@wordpress/block-editor';
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#save
  *
- * @param {Object} props               Block properties.
- * @param {Object} props.attributes    Block attributes.
+ * @param {Object} props            Block properties.
+ * @param {Object} props.attributes Block attributes.
  * @return {Element} Element to render.
  */
 export default function Save( { attributes } ) {
@@ -38,8 +38,6 @@ export default function Save( { attributes } ) {
 	} );
 
 	return (
-		<div { ...blockProps }>
-			{/* React will mount here via view.js */}
-		</div>
+		<div { ...blockProps }>{ /* React will mount here via view.js */ }</div>
 	);
 }

@@ -15,8 +15,14 @@ export default function Save() {
 
 	return (
 		<div { ...blockProps }>
-			<div id="weekly-calendar-container" className="weekly-calendar-container">
-				<div id="weekly-calendar-controls" className="weekly-calendar-controls">
+			<div
+				id="weekly-calendar-container"
+				className="weekly-calendar-container"
+			>
+				<div
+					id="weekly-calendar-controls"
+					className="weekly-calendar-controls"
+				>
 					<button id="prev-week" className="week-nav-btn">
 						← Previous Week
 					</button>

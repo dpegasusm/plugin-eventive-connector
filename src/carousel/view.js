@@ -9,6 +9,7 @@ import { createRoot, useState, useEffect, useRef } from '@wordpress/element';
 
 /**
  * Get cover image helper
+ * @param event
  */
 function getCoverImage( event ) {
 	const img =
@@ -25,6 +26,9 @@ function getCoverImage( event ) {
 
 /**
  * Carousel Slide component
+ * @param root0
+ * @param root0.event
+ * @param root0.isActive
  */
 function CarouselSlide( { event, isActive } ) {
 	const name = event.name || 'Untitled Event';
@@ -62,7 +66,10 @@ function CarouselSlide( { event, isActive } ) {
 				</p>
 				{ showButton && (
 					<div className="carousel-ticket-button">
-						<div className="eventive-button" data-event={ event.id } />
+						<div
+							className="eventive-button"
+							data-event={ event.id }
+						/>
 					</div>
 				) }
 			</div>
@@ -72,6 +79,9 @@ function CarouselSlide( { event, isActive } ) {
 
 /**
  * Carousel component
+ * @param root0
+ * @param root0.limit
+ * @param root0.showDescription
  */
 function EventiveCarousel( { limit, showDescription } ) {
 	const [ events, setEvents ] = useState( [] );
@@ -184,9 +194,7 @@ function EventiveCarousel( { limit, showDescription } ) {
 	}
 
 	if ( events.length === 0 ) {
-		return (
-			<div className="carousel-error">No upcoming events found.</div>
-		);
+		return <div className="carousel-error">No upcoming events found.</div>;
 	}
 
 	return (

@@ -86,7 +86,7 @@ function EventiveAccount() {
 					You are not logged in. Please log in to view your account.
 				</p>
 				<div className="eventive-login-placeholder">
-					{/* Login form would be rendered by eventive-login block */}
+					{ /* Login form would be rendered by eventive-login block */ }
 				</div>
 			</div>
 		);
@@ -105,16 +105,16 @@ function EventiveAccount() {
 			</div>
 			<div className="top-section">
 				<div className="account-details">
-					{/* Account details would be rendered by eventive-account-details block */}
+					{ /* Account details would be rendered by eventive-account-details block */ }
 					<div className="eventive-account-details-placeholder" />
 				</div>
 				<div className="account-passes">
-					{/* Passes would be rendered by eventive-account-passes block */}
+					{ /* Passes would be rendered by eventive-account-passes block */ }
 					<div className="eventive-account-passes-placeholder" />
 				</div>
 			</div>
 			<div className="account-tickets">
-				{/* Tickets would be rendered by eventive-account-tickets block */}
+				{ /* Tickets would be rendered by eventive-account-tickets block */ }
 				<div className="eventive-account-tickets-placeholder" />
 			</div>
 		</div>

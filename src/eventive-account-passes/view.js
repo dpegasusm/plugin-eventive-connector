@@ -93,7 +93,15 @@ function AccountPassesApp() {
 
 	if ( isLoading ) {
 		return (
-			<div className="eventive-login-container" style={ { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' } }>
+			<div
+				className="eventive-login-container"
+				style={ {
+					display: 'flex',
+					justifyContent: 'center',
+					alignItems: 'center',
+					height: '100px',
+				} }
+			>
 				<div className="loader"></div>
 			</div>
 		);
@@ -116,28 +124,51 @@ function AccountPassesApp() {
 				) : (
 					<div className="eventive-passes-grid">
 						{ passes.map( ( pass, idx ) => {
-							const name = pass.name || pass.pass_name || pass.title || 'Pass';
-							const type = pass.type || ( pass.pass && pass.pass.type );
-							const eventsRemaining = pass.events_remaining != null ? `${ pass.events_remaining } left` : '';
-							const sale = pass.gross_cents != null ? formatCurrency( pass.gross_cents ) : '';
-							const metaBits = [ type, eventsRemaining, sale ].filter( Boolean ).join( ' • ' );
+							const name =
+								pass.name ||
+								pass.pass_name ||
+								pass.title ||
+								'Pass';
+							const type =
+								pass.type || ( pass.pass && pass.pass.type );
+							const eventsRemaining =
+								pass.events_remaining != null
+									? `${ pass.events_remaining } left`
+									: '';
+							const sale =
+								pass.gross_cents != null
+									? formatCurrency( pass.gross_cents )
+									: '';
+							const metaBits = [ type, eventsRemaining, sale ]
+								.filter( Boolean )
+								.join( ' • ' );
 
 							return (
 								<div key={ idx } className="eventive-pass-card">
 									<div className="eventive-pass-card__body">
-										<div className="eventive-pass-card__title">{ name }</div>
-										{ metaBits && <div className="eventive-pass-card__meta">{ metaBits }</div> }
+										<div className="eventive-pass-card__title">
+											{ name }
+										</div>
+										{ metaBits && (
+											<div className="eventive-pass-card__meta">
+												{ metaBits }
+											</div>
+										) }
 									</div>
 									<div className="eventive-pass-card__actions">
 										<button
 											className="eventive-pass-btn eventive-pass-btn--primary"
-											onClick={ () => handleShowBarcode( pass ) }
+											onClick={ () =>
+												handleShowBarcode( pass )
+											}
 										>
 											Show Pass
 										</button>
 										<button
 											className="eventive-pass-btn eventive-pass-btn--secondary"
-											onClick={ () => handleEditPass( pass ) }
+											onClick={ () =>
+												handleEditPass( pass )
+											}
 										>
 											Edit Details
 										</button>
@@ -153,10 +184,17 @@ function AccountPassesApp() {
 			{ showBarcodeModal && barcodePass && (
 				<div
 					className="eventive-show-pass-barcode-modal"
-					onClick={ ( e ) => e.target.classList.contains( 'eventive-show-pass-barcode-modal' ) && closeModals() }
+					onClick={ ( e ) =>
+						e.target.classList.contains(
+							'eventive-show-pass-barcode-modal'
+						) && closeModals()
+					}
 				>
 					<div className="show-pass-barcode-modal-content">
-						<button className="modal-close-btn" onClick={ closeModals }>
+						<button
+							className="modal-close-btn"
+							onClick={ closeModals }
+						>
 							×
 						</button>
 						<h3>My Pass Credentials</h3>
@@ -178,19 +216,32 @@ function AccountPassesApp() {
 			{ showEditModal && editingPass && (
 				<div
 					className="eventive-edit-pass-modal"
-					onClick={ ( e ) => e.target.classList.contains( 'eventive-edit-pass-modal' ) && closeModals() }
+					onClick={ ( e ) =>
+						e.target.classList.contains(
+							'eventive-edit-pass-modal'
+						) && closeModals()
+					}
 				>
 					<div className="edit-pass-modal-content">
-						<button className="modal-close-btn" onClick={ closeModals }>
+						<button
+							className="modal-close-btn"
+							onClick={ closeModals }
+						>
 							×
 						</button>
 						<h3>Edit Pass Details</h3>
 						<form>
 							<div className="form-group">
 								<label>Pass Name</label>
-								<input type="text" defaultValue={ editingPass.name } />
+								<input
+									type="text"
+									defaultValue={ editingPass.name }
+								/>
 							</div>
-							<button type="button" className="pass-submit-row-button">
+							<button
+								type="button"
+								className="pass-submit-row-button"
+							>
 								Save Changes
 							</button>
 						</form>
@@ -205,7 +256,9 @@ function AccountPassesApp() {
  * Initialize block on all matching elements
  */
 document.addEventListener( 'DOMContentLoaded', () => {
-	const blocks = document.querySelectorAll( '.wp-block-eventive-account-passes' );
+	const blocks = document.querySelectorAll(
+		'.wp-block-eventive-account-passes'
+	);
 
 	blocks.forEach( ( block ) => {
 		const root = createRoot( block );

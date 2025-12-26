@@ -5,7 +5,12 @@
  */
 import { __ } from '@wordpress/i18n';
 import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
-import { PanelBody, TextControl, ToggleControl, SelectControl } from '@wordpress/components';
+import {
+	PanelBody,
+	TextControl,
+	ToggleControl,
+	SelectControl,
+} from '@wordpress/components';
 
 /**
  * Edit component - renders the block in the editor
@@ -25,30 +30,52 @@ export default function Edit( { attributes, setAttributes } ) {
 					<TextControl
 						label={ __( 'Tag Name (comma-separated)', 'eventive' ) }
 						value={ attributes.tagName }
-						onChange={ ( value ) => setAttributes( { tagName: value } ) }
-						help={ __( 'Filter by tag name(s) or ID(s)', 'eventive' ) }
+						onChange={ ( value ) =>
+							setAttributes( { tagName: value } )
+						}
+						help={ __(
+							'Filter by tag name(s) or ID(s)',
+							'eventive'
+						) }
 					/>
 					<TextControl
-						label={ __( 'Exclude Tag (comma-separated)', 'eventive' ) }
+						label={ __(
+							'Exclude Tag (comma-separated)',
+							'eventive'
+						) }
 						value={ attributes.excludeTag }
-						onChange={ ( value ) => setAttributes( { excludeTag: value } ) }
-						help={ __( 'Exclude films with these tag(s)', 'eventive' ) }
+						onChange={ ( value ) =>
+							setAttributes( { excludeTag: value } )
+						}
+						help={ __(
+							'Exclude films with these tag(s)',
+							'eventive'
+						) }
 					/>
 					<TextControl
 						label={ __( 'Film ID', 'eventive' ) }
 						value={ attributes.filmId }
-						onChange={ ( value ) => setAttributes( { filmId: value } ) }
-						help={ __( 'Display only this specific film', 'eventive' ) }
+						onChange={ ( value ) =>
+							setAttributes( { filmId: value } )
+						}
+						help={ __(
+							'Display only this specific film',
+							'eventive'
+						) }
 					/>
 					<ToggleControl
 						label={ __( 'Show Events', 'eventive' ) }
 						checked={ attributes.showEvents }
-						onChange={ ( value ) => setAttributes( { showEvents: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { showEvents: value } )
+						}
 					/>
 					<ToggleControl
 						label={ __( 'Show Filter', 'eventive' ) }
 						checked={ attributes.showFilter }
-						onChange={ ( value ) => setAttributes( { showFilter: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { showFilter: value } )
+						}
 					/>
 					<SelectControl
 						label={ __( 'Image Type', 'eventive' ) }
@@ -58,7 +85,9 @@ export default function Edit( { attributes, setAttributes } ) {
 							{ label: 'Cover', value: 'cover' },
 							{ label: 'Still', value: 'still' },
 						] }
-						onChange={ ( value ) => setAttributes( { image: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { image: value } )
+						}
 					/>
 					<SelectControl
 						label={ __( 'View Mode', 'eventive' ) }
@@ -67,37 +96,51 @@ export default function Edit( { attributes, setAttributes } ) {
 							{ label: 'Grid', value: 'grid' },
 							{ label: 'List', value: 'list' },
 						] }
-						onChange={ ( value ) => setAttributes( { view: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { view: value } )
+						}
 					/>
 					<ToggleControl
 						label={ __( 'Show Tags', 'eventive' ) }
 						checked={ attributes.showTags }
-						onChange={ ( value ) => setAttributes( { showTags: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { showTags: value } )
+						}
 					/>
 					<ToggleControl
 						label={ __( 'Show Description', 'eventive' ) }
 						checked={ attributes.showDescription }
-						onChange={ ( value ) => setAttributes( { showDescription: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { showDescription: value } )
+						}
 					/>
 					<ToggleControl
 						label={ __( 'Show Details', 'eventive' ) }
 						checked={ attributes.showDetails }
-						onChange={ ( value ) => setAttributes( { showDetails: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { showDetails: value } )
+						}
 					/>
 					<ToggleControl
 						label={ __( 'Year Round Mode', 'eventive' ) }
 						checked={ attributes.yearRound }
-						onChange={ ( value ) => setAttributes( { yearRound: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { yearRound: value } )
+						}
 					/>
 					<ToggleControl
 						label={ __( 'Show Search', 'eventive' ) }
 						checked={ attributes.search }
-						onChange={ ( value ) => setAttributes( { search: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { search: value } )
+						}
 					/>
 					<ToggleControl
 						label={ __( 'Show View Switcher', 'eventive' ) }
 						checked={ attributes.showViewSwitcher }
-						onChange={ ( value ) => setAttributes( { showViewSwitcher: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { showViewSwitcher: value } )
+						}
 					/>
 				</PanelBody>
 			</InspectorControls>
@@ -106,14 +149,33 @@ export default function Edit( { attributes, setAttributes } ) {
 				<div className="eventive-block-placeholder">
 					<h3>{ __( 'Eventive Film Guide', 'eventive' ) }</h3>
 					<p>
-						{ __( 'Film guide will display on the frontend.', 'eventive' ) }
+						{ __(
+							'Film guide will display on the frontend.',
+							'eventive'
+						) }
 					</p>
-					<p><strong>{ __( 'Settings:', 'eventive' ) }</strong></p>
+					<p>
+						<strong>{ __( 'Settings:', 'eventive' ) }</strong>
+					</p>
 					<ul>
-						{ attributes.tagName && <li>{ __( 'Tag:', 'eventive' ) } { attributes.tagName }</li> }
-						{ attributes.filmId && <li>{ __( 'Film ID:', 'eventive' ) } { attributes.filmId }</li> }
-						<li>{ __( 'View:', 'eventive' ) } { attributes.view }</li>
-						<li>{ __( 'Image:', 'eventive' ) } { attributes.image }</li>
+						{ attributes.tagName && (
+							<li>
+								{ __( 'Tag:', 'eventive' ) }{ ' ' }
+								{ attributes.tagName }
+							</li>
+						) }
+						{ attributes.filmId && (
+							<li>
+								{ __( 'Film ID:', 'eventive' ) }{ ' ' }
+								{ attributes.filmId }
+							</li>
+						) }
+						<li>
+							{ __( 'View:', 'eventive' ) } { attributes.view }
+						</li>
+						<li>
+							{ __( 'Image:', 'eventive' ) } { attributes.image }
+						</li>
 					</ul>
 				</div>
 			</div>

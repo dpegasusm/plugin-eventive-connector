@@ -10,10 +10,15 @@ import { useState, useEffect } from '@wordpress/element';
 
 /**
  * Helper: detect if this instance is inside the parent [eventive-account]
+ * @param el
  */
 function inParentAccountContainer( el ) {
 	try {
-		return !! ( el && el.closest && el.closest( '.eventive-account-container' ) );
+		return !! (
+			el &&
+			el.closest &&
+			el.closest( '.eventive-account-container' )
+		);
 	} catch ( _ ) {
 		return false;
 	}
@@ -21,6 +26,7 @@ function inParentAccountContainer( el ) {
 
 /**
  * Helpers to safely extract values
+ * @param {...any} args
  */
 function pickFirst( ...args ) {
 	for ( let i = 0; i < args.length; i++ ) {
@@ -72,8 +78,12 @@ function normalizePerson( p ) {
 		d.name,
 		p.full_name,
 		p.fullName,
-		p.first_name && p.last_name ? p.first_name + ' ' + p.last_name : undefined,
-		d.first_name && d.last_name ? d.first_name + ' ' + d.last_name : undefined
+		p.first_name && p.last_name
+			? p.first_name + ' ' + p.last_name
+			: undefined,
+		d.first_name && d.last_name
+			? d.first_name + ' ' + d.last_name
+			: undefined
 	);
 	const email = pickFirst( p.email, d.email, firstIn( emails, 'email' ) );
 	const phone_number = pickFirst(
@@ -99,7 +109,10 @@ function normalizePerson( p ) {
 		firstIn( addresses )
 	);
 
-	const sms_tickets_enabled = pickFirst( p.sms_tickets_enabled, d.sms_tickets_enabled );
+	const sms_tickets_enabled = pickFirst(
+		p.sms_tickets_enabled,
+		d.sms_tickets_enabled
+	);
 
 	return {
 		name,
@@ -145,7 +158,10 @@ function AccountDetailsApp() {
 
 					// Render buttons if available
 					if ( window.Eventive.renderButtons ) {
-						setTimeout( () => window.Eventive.renderButtons(), 100 );
+						setTimeout(
+							() => window.Eventive.renderButtons(),
+							100
+						);
 					}
 				}
 			} catch ( error ) {
@@ -180,7 +196,10 @@ function AccountDetailsApp() {
 				return;
 			}
 
-			const wpApiSettings = window.wpApiSettings || { root: '/', nonce: '' };
+			const wpApiSettings = window.wpApiSettings || {
+				root: '/',
+				nonce: '',
+			};
 			const url = `${ wpApiSettings.root }eventive/v1/person/${ personId }`;
 			const payload = {};
 			payload[ key ] = editValue;
@@ -216,7 +235,10 @@ function AccountDetailsApp() {
 				return;
 			}
 
-			const wpApiSettings = window.wpApiSettings || { root: '/', nonce: '' };
+			const wpApiSettings = window.wpApiSettings || {
+				root: '/',
+				nonce: '',
+			};
 			const url = `${ wpApiSettings.root }eventive/v1/person/${ personId }`;
 			const payload = { sms_tickets_enabled: checked };
 
@@ -239,7 +261,15 @@ function AccountDetailsApp() {
 
 	if ( isLoading ) {
 		return (
-			<div className="eventive-login-container" style={ { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' } }>
+			<div
+				className="eventive-login-container"
+				style={ {
+					display: 'flex',
+					justifyContent: 'center',
+					alignItems: 'center',
+					height: '100px',
+				} }
+			>
 				<div className="loader"></div>
 			</div>
 		);
@@ -268,7 +298,10 @@ function AccountDetailsApp() {
 		mailing_address: 'Mailing Address',
 	};
 
-	if ( details && Object.prototype.hasOwnProperty.call( details, 'sms_tickets_enabled' ) ) {
+	if (
+		details &&
+		Object.prototype.hasOwnProperty.call( details, 'sms_tickets_enabled' )
+	) {
 		fields.sms_tickets_enabled = 'SMS Tickets Enabled';
 	}
 
@@ -288,8 +321,18 @@ function AccountDetailsApp() {
 						{ Object.keys( fields ).map( ( key ) => {
 							const label = fields[ key ];
 							const rawValue = details[ key ];
-							const value = rawValue !== undefined && rawValue !== null && rawValue !== '' ? rawValue : 'Not Set';
-							const displayValue = typeof value === 'boolean' ? ( value ? 'Yes' : 'No' ) : value;
+							const value =
+								rawValue !== undefined &&
+								rawValue !== null &&
+								rawValue !== ''
+									? rawValue
+									: 'Not Set';
+							const displayValue =
+								typeof value === 'boolean'
+									? value
+										? 'Yes'
+										: 'No'
+									: value;
 							const isEditing = editingKey === key;
 
 							return (
@@ -300,17 +343,29 @@ function AccountDetailsApp() {
 											key === 'sms_tickets_enabled' ? (
 												<select
 													value={ editValue }
-													onChange={ ( e ) => setEditValue( e.target.value ) }
+													onChange={ ( e ) =>
+														setEditValue(
+															e.target.value
+														)
+													}
 													className="edit-select"
 												>
-													<option value="true">Yes</option>
-													<option value="false">No</option>
+													<option value="true">
+														Yes
+													</option>
+													<option value="false">
+														No
+													</option>
 												</select>
 											) : (
 												<input
 													type="text"
 													value={ editValue }
-													onChange={ ( e ) => setEditValue( e.target.value ) }
+													onChange={ ( e ) =>
+														setEditValue(
+															e.target.value
+														)
+													}
 													className="edit-input"
 												/>
 											)
@@ -325,7 +380,11 @@ function AccountDetailsApp() {
 													type="checkbox"
 													className="sms-toggle"
 													checked={ value === true }
-													onChange={ ( e ) => handleSmsToggle( e.target.checked ) }
+													onChange={ ( e ) =>
+														handleSmsToggle(
+															e.target.checked
+														)
+													}
 												/>
 												<span className="slider"></span>
 											</label>
@@ -333,16 +392,29 @@ function AccountDetailsApp() {
 											<>
 												<button
 													className="submit-row-button"
-													onClick={ () => handleSubmit( key ) }
+													onClick={ () =>
+														handleSubmit( key )
+													}
 												>
 													Submit
 												</button>{ ' ' }
-												<button className="cancel-row-button" onClick={ handleCancel }>
+												<button
+													className="cancel-row-button"
+													onClick={ handleCancel }
+												>
 													Cancel
 												</button>
 											</>
 										) : (
-											<button className="edit-row-button" onClick={ () => handleEdit( key, displayValue ) }>
+											<button
+												className="edit-row-button"
+												onClick={ () =>
+													handleEdit(
+														key,
+														displayValue
+													)
+												}
+											>
 												Edit
 											</button>
 										) }
@@ -352,8 +424,15 @@ function AccountDetailsApp() {
 						} ) }
 					</tbody>
 				</table>
-				<div className="eventive-account-actions" style={ { marginTop: '16px' } }>
-					<div className="eventive-button" data-payment="true" data-label="Manage Payment Details"></div>
+				<div
+					className="eventive-account-actions"
+					style={ { marginTop: '16px' } }
+				>
+					<div
+						className="eventive-button"
+						data-payment="true"
+						data-label="Manage Payment Details"
+					></div>
 				</div>
 			</div>
 		</div>
@@ -364,7 +443,9 @@ function AccountDetailsApp() {
  * Initialize block on all matching elements
  */
 document.addEventListener( 'DOMContentLoaded', () => {
-	const blocks = document.querySelectorAll( '.wp-block-eventive-account-details' );
+	const blocks = document.querySelectorAll(
+		'.wp-block-eventive-account-details'
+	);
 
 	blocks.forEach( ( block ) => {
 		const root = createRoot( block );

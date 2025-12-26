@@ -8,7 +8,8 @@ import { useBlockProps } from '@wordpress/block-editor';
 /**
  * Save component - renders the block markup on the frontend
  *
- * @param {Object} props Block properties
+ * @param {Object} props            Block properties
+ * @param          props.attributes
  * @return {JSX.Element} Save component
  */
 export default function Save( { attributes } ) {

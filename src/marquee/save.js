@@ -8,7 +8,8 @@ import { useBlockProps } from '@wordpress/block-editor';
 /**
  * Save component - renders the block markup on the frontend
  *
- * @param {Object} props Block properties
+ * @param {Object} props            Block properties
+ * @param          props.attributes
  * @return {JSX.Element} Save component
  */
 export default function Save( { attributes } ) {
@@ -42,7 +43,10 @@ export default function Save( { attributes } ) {
 			<div className="eventive-marquee-overlay" aria-hidden="true"></div>
 			<div className="eventive-marquee-container">
 				<div className="eventive-marquee">
-					<div className="eventive-marquee-caption" aria-live="polite">
+					<div
+						className="eventive-marquee-caption"
+						aria-live="polite"
+					>
 						<div className="eventive-marquee-caption-track"></div>
 					</div>
 				</div>

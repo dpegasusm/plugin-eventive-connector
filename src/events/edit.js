@@ -5,7 +5,12 @@
  */
 import { __ } from '@wordpress/i18n';
 import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
-import { PanelBody, TextControl, SelectControl, ToggleControl } from '@wordpress/components';
+import {
+	PanelBody,
+	TextControl,
+	SelectControl,
+	ToggleControl,
+} from '@wordpress/components';
 import './editor.scss';
 
 /**
@@ -18,7 +23,15 @@ import './editor.scss';
  */
 export default function Edit( { attributes, setAttributes } ) {
 	const blockProps = useBlockProps();
-	const { tagId, venueId, image, description, showFilter, eventId, filmsBase } = attributes;
+	const {
+		tagId,
+		venueId,
+		image,
+		description,
+		showFilter,
+		eventId,
+		filmsBase,
+	} = attributes;
 
 	return (
 		<>
@@ -55,10 +68,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						onChange={ ( value ) =>
 							setAttributes( { eventId: value } )
 						}
-						help={ __(
-							'Open specific event on load',
-							'eventive'
-						) }
+						help={ __( 'Open specific event on load', 'eventive' ) }
 					/>
 					<ToggleControl
 						label={ __( 'Show Filter', 'eventive' ) }
@@ -66,10 +76,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						onChange={ ( value ) =>
 							setAttributes( { showFilter: value } )
 						}
-						help={ __(
-							'Display tag filter UI',
-							'eventive'
-						) }
+						help={ __( 'Display tag filter UI', 'eventive' ) }
 					/>
 				</PanelBody>
 				<PanelBody
@@ -123,7 +130,10 @@ export default function Edit( { attributes, setAttributes } ) {
 						🎟️ { __( 'Eventive Events', 'eventive' ) }
 					</p>
 					<p style={ { margin: '8px 0 0', fontSize: '14px' } }>
-						{ __( 'Upcoming events will display here', 'eventive' ) }
+						{ __(
+							'Upcoming events will display here',
+							'eventive'
+						) }
 					</p>
 				</div>
 			</div>

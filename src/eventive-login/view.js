@@ -10,6 +10,8 @@ import { useState, useEffect } from '@wordpress/element';
 
 /**
  * Login Component
+ * @param root0
+ * @param root0.loginLinkText
  */
 function LoginApp( { loginLinkText } ) {
 	const [ isLoggedIn, setIsLoggedIn ] = useState( false );
@@ -139,8 +141,14 @@ function LoginApp( { loginLinkText } ) {
 					</a>
 				) : (
 					<>
-						<span className="welcome-text">Welcome, { userName }!</span>{ ' ' }
-						<a href="#" onClick={ handleLogout } className="logout-link">
+						<span className="welcome-text">
+							Welcome, { userName }!
+						</span>{ ' ' }
+						<a
+							href="#"
+							onClick={ handleLogout }
+							className="logout-link"
+						>
 							Log out
 						</a>
 					</>
@@ -148,12 +156,23 @@ function LoginApp( { loginLinkText } ) {
 			</p>
 
 			{ showModal && (
-				<div className="eventive-login-modal" onClick={ ( e ) => e.target.classList.contains( 'eventive-login-modal' ) && closeModal() }>
+				<div
+					className="eventive-login-modal"
+					onClick={ ( e ) =>
+						e.target.classList.contains( 'eventive-login-modal' ) &&
+						closeModal()
+					}
+				>
 					<div className="eventive-login-form">
-						<button className="eventive-modal-close" onClick={ closeModal }>
+						<button
+							className="eventive-modal-close"
+							onClick={ closeModal }
+						>
 							×
 						</button>
-						<p className="eventive-modal-title">Log in using your Eventive Account</p>
+						<p className="eventive-modal-title">
+							Log in using your Eventive Account
+						</p>
 						<form onSubmit={ handleLogin }>
 							<label htmlFor="email">Email</label>
 							<input
@@ -168,10 +187,14 @@ function LoginApp( { loginLinkText } ) {
 								type="password"
 								id="password"
 								value={ password }
-								onChange={ ( e ) => setPassword( e.target.value ) }
+								onChange={ ( e ) =>
+									setPassword( e.target.value )
+								}
 								required
 							/>
-							{ error && <div className="error-message">{ error }</div> }
+							{ error && (
+								<div className="error-message">{ error }</div>
+							) }
 							<div className="button-row">
 								<button type="submit">LOGIN</button>
 								<button type="button" onClick={ closeModal }>
@@ -181,20 +204,40 @@ function LoginApp( { loginLinkText } ) {
 						</form>
 						<div className="eventive-modal-footer">
 							<div className="eventive-footer-note">
-								<a href="https://eventive.org" target="_blank" rel="noopener">
-									Powered by <img src="https://festival.eofilmfest.com/img/eventive.png" alt="Eventive" />
+								<a
+									href="https://eventive.org"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									Powered by{ ' ' }
+									<img
+										src="https://festival.eofilmfest.com/img/eventive.png"
+										alt="Eventive"
+									/>
 								</a>
 							</div>
 							<div>
-								<a href="https://eventive.org/terms" target="_blank" rel="noopener">
+								<a
+									href="https://eventive.org/terms"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
 									Terms
 								</a>{ ' ' }
 								·{ ' ' }
-								<a href="https://eventive.org/privacy" target="_blank" rel="noopener">
+								<a
+									href="https://eventive.org/privacy"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
 									Privacy
 								</a>{ ' ' }
 								·{ ' ' }
-								<a href="https://status.eventive.org/" target="_blank" rel="noopener">
+								<a
+									href="https://status.eventive.org/"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
 									System Status
 								</a>
 							</div>
@@ -213,7 +256,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	const blocks = document.querySelectorAll( '.wp-block-eventive-login' );
 
 	blocks.forEach( ( block ) => {
-		const loginLinkText = block.dataset.loginLinkText || 'Log in to your account';
+		const loginLinkText =
+			block.dataset.loginLinkText || 'Log in to your account';
 		const root = createRoot( block );
 		root.render( <LoginApp loginLinkText={ loginLinkText } /> );
 	} );

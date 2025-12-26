@@ -195,7 +195,9 @@ export default function Edit( { attributes, setAttributes } ) {
 					</p>
 					<p style={ { margin: '8px 0 0', fontSize: '14px' } }>
 						{ __(
-							`${ view === 'list' ? 'List' : 'Grid' } view • Limit: ${ limit }`,
+							`${
+								view === 'list' ? 'List' : 'Grid'
+							} view • Limit: ${ limit }`,
 							'eventive'
 						) }
 					</p>

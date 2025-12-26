@@ -30,8 +30,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		}
 
 		// Extract attributes from data attributes
-		const showEvents =
-			block.getAttribute( 'data-show-events' ) === 'true';
+		const showEvents = block.getAttribute( 'data-show-events' ) === 'true';
 		const showDetails =
 			block.getAttribute( 'data-show-details' ) === 'true';
 		const showTags = block.getAttribute( 'data-show-tags' ) === 'true';

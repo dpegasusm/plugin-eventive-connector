@@ -52,8 +52,6 @@ wp-config.php
 /vendor
 node_modules
 vendor
-src_eventive_old
-/src_eventive_old
 
 # DS Store Files
 .DS_Store

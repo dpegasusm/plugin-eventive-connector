@@ -202,8 +202,31 @@ class Eventive_API {
 	 * @access public
 	 * @return string The API base endpoint URL.
 	 */
-	public function get_api_base_endpoint() {
+	public function get_api_base() {
 		return rest_url( 'eventive/v1/' );
+	}
+
+	/**
+	 * Get the API endpoints in an array.
+	 * 
+	 * @access public
+	 * @return array The API endpoints.
+	 */
+	public function get_api_endpoints() {
+		return array(
+			'event_buckets'        => $this->api_endpoint_event_buckets,
+			'event_buckets_active' => $this->api_endpoint_event_buckets_active,
+			'events'               => $this->api_endpoint_events,
+			'films'                => $this->api_endpoint_films,
+			'item_buckets'         => $this->api_endpoint_item_buckets,
+			'items'                => $this->api_endpoint_items,
+			'ledger'               => $this->api_endpoint_ledger,
+			'order'                => $this->api_endpoint_order,
+			'passes'               => $this->api_endpoint_passes,
+			'people'               => $this->api_endpoint_people,
+			'tags'                 => $this->api_endpoint_tags,
+			'tickets'              => $this->api_endpoint_tickets,
+		);
 	}
 
 	/**

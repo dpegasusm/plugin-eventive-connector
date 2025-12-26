@@ -5,7 +5,7 @@
  * @since 1.0.0
  */
 
-import { createRoot } from '@wordpress/element';
+import { createRoot, useState, useEffect, useMemo } from '@wordpress/element';
 
 /**
  * Get text color based on background brightness
@@ -163,21 +163,21 @@ const TagPill = ( { tag, isActive, onClick, resetUrl } ) => {
  * @return {JSX.Element} Tags container
  */
 const TagsContainer = ( { view, display, hideEmpty, excludeTags } ) => {
-	const [ tags, setTags ] = React.useState( [] );
-	const [ loading, setLoading ] = React.useState( true );
-	const [ error, setError ] = React.useState( null );
-	const [ selectedTagId, setSelectedTagId ] = React.useState( '' );
-	const [ allowedTagIds, setAllowedTagIds ] = React.useState( null );
+	const [ tags, setTags ] = useState( [] );
+	const [ loading, setLoading ] = useState( true );
+	const [ error, setError ] = useState( null );
+	const [ selectedTagId, setSelectedTagId ] = useState( '' );
+	const [ allowedTagIds, setAllowedTagIds ] = useState( null );
 
 	// Get current URL params
-	React.useEffect( () => {
+	useEffect( () => {
 		const urlParams = new URLSearchParams( window.location.search );
 		const tagId = urlParams.get( 'tag-id' ) || '';
 		setSelectedTagId( tagId );
 	}, [] );
 
 	// Build reset URL
-	const resetUrl = React.useMemo( () => {
+	const resetUrl = useMemo( () => {
 		const url = new URL( window.location.href );
 		const clearKeys = [
 			'tag-id',
@@ -200,12 +200,11 @@ const TagsContainer = ( { view, display, hideEmpty, excludeTags } ) => {
 		return url.toString();
 	}, [] );
 
-	React.useEffect( () => {
+	useEffect( () => {
 		const loadTags = async () => {
 			try {
 				// Get event bucket from localized data
-				const eventBucket =
-					window.EventiveBlockData?.eventBucket || '';
+				const eventBucket = window.EventiveBlockData?.eventBucket || '';
 				if ( ! eventBucket ) {
 					setError( 'Event bucket not configured.' );
 					setLoading( false );
@@ -213,7 +212,9 @@ const TagsContainer = ( { view, display, hideEmpty, excludeTags } ) => {
 				}
 
 				// Get REST API URL and nonce from localized data
-				const restUrl = window.EventiveBlockData?.restUrl || '/wp-json/eventive/v1/';
+				const restUrl =
+					window.EventiveBlockData?.restUrl ||
+					'/wp-json/eventive/v1/';
 				const nonce = window.EventiveBlockData?.restNonce || '';
 
 				// Fetch tags from WordPress REST API
@@ -404,8 +405,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const display = container.getAttribute( 'data-display' ) || 'both';
 		const hideEmpty =
 			container.getAttribute( 'data-hide-empty' ) === 'true';
-		const excludeTags =
-			container.getAttribute( 'data-exclude-tags' ) || '';
+		const excludeTags = container.getAttribute( 'data-exclude-tags' ) || '';
 
 		const root = createRoot( container );
 		root.render(

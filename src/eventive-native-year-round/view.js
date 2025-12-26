@@ -23,8 +23,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const showDetails = block.getAttribute( 'data-details' ) === 'true';
 
 		// Generate unique IDs for this instance
-		const uid =
-			'nyr_' + Math.random().toString( 36 ).substring( 2, 9 );
+		const uid = 'nyr_' + Math.random().toString( 36 ).substring( 2, 9 );
 		const ids = {
 			root: uid + '_root',
 			calWrap: uid + '_calendar_wrap',
@@ -35,8 +34,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		};
 
 		// Get WP options passed from PHP via global variables
-		const eventBucket =
-			window.eventiveOptions?.eventBucket || '';
+		const eventBucket = window.eventiveOptions?.eventBucket || '';
 		const apiKey = window.eventiveOptions?.apiKey || '';
 		const filmDetailBaseURL =
 			window.eventiveOptions?.filmDetailBaseURL || '';

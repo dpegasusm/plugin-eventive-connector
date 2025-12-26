@@ -9,6 +9,7 @@ import { createRoot, useState, useEffect } from '@wordpress/element';
 
 /**
  * Get text color based on background brightness
+ * @param bgColor
  */
 function getAccessibleTextColor( bgColor ) {
 	const hex = bgColor.replace( '#', '' );
@@ -24,6 +25,7 @@ function getAccessibleTextColor( bgColor ) {
 
 /**
  * Get venue details helper
+ * @param event
  */
 function getVenueDetails( event ) {
 	if ( event.is_virtual ) {
@@ -39,7 +41,9 @@ function getVenueDetails( event ) {
  */
 function EventiveCalendar() {
 	const [ events, setEvents ] = useState( [] );
-	const [ currentYear, setCurrentYear ] = useState( new Date().getFullYear() );
+	const [ currentYear, setCurrentYear ] = useState(
+		new Date().getFullYear()
+	);
 	const [ currentMonth, setCurrentMonth ] = useState( new Date().getMonth() );
 	const [ modalEvent, setModalEvent ] = useState( null );
 	const [ isLoading, setIsLoading ] = useState( true );
@@ -123,7 +127,11 @@ function EventiveCalendar() {
 		// Add cells for each day of the month
 		for ( let day = 1; day <= daysInMonth; day++ ) {
 			const eventsForDay = events.filter( ( event ) => {
-				if ( event.is_virtual && ! event.start_time && ! event.end_time ) {
+				if (
+					event.is_virtual &&
+					! event.start_time &&
+					! event.end_time
+				) {
 					return true;
 				}
 				const eventDate = new Date( event.start_time );
@@ -302,8 +310,7 @@ function EventiveCalendar() {
 													className="tag-button film-tag"
 													style={ {
 														background:
-															tag.color ||
-															'#ccc',
+															tag.color || '#ccc',
 														color: getAccessibleTextColor(
 															tag.color || '#ccc'
 														),

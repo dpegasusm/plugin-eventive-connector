@@ -25,17 +25,27 @@ export default function Edit( { attributes, setAttributes } ) {
 					<TextControl
 						label={ __( 'Film ID', 'eventive' ) }
 						value={ attributes.filmId }
-						onChange={ ( value ) => setAttributes( { filmId: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { filmId: value } )
+						}
 						help={ __( 'Eventive film ID to display', 'eventive' ) }
 					/>
 					<TextControl
 						label={ __( 'Event ID', 'eventive' ) }
 						value={ attributes.eventId }
-						onChange={ ( value ) => setAttributes( { eventId: value } ) }
-						help={ __( 'Eventive event ID to display', 'eventive' ) }
+						onChange={ ( value ) =>
+							setAttributes( { eventId: value } )
+						}
+						help={ __(
+							'Eventive event ID to display',
+							'eventive'
+						) }
 					/>
 					<p className="components-base-control__help">
-						{ __( 'Provide either a Film ID or Event ID (not both).', 'eventive' ) }
+						{ __(
+							'Provide either a Film ID or Event ID (not both).',
+							'eventive'
+						) }
 					</p>
 				</PanelBody>
 			</InspectorControls>
@@ -44,17 +54,29 @@ export default function Edit( { attributes, setAttributes } ) {
 				<div className="eventive-block-placeholder">
 					<h3>{ __( 'Eventive Single Film', 'eventive' ) }</h3>
 					<p>
-						{ __( 'Film or event details will display on the frontend.', 'eventive' ) }
+						{ __(
+							'Film or event details will display on the frontend.',
+							'eventive'
+						) }
 					</p>
 					{ attributes.filmId && (
-						<p><strong>{ __( 'Film ID:', 'eventive' ) }</strong> { attributes.filmId }</p>
+						<p>
+							<strong>{ __( 'Film ID:', 'eventive' ) }</strong>{ ' ' }
+							{ attributes.filmId }
+						</p>
 					) }
 					{ attributes.eventId && (
-						<p><strong>{ __( 'Event ID:', 'eventive' ) }</strong> { attributes.eventId }</p>
+						<p>
+							<strong>{ __( 'Event ID:', 'eventive' ) }</strong>{ ' ' }
+							{ attributes.eventId }
+						</p>
 					) }
 					{ ! attributes.filmId && ! attributes.eventId && (
 						<p className="warning">
-							{ __( '⚠️ Please provide either a Film ID or Event ID in the block settings.', 'eventive' ) }
+							{ __(
+								'⚠️ Please provide either a Film ID or Event ID in the block settings.',
+								'eventive'
+							) }
 						</p>
 					) }
 				</div>

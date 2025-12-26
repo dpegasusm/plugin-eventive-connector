@@ -11,7 +11,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		'.wp-block-eventive-events-week'
 	);
 
-	if ( blocks.length === 0 ) return;
+	if ( blocks.length === 0 ) {
+		return;
+	}
 
 	// Ensure Eventive API is loaded
 	if ( window.Eventive && window.Eventive.on ) {
@@ -71,7 +73,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 	function renderWeeklyTable( block, events, startDate ) {
 		const grid = block.querySelector( '.weekly-calendar-grid' );
-		if ( ! grid ) return;
+		if ( ! grid ) {
+			return;
+		}
 
 		const endDate = new Date( startDate );
 		endDate.setDate( endDate.getDate() + 6 );
@@ -125,12 +129,13 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 			html += '<td><div class="day-events">';
 			dayEvents.forEach( ( event ) => {
-				const time = new Date(
-					event.start_time
-				).toLocaleTimeString( undefined, {
-					hour: 'numeric',
-					minute: '2-digit',
-				} );
+				const time = new Date( event.start_time ).toLocaleTimeString(
+					undefined,
+					{
+						hour: 'numeric',
+						minute: '2-digit',
+					}
+				);
 				html += `<div class="event-item" data-event-id="${ event.id }">
 					<div class="event-time">${ time }</div>
 					<div class="event-name">${ event.name }</div>
@@ -156,15 +161,17 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 	function updateWeekRangeDisplay( block, startDate ) {
 		const rangeSpan = block.querySelector( '#current-week-range' );
-		if ( ! rangeSpan ) return;
+		if ( ! rangeSpan ) {
+			return;
+		}
 
 		const endDate = new Date( startDate );
 		endDate.setDate( endDate.getDate() + 6 );
 
-		rangeSpan.textContent = `${ startDate.toLocaleDateString(
-			undefined,
-			{ month: 'short', day: 'numeric' }
-		) } - ${ endDate.toLocaleDateString( undefined, {
+		rangeSpan.textContent = `${ startDate.toLocaleDateString( undefined, {
+			month: 'short',
+			day: 'numeric',
+		} ) } - ${ endDate.toLocaleDateString( undefined, {
 			month: 'short',
 			day: 'numeric',
 			year: 'numeric',
@@ -219,7 +226,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const modal = block.querySelector( '.event-modal' );
 		const modalDetails = block.querySelector( '#modal-details' );
 
-		if ( ! modal || ! modalDetails ) return;
+		if ( ! modal || ! modalDetails ) {
+			return;
+		}
 
 		const time = new Date( event.start_time ).toLocaleTimeString(
 			undefined,
@@ -234,7 +243,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			<p><strong>Time:</strong> ${ time }</p>
 			${ event.venue ? `<p><strong>Venue:</strong> ${ event.venue.name }</p>` : '' }
 			${ event.description ? `<p>${ event.description }</p>` : '' }
-			<button class="eventive-button" data-eventive-event-id="${ event.id }">Buy Tickets</button>
+			<button class="eventive-button" data-eventive-event-id="${
+				event.id
+			}">Buy Tickets</button>
 		`;
 
 		modal.style.display = 'block';
