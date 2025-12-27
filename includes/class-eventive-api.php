@@ -54,25 +54,25 @@ class Eventive_API {
 	public $api_endpoint_event_buckets = 'event_buckets';
 
 	/**
-	 * Endpoint for active event buckets.
-	 *
-	 * @access public
-	 * @var string
-	 */
-	public $api_endpoint_event_buckets_active = 'event_buckets/active';
-
-	/**
 	 * Endpoint for event bucket variable endpoints.
 	 *
 	 * @access public
 	 * @var string
 	 */
 	public $api_endpoint_event_bucket_endpoints = array(
-		'tags' => array(
-			'events',
-			'films',
-		),
+		'tags',
 		'active',
+	);
+
+	/**
+	 * Endpoint for event tag buckets.
+	 *
+	 * @access public
+	 * @var string
+	 */
+	public $api_endpoint_event_bucket_tags = array(
+		'events',
+		'films',
 	);
 
 	/**
@@ -181,18 +181,17 @@ class Eventive_API {
 		}
 
 		// Set the API endpoints with the mandatory query args.
-		$this->api_endpoint_event_buckets        = apply_filters( 'api_endpoint_event_buckets', esc_attr( $this->api_endpoint_event_buckets ) );
-		$this->api_endpoint_event_buckets_active = apply_filters( 'api_endpoint_event_buckets_active', esc_attr( $this->api_endpoint_event_buckets_active ) );
-		$this->api_endpoint_events               = apply_filters( 'api_endpoint_events', esc_attr( $this->api_endpoint_events ) );
-		$this->api_endpoint_films                = apply_filters( 'api_endpoint_films', esc_attr( $this->api_endpoint_films ) );
-		$this->api_endpoint_item_buckets         = apply_filters( 'api_endpoint_item_buckets', esc_attr( $this->api_endpoint_item_buckets ) );
-		$this->api_endpoint_items                = apply_filters( 'api_endpoint_items', esc_attr( $this->api_endpoint_items ) );
-		$this->api_endpoint_ledger               = apply_filters( 'api_endpoint_ledger', esc_attr( $this->api_endpoint_ledger ) );
-		$this->api_endpoint_order                = apply_filters( 'api_endpoint_order', esc_attr( $this->api_endpoint_order ) );
-		$this->api_endpoint_passes               = apply_filters( 'api_endpoint_passes', esc_attr( $this->api_endpoint_passes ) );
-		$this->api_endpoint_people               = apply_filters( 'api_endpoint_people', esc_attr( $this->api_endpoint_people ) );
-		$this->api_endpoint_tags                 = apply_filters( 'api_endpoint_tags', esc_attr( $this->api_endpoint_tags ) );
-		$this->api_endpoint_tickets              = apply_filters( 'api_endpoint_tickets', esc_attr( $this->api_endpoint_tickets ) );
+		$this->api_endpoint_event_buckets = apply_filters( 'api_endpoint_event_buckets', esc_attr( $this->api_endpoint_event_buckets ) );
+		$this->api_endpoint_events        = apply_filters( 'api_endpoint_events', esc_attr( $this->api_endpoint_events ) );
+		$this->api_endpoint_films         = apply_filters( 'api_endpoint_films', esc_attr( $this->api_endpoint_films ) );
+		$this->api_endpoint_item_buckets  = apply_filters( 'api_endpoint_item_buckets', esc_attr( $this->api_endpoint_item_buckets ) );
+		$this->api_endpoint_items         = apply_filters( 'api_endpoint_items', esc_attr( $this->api_endpoint_items ) );
+		$this->api_endpoint_ledger        = apply_filters( 'api_endpoint_ledger', esc_attr( $this->api_endpoint_ledger ) );
+		$this->api_endpoint_order         = apply_filters( 'api_endpoint_order', esc_attr( $this->api_endpoint_order ) );
+		$this->api_endpoint_passes        = apply_filters( 'api_endpoint_passes', esc_attr( $this->api_endpoint_passes ) );
+		$this->api_endpoint_people        = apply_filters( 'api_endpoint_people', esc_attr( $this->api_endpoint_people ) );
+		$this->api_endpoint_tags          = apply_filters( 'api_endpoint_tags', esc_attr( $this->api_endpoint_tags ) );
+		$this->api_endpoint_tickets       = apply_filters( 'api_endpoint_tickets', esc_attr( $this->api_endpoint_tickets ) );
 	}
 
 	/**
@@ -214,18 +213,17 @@ class Eventive_API {
 	 */
 	public function get_api_endpoints() {
 		return array(
-			'event_buckets'        => $this->api_endpoint_event_buckets,
-			'event_buckets_active' => $this->api_endpoint_event_buckets_active,
-			'events'               => $this->api_endpoint_events,
-			'films'                => $this->api_endpoint_films,
-			'item_buckets'         => $this->api_endpoint_item_buckets,
-			'items'                => $this->api_endpoint_items,
-			'ledger'               => $this->api_endpoint_ledger,
-			'order'                => $this->api_endpoint_order,
-			'passes'               => $this->api_endpoint_passes,
-			'people'               => $this->api_endpoint_people,
-			'tags'                 => $this->api_endpoint_tags,
-			'tickets'              => $this->api_endpoint_tickets,
+			'event_buckets' => $this->api_endpoint_event_buckets,
+			'events'        => $this->api_endpoint_events,
+			'films'         => $this->api_endpoint_films,
+			'item_buckets'  => $this->api_endpoint_item_buckets,
+			'items'         => $this->api_endpoint_items,
+			'ledger'        => $this->api_endpoint_ledger,
+			'order'         => $this->api_endpoint_order,
+			'passes'        => $this->api_endpoint_passes,
+			'people'        => $this->api_endpoint_people,
+			'tags'          => $this->api_endpoint_tags,
+			'tickets'       => $this->api_endpoint_tickets,
 		);
 	}
 
@@ -263,6 +261,11 @@ class Eventive_API {
 						'default'           => '',
 						'sanitize_callback' => 'sanitize_text_field',
 						'validate_callback' => array( $this, 'validate_event_bucket_endpoint' ),
+					),
+					'tag_point' => array(
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => array( $this, 'validate_event_bucket_tag_point' ),
 					),
 				),
 			)
@@ -480,7 +483,7 @@ class Eventive_API {
 
 	/**
 	 * Validate the endpoint parameter for event buckets.
-	 * 
+	 *
 	 * @param string $param The endpoint parameter to validate.
 	 * @return bool True if valid, false otherwise.
 	 */
@@ -489,11 +492,30 @@ class Eventive_API {
 		$valid_endpoints = $this->api_endpoint_event_bucket_endpoints;
 
 		// Check if the parameter is valid against the keys in the valid array.
-		if ( array_key_exists( $param, $valid_endpoints ) ) {
+		if ( in_array( $param, $valid_endpoints, true ) ) {
 			return true;
 		}
 
 		// Invalid endpoint.
+		return false;
+	}
+
+	/**
+	 * Validate the tag_point parameter for event buckets.
+	 *
+	 * @param string $param The tag_point parameter to validate.
+	 * @return bool True if valid, false otherwise.
+	 */
+	public function validate_event_bucket_tag_point( $param ) {
+		// Get the valid tag points.
+		$valid_tag_points = $this->api_endpoint_event_bucket_tags;
+
+		// Check if the parameter is valid against the keys in the valid array.
+		if ( in_array( $param, $valid_tag_points, true ) ) {
+			return true;
+		}
+
+		// Invalid tag point.
 		return false;
 	}
 
@@ -617,18 +639,23 @@ class Eventive_API {
 		$bucket_id = $request->get_param( 'bucket_id' );
 		$tag_id    = $request->get_param( 'tag_id' );
 		$endpoint  = $request->get_param( 'endpoint' );
+		$tag_point = $request->get_param( 'tag_point' );
 
 		// Modify the endpoint based on parameters.
 		switch ( $endpoint ) {
 			case 'tags':
 				if ( ! empty( $tag_id ) ) {
-					$api_url .= '/tags/' . absint( $tag_id ) . '/' . $endpoint;
+					$api_url .= '/tags/' . absint( $tag_id ) . '/' . $tag_point;
 				}
 				break;
 			case 'active':
-				$api_url = $api_url . $this->api_endpoint_event_buckets_active;
+				$api_url = $api_url . '/active';
 				break;
 			default:
+				// if the bucket is set use it.
+				if ( ! empty( $bucket_id ) && is_int( $bucket_id ) && absint( $bucket_id ) > 0 ) {
+					$api_url .= '/' . absint( $bucket_id );
+				}
 				break;
 		}
 
