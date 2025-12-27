@@ -24,6 +24,9 @@ class Eventive_Settings {
 	 * @return void
 	 */
 	public function init() {
+		// Global the sync object.
+		global $eventive_sync;
+
 		// Register the Admin menu item for the settings page.
 		add_action( 'admin_menu', array( $this, 'eventive_admin_menu' ) );
 
@@ -31,7 +34,7 @@ class Eventive_Settings {
 		add_action( 'admin_init', array( $this, 'eventive_register_settings' ) );
 
 		// Register AJAX handler for syncing events.
-		add_action( 'wp_ajax_sync_eventive_events', array( $this, 'sync_eventive_events_with_wordpress' ) );
+		add_action( 'wp_ajax_sync_eventive_events', array( $eventive_sync, 'sync_eventive_events_with_wordpress' ) );
 
 		// Enqueue scripts for the Eventive options page.
 		add_action( 'admin_enqueue_scripts', array( $this, 'eventive_enqueue_admin_scripts' ) );
@@ -144,7 +147,7 @@ class Eventive_Settings {
 			<!-- Eventive Events Button -->
 			<form method="post" action="">
 				<?php wp_nonce_field( 'eventive_sync_events', 'eventive_sync_events_nonce' ); ?>
-				<button type="submit" name="eventive_sync_events" class="button button-primary">
+				<button type="submit" name="eventive_sync_events" class="button button-secondary">
 					<?php esc_html_e( 'Sync with Eventive', 'eventive' ); ?>
 				</button>
 				<br>
