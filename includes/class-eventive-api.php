@@ -488,8 +488,8 @@ class Eventive_API {
 		// Get the valid endpoints.
 		$valid_endpoints = $this->api_endpoint_event_bucket_endpoints;
 
-		// Check if the parameter is valid.
-		if ( in_array( $param, $valid_endpoints, true ) ) {
+		// Check if the parameter is valid against the keys in the valid array.
+		if ( array_key_exists( $param, $valid_endpoints ) ) {
 			return true;
 		}
 
@@ -611,7 +611,7 @@ class Eventive_API {
 	 */
 	public function get_api_event_buckets( $request ) {
 		// Prepare the endpoint URL.
-		$api_url = esc_url_raw( $this->api_url_base . $this->api_endpoint_event_buckets );
+		$api_url = $this->api_url_base . $this->api_endpoint_event_buckets;
 
 		// get the parameters.
 		$bucket_id = $request->get_param( 'bucket_id' );
@@ -626,7 +626,7 @@ class Eventive_API {
 				}
 				break;
 			case 'active':
-				$api_url = $this->api_endpoint_event_buckets_active;
+				$api_url = $api_url . $this->api_endpoint_event_buckets_active;
 				break;
 			default:
 				break;
@@ -637,7 +637,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		$response = $this->eventive_make_api_call( $api_url, $response_body, $args );
+		$response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
 		return rest_ensure_response( $response );
 	}
 
@@ -649,7 +649,7 @@ class Eventive_API {
 	 */
 	public function get_api_events( $request ) {
 		// Build the endpoint URL.
-		$api_url = esc_url_raw( $this->api_url_base . $this->api_endpoint_events );
+		$api_url = $this->api_url_base . $this->api_endpoint_events;
 
 		// get the parameters.
 		$event_id = $request->get_param( 'event_id' );
@@ -664,7 +664,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		$response = $this->eventive_make_api_call( $api_url, $response_body, $args );
+		$response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
 		return rest_ensure_response( $response );
 	}
 
@@ -676,7 +676,7 @@ class Eventive_API {
 	 */
 	public function get_api_films( $request ) {
 		// Build the endpoint URL.
-		$api_url = esc_url_raw( $this->api_url_base . $this->api_endpoint_films );
+		$api_url = $this->api_url_base . $this->api_endpoint_films;
 
 		// Get the parameters.
 		$film_id = $request->get_param( 'film_id' );
@@ -691,7 +691,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		$response = $this->eventive_make_api_call( $api_url, $response_body, $args );
+		$response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
 		return rest_ensure_response( $response );
 	}
 
@@ -703,7 +703,7 @@ class Eventive_API {
 	 */
 	public function get_api_item_buckets( $request ) {
 		// Build the endpoint URL.
-		$api_url = esc_url_raw( $this->api_url_base . $this->api_endpoint_item_buckets );
+		$api_url = $this->api_url_base . $this->api_endpoint_item_buckets;
 
 		// Get the parameters.
 		$item_bucket_id = $request->get_param( 'item_bucket_id' );
@@ -718,7 +718,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		$response = $this->eventive_make_api_call( $api_url, $response_body, $args );
+		$response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
 		return rest_ensure_response( $response );
 	}
 
@@ -730,7 +730,7 @@ class Eventive_API {
 	 */
 	public function get_api_items( $request ) {
 		// Build the endpoint URL.
-		$api_url = esc_url_raw( $this->api_url_base . $this->api_endpoint_items );
+		$api_url = $this->api_url_base . $this->api_endpoint_items;
 
 		// Get the parameters.
 		$item_id = $request->get_param( 'item_id' );
@@ -745,7 +745,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		$response = $this->eventive_make_api_call( $api_url, $response_body, $args );
+		$response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
 		return rest_ensure_response( $response );
 	}
 
@@ -757,14 +757,14 @@ class Eventive_API {
 	 */
 	public function get_api_ledger( $request ) {
 		// Build the endpoint URL.
-		$api_url = esc_url_raw( $this->api_url_base . $this->api_endpoint_ledger );
+		$api_url = $this->api_url_base . $this->api_endpoint_ledger;
 
 		// Prepare other parameters.
 		$response_body = '';
 		$args          = array();
 
 		// Make the API call.
-		$response = $this->eventive_make_api_call( $api_url, $response_body, $args );
+		$response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
 		return rest_ensure_response( $response );
 	}
 
@@ -776,7 +776,7 @@ class Eventive_API {
 	 */
 	public function get_api_order( $request ) {
 		// Build the endpoint URL.
-		$api_url = esc_url_raw( $this->api_url_base . $this->api_endpoint_order );
+		$api_url = $this->api_url_base . $this->api_endpoint_order;
 
 		// Get the parameters.
 		$order_id = $request->get_param( 'order_id' );
@@ -791,7 +791,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		$response = $this->eventive_make_api_call( $api_url, $response_body, $args );
+		$response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
 		return rest_ensure_response( $response );
 	}
 
@@ -803,7 +803,7 @@ class Eventive_API {
 	 */
 	public function get_api_passes( $request ) {
 		// Build the endpoint URL.
-		$api_url = esc_url_raw( $this->api_url_base . $this->api_endpoint_passes );
+		$api_url = $this->api_url_base . $this->api_endpoint_passes;
 
 		// Get the parameters.
 		$pass_id = $request->get_param( 'pass_id' );
@@ -818,7 +818,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		$response = $this->eventive_make_api_call( $api_url, $response_body, $args );
+		$response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
 		return rest_ensure_response( $response );
 	}
 
@@ -830,7 +830,7 @@ class Eventive_API {
 	 */
 	public function get_api_people( $request ) {
 		// Build the endpoint URL.
-		$api_url = esc_url_raw( $this->api_url_base . $this->api_endpoint_people );
+		$api_url = $this->api_url_base . $this->api_endpoint_people;
 
 		// Get the parameters.
 		$person_id = $request->get_param( 'person_id' );
@@ -845,7 +845,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		$response = $this->eventive_make_api_call( $api_url, $response_body, $args );
+		$response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
 		return rest_ensure_response( $response );
 	}
 
@@ -857,7 +857,7 @@ class Eventive_API {
 	 */
 	public function get_api_tags( $request ) {
 		// Build the endpoint URL.
-		$api_url = esc_url_raw( $this->api_url_base . $this->api_endpoint_tags );
+		$api_url = $this->api_url_base . $this->api_endpoint_tags;
 
 		// Get the parameters.
 		$tag_id = $request->get_param( 'tag_id' );
@@ -872,7 +872,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		$response = $this->eventive_make_api_call( $api_url, $response_body, $args );
+		$response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
 		return rest_ensure_response( $response );
 	}
 
@@ -884,7 +884,7 @@ class Eventive_API {
 	 */
 	public function get_api_tickets( $request ) {
 		// Build the endpoint URL.
-		$api_url = esc_url_raw( $this->api_url_base . $this->api_endpoint_tickets );
+		$api_url = $this->api_url_base . $this->api_endpoint_tickets;
 
 		// Get the parameters.
 		$ticket_id = $request->get_param( 'ticket_id' );
@@ -899,7 +899,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		$response = $this->eventive_make_api_call( $api_url, $response_body, $args );
+		$response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
 		return rest_ensure_response( $response );
 	}
 }
