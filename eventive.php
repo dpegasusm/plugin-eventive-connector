@@ -71,7 +71,7 @@ if ( ! empty( $api_key ) ) {
 	// Load the admin dashboard widget only in admin.
 	if ( is_admin() ) {
 		// Load the admin settings page.
-		require_once EVENTIVE_PLUGIN_PATH . 'admin/class-eventive-dashboard.php';
+		require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-dashboard.php';
 		$eventive_dashboard = new Eventive_Dashboard();
 		$eventive_dashboard->init();
 	}

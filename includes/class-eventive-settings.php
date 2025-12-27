@@ -63,8 +63,8 @@ class Eventive_Settings {
 
 		// Enqueue your custom script here.
 		wp_enqueue_script(
-			'eventive-options-script',
-			EVENTIVE_PLUGIN . 'assets/js/eventive-options.js',
+			'eventive-settings-script',
+			EVENTIVE_PLUGIN . 'assets/js/eventive-settings.js',
 			array( 'jquery' ),
 			EVENTIVE_CURRENT_VERSION,
 			true
@@ -81,7 +81,7 @@ class Eventive_Settings {
 		add_settings_section( 'eventive_info_section', __( 'Eventive Configuration Settings', 'eventive' ), array( $this, 'eventive_admin_options_section_info' ), 'eventive_options' );
 
 		// Add the Navbar settings.
-		register_setting( 'eventive_options', 'eventive_navbar_box_title', 'sanitize_text_field' );
+		register_setting( 'eventive_options', 'eventive_secret_key', 'sanitize_text_field' );
 
 		// Fields to be added to the Navbar section.
 		add_settings_field(
@@ -97,29 +97,23 @@ class Eventive_Settings {
 			)
 		);
 
-		// Get the value of the secret key and if its set then add the event bucket id field.
-		$secret_key = get_option( 'eventive_secret_key', '' );
+		// Add the Event Bucket ID field.
+		register_setting( 'eventive_options', 'eventive_event_bucket_id', 'sanitize_text_field' );
 
-		// Check for the secret key before adding the event bucket id field.
-		if ( ! empty( $secret_key ) ) {
-			// Add the Event Bucket ID field.
-			register_setting( 'eventive_options', 'eventive_navbar_box_description', 'sanitize_text_field' );
-
-			// add the settings field.
-			add_settings_field(
-				'eventive_event_bucket_id',
-				esc_html__( 'Event Default Bucket ID', 'eventive' ),
-				array( $this, 'eventive_dropdown_callback' ),
-				'eventive_options',
-				'eventive_info_section',
-				array(
-					'label_for' => 'eventive_event_bucket_id',
-					'label'     => esc_html__( 'Default bucket to use inside eventive. This can be overridden on a page by page basis.', 'eventive' ),
-					'default'   => '',
-					'values'    => array(), // This will be populated via JS on the front.
-				)
-			);
-		}
+		// add the settings field.
+		add_settings_field(
+			'eventive_event_bucket_id',
+			esc_html__( 'Event Default Bucket ID', 'eventive' ),
+			array( $this, 'eventive_dropdown_callback' ),
+			'eventive_options',
+			'eventive_info_section',
+			array(
+				'label_for' => 'eventive_event_bucket_id',
+				'label'     => esc_html__( 'Default bucket to use inside eventive. This can be overridden on a page by page basis.', 'eventive' ),
+				'default'   => '',
+				'values'    => array(), // This will be populated via JS on the front.
+			)
+		);
 	}
 
 	/**
