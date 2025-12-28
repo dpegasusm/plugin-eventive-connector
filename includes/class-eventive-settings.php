@@ -68,7 +68,7 @@ class Eventive_Settings {
 		wp_enqueue_script(
 			'eventive-settings-script',
 			EVENTIVE_PLUGIN . 'assets/js/eventive-settings.js',
-			array( 'jquery' ),
+			array( 'jquery', 'wp-api-fetch' ),
 			EVENTIVE_CURRENT_VERSION,
 			true
 		);
@@ -297,7 +297,7 @@ class Eventive_Settings {
 		$value = get_option( $field, $default );
 
 		// Start the dropdown.
-		echo '<select name="' . esc_attr( $field ) . '" id="' . esc_attr( $field ) . '" style="width: 100%;">';
+		echo '<select name="' . esc_attr( $field ) . '" id="' . esc_attr( $field ) . '" data-selected-value="' . esc_attr( $value ) . '" style="width: 100%;">';
 		echo '<option value="">' . esc_html__( 'Select an Option', 'eventive' ) . '</option>';
 
 		// Loop through the pages and add them as options.

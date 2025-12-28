@@ -38,8 +38,8 @@ class Eventive {
 	 */
 	public function eventive_admin_init() {
 		// Get the API secret key and bucket ID.
-		$api_secret_key = get_option( 'eventive_secret_key', '' );
-		$api_default_bucket_id  = get_option( 'eventive_default_bucket_id', '' );
+		$api_secret_key        = get_option( 'eventive_secret_key', '' );
+		$api_default_bucket_id = get_option( 'eventive_default_bucket_id', '' );
 
 		// Display a notice if we dont have an API key or bucket ID.
 		if ( empty( $api_secret_key ) ) {
@@ -51,7 +51,7 @@ class Eventive {
 					</div>';
 				}
 			);
-		} else if ( empty( $api_default_bucket_id ) ) {
+		} elseif ( empty( $api_default_bucket_id ) ) {
 			add_action(
 				'admin_notices',
 				function () {

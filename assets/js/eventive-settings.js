@@ -29,25 +29,15 @@ jQuery( document ).ready( function ( $ ) {
 			'<option value="">Loading buckets...</option>'
 		);
 
-		// Fetch buckets using native fetch API
-		const apiUrl = EventiveData.restUrl + '/event_buckets?eventive_nonce=' + EventiveData.eventNonce;
-
-		fetch( apiUrl, {
+		// Fetch buckets using WordPress REST API
+		wp.apiFetch( {
+			path: '/eventive/v1/event_buckets?eventive_nonce=' + EventiveData.eventNonce,
 			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-			},
 		} )
 			.then( function ( response ) {
-				if ( ! response.ok ) {
-					throw new Error( 'HTTP error ' + response.status );
-				}
-				return response.json();
-			} )
-			.then( function ( data ) {
 				// Response from WP REST API
-				if ( data && data.event_buckets && data.event_buckets.length > 0 ) {
-					populateBucketDropdown( data.event_buckets );
+				if ( response && response.event_buckets && response.event_buckets.length > 0 ) {
+					populateBucketDropdown( response.event_buckets );
 				} else {
 					disableBucketDropdown( 'No buckets found' );
 				}
@@ -64,12 +54,12 @@ jQuery( document ).ready( function ( $ ) {
 	 * Populate the bucket dropdown with options
 	 */
 	function populateBucketDropdown( buckets ) {
-		const currentValue = $bucketDropdown.data( 'current-value' ) || '';
+		const selectedValue = $bucketDropdown.attr( 'data-selected-value' ) || '';
 
 		// Build options HTML
 		let optionsHtml = '<option value="">Select a bucket</option>';
 		buckets.forEach( function ( bucket ) {
-			const selected = bucket.id === currentValue ? ' selected' : '';
+			const selected = bucket.id === selectedValue ? ' selected' : '';
 			optionsHtml +=
 				'<option value="' +
 				bucket.id +
@@ -97,12 +87,6 @@ jQuery( document ).ready( function ( $ ) {
 	 * Initialize bucket dropdown on page load
 	 */
 	function initBucketDropdown() {
-		// Store current value for restoration after fetch
-		const currentValue = $bucketDropdown.val();
-		if ( currentValue ) {
-			$bucketDropdown.data( 'current-value', currentValue );
-		}
-
 		// Check if API key is available from localization
 		if (
 			typeof EventiveData !== 'undefined' &&

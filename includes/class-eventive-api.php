@@ -182,8 +182,8 @@ class Eventive_API {
 		$this->api_cache_duration = apply_filters( 'eventive_api_cache_duration', 3600 ); // 1 hour
 
 		// Get the required Query Args for the API from the options.
-		$this->api_secret_key = get_option( 'eventive_secret_key', '' );
-		$this->api_default_bucket_id  = get_option( 'eventive_default_bucket_id', '' );
+		$this->api_secret_key        = get_option( 'eventive_secret_key', '' );
+		$this->api_default_bucket_id = get_option( 'eventive_default_bucket_id', '' );
 
 		// Set the API endpoints with the mandatory query args.
 		$this->api_endpoint_event_buckets = apply_filters( 'api_endpoint_event_buckets', esc_attr( $this->api_endpoint_event_buckets ) );
@@ -256,7 +256,7 @@ class Eventive_API {
 
 	/**
 	 * Return the localization data all in one place.
-	 * 
+	 *
 	 * @access public
 	 * @return array The localization data.
 	 */
@@ -537,6 +537,11 @@ class Eventive_API {
 	 * @return bool True if valid, false otherwise.
 	 */
 	public function validate_event_bucket_endpoint( $param ) {
+		// Empty is ok.
+		if ( empty( $param ) ) {
+			return true;
+		}
+
 		// Get the valid endpoints.
 		$valid_endpoints = $this->api_endpoint_event_bucket_endpoints;
 
@@ -556,6 +561,11 @@ class Eventive_API {
 	 * @return bool True if valid, false otherwise.
 	 */
 	public function validate_event_bucket_tag_point( $param ) {
+		// Empty is ok.
+		if ( empty( $param ) ) {
+			return true;
+		}
+
 		// Get the valid tag points.
 		$valid_tag_points = $this->api_endpoint_event_bucket_tags;
 
@@ -576,6 +586,11 @@ class Eventive_API {
 	 * @return bool True if valid, false otherwise.
 	 */
 	public function validate_ticket_endpoint( $param ) {
+		// Empty is ok.
+		if ( empty( $param ) ) {
+			return true;
+		}
+
 		// Get the valid endpoints.
 		$valid_endpoints = $this->api_endpoint_ticket_addons;
 
