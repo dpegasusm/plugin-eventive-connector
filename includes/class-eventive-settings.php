@@ -96,6 +96,29 @@ class Eventive_Settings {
 		// Add the Navbar settings - with sanitize callback.
 		register_setting(
 			'eventive_options',
+			'eventive_public_key',
+			array(
+				'sanitize_callback' => array( $this, 'eventive_sanitize_public_key' ),
+			)
+		);
+
+		// Fields to be added to the Navbar section.
+		add_settings_field(
+			'eventive_public_key',
+			esc_html__( 'Event Public Key', 'eventive' ),
+			array( $this, 'eventive_text_field_callback' ),
+			'eventive_options',
+			'eventive_info_section',
+			array(
+				'label_for' => 'eventive_public_key',
+				'label'     => esc_html__( 'The public key used to authenticate with Eventive.', 'eventive' ),
+				'default'   => '',
+			)
+		);
+
+		// Add the Navbar settings - with sanitize callback.
+		register_setting(
+			'eventive_options',
 			'eventive_secret_key',
 			array(
 				'sanitize_callback' => array( $this, 'eventive_sanitize_secret_key' ),
@@ -111,7 +134,7 @@ class Eventive_Settings {
 			'eventive_info_section',
 			array(
 				'label_for' => 'eventive_secret_key',
-				'label'     => esc_html__( 'Title to go in the callout box on the bottom of the nav menu.', 'eventive' ),
+				'label'     => esc_html__( 'The secret key used to authenticate with Eventive.', 'eventive' ),
 				'default'   => '',
 			)
 		);
@@ -326,6 +349,24 @@ class Eventive_Settings {
 	}
 
 	/**
+	 * Sanitize public key on save.
+	 *
+	 * This function runs when the eventive_public_key option is saved.
+	 *
+	 * @param string $value The value being saved.
+	 * @return string Sanitized value.
+	 */
+	public function eventive_sanitize_public_key( $value ) {
+		// Sanitize the input.
+		$sanitized_value = sanitize_text_field( $value );
+
+		// Hook to run custom functions when settings are saved.
+		do_action( 'eventive_api_public_key_settings_saved', 'eventive_public_key', $sanitized_value );
+
+		return $sanitized_value;
+	}
+
+	/**
 	 * Sanitize secret key on save.
 	 *
 	 * This function runs when the eventive_secret_key option is saved.
@@ -338,7 +379,7 @@ class Eventive_Settings {
 		$sanitized_value = sanitize_text_field( $value );
 
 		// Hook to run custom functions when settings are saved.
-		do_action( 'eventive_api_key_settings_saved', 'eventive_secret_key', $sanitized_value );
+		do_action( 'eventive_api_secret_key_settings_saved', 'eventive_secret_key', $sanitized_value );
 
 		return $sanitized_value;
 	}

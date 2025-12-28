@@ -3,13 +3,51 @@
  *
  * Handles loading and displaying Eventive analytics data on the WordPress dashboard.
  *
- * @param $
- * @package
+ * @package Eventive
  * @since 1.0.0
  */
 
-( function ( $ ) {
+( function () {
 	'use strict';
+
+	/**
+	 * Helper to get element by ID.
+	 *
+	 * @param {string} id The element ID.
+	 * @return {HTMLElement|null} The element or null.
+	 */
+	function $( id ) {
+		return document.getElementById( id );
+	}
+
+	/**
+	 * Helper to query selector.
+	 *
+	 * @param {HTMLElement|Document} root The root element.
+	 * @param {string} sel The selector.
+	 * @return {HTMLElement|null} The element or null.
+	 */
+	function bySel( root, sel ) {
+		return ( root || document ).querySelector( sel );
+	}
+
+	/**
+	 * Escape HTML special characters.
+	 *
+	 * @param {string} str The string to escape.
+	 * @return {string} The escaped string.
+	 */
+	function htmlEscape( str ) {
+		return ( str || '' ).replace( /[&<>"']/g, function ( c ) {
+			return {
+				'&': '&amp;',
+				'<': '&lt;',
+				'>': '&gt;',
+				'"': '&quot;',
+				"'": '&#39;'
+			}[ c ];
+		} );
+	}
 
 	/**
 	 * Animate count from start to end value.
@@ -59,83 +97,73 @@
 	 * Load dashboard data from the API.
 	 */
 	function loadDashboardData() {
-		const $container = $( '#eventive-dashboard-widget-content' );
+		const container = $( 'eventive-dashboard-widget-content' );
 
-		if ( ! $container.length ) {
+		if ( ! container ) {
+			return;
+		}
+
+		// Check if wp.apiFetch is available.
+		if ( ! window.wp || ! window.wp.apiFetch ) {
+			container.innerHTML = '<div class="eventive-error"><strong>Error:</strong> WordPress API is not available. Please check your configuration.</div>';
 			return;
 		}
 
 		// Check if EventiveData is available.
-		if ( typeof EventiveData === 'undefined' || ! EventiveData.apiKey || ! EventiveData.apiBase ) {
-			$container.html( `
-				<div class="eventive-error">
-					<strong>Error:</strong> Eventive API credentials are not configured. Please update your settings.
-				</div>
-			` );
+		if ( typeof EventiveData === 'undefined' || ! EventiveData.defaultBucket || ! EventiveData.eventNonce ) {
+			container.innerHTML = '<div class="eventive-error"><strong>Error:</strong> Eventive configuration is missing. Please update your settings.</div>';
 			return;
 		}
 
-		// Build the API URL for charts/overview.
-		const apiUrl = `${ EventiveData.apiBase }charts/overview?event_bucket=${ EventiveData.defaultBucket }`;
+		// Build the API path for charts endpoint.
+		const apiPath = '/eventive/v1/charts?event_bucket=' + encodeURIComponent( EventiveData.defaultBucket ) + '&eventive_nonce=' + encodeURIComponent( EventiveData.eventNonce );
 
-		// Make the API call using wp.apiFetch with custom URL.
+		// Make the API call using wp.apiFetch.
 		wp.apiFetch( {
-			url: apiUrl,
-			method: 'GET',
-			headers: {
-				'X-API-KEY': EventiveData.apiKey,
-			},
+			path: apiPath,
+			method: 'GET'
 		} )
-			.then( ( data ) => {
+			.then( function ( data ) {
 				// Extract and format data.
 				const totalVolume = data.total_volume ? ( data.total_volume / 100 ).toFixed( 2 ) : '0.00';
 				const totalNetVolume = data.total_net_volume ? ( data.total_net_volume / 100 ).toFixed( 2 ) : '0.00';
 				const totalPaidCount = data.total_paid_count ? parseInt( data.total_paid_count, 10 ) : 0;
 
 				// Build the dashboard HTML.
-				const html = `
-					<div class="eventive-dashboard-container">
-						<div class="eventive-dashboard-box">
-							<strong>Total Volume</strong>
-							<div class="count" data-count="${ totalVolume }">$0</div>
-						</div>
-						<div class="eventive-dashboard-box">
-							<strong>Net Volume</strong>
-							<div class="count" data-count="${ totalNetVolume }">$0</div>
-						</div>
-						<div class="eventive-dashboard-box">
-							<strong>Paid Transactions</strong>
-							<div class="count" data-count="${ totalPaidCount }">0</div>
-						</div>
-					</div>
-					<p style="text-align: center; margin-top: 15px;">
-						<a href="https://admin.eventive.org/" target="_blank" rel="noopener noreferrer" class="button button-primary">
-							View Full Eventive Dashboard
-						</a>
-					</p>
-				`;
+				const html = '<div class="eventive-dashboard-container">' +
+					'<div class="eventive-dashboard-box">' +
+					'<strong>Total Volume</strong>' +
+					'<div class="count" data-count="' + htmlEscape( totalVolume ) + '">$0</div>' +
+					'</div>' +
+					'<div class="eventive-dashboard-box">' +
+					'<strong>Net Volume</strong>' +
+					'<div class="count" data-count="' + htmlEscape( totalNetVolume ) + '">$0</div>' +
+					'</div>' +
+					'<div class="eventive-dashboard-box">' +
+					'<strong>Paid Transactions</strong>' +
+					'<div class="count" data-count="' + htmlEscape( String( totalPaidCount ) ) + '">0</div>' +
+					'</div>' +
+					'</div>' +
+					'<p style="text-align: center; margin-top: 15px;">' +
+					'<a href="https://admin.eventive.org/" target="_blank" rel="noopener noreferrer" class="button button-primary">' +
+					'View Full Eventive Dashboard' +
+					'</a>' +
+					'</p>';
 
-				$container.html( html );
+				container.innerHTML = html;
 
 				// Animate the counts.
-				$container
-					.find( '.eventive-dashboard-box .count' )
-					.each( function () {
-						const $this = $( this );
-						const endValue = parseFloat(
-							$this.attr( 'data-count' )
-						);
-						const isCurrency = $this
-							.parent()
-						.find( 'strong' )
-						.text()
-						.includes( 'Volume' );
+				const countElements = container.querySelectorAll( '.eventive-dashboard-box .count' );
+				countElements.forEach( function ( element ) {
+					const endValue = parseFloat( element.getAttribute( 'data-count' ) );
+					const parentBox = element.closest( '.eventive-dashboard-box' );
+					const strongText = parentBox ? bySel( parentBox, 'strong' ).textContent : '';
+					const isCurrency = strongText.includes( 'Volume' );
 
 					if ( isCurrency ) {
 						// Animate currency values.
 						let startTime = null;
 						const duration = 1500;
-						const element = this;
 
 						function animateCurrency( currentTime ) {
 							if ( ! startTime ) {
@@ -147,46 +175,43 @@
 								1
 							);
 							const currentValue = progress * endValue;
-							element.textContent =
-								formatCurrency( currentValue );
+							element.textContent = formatCurrency( currentValue );
 
 							if ( progress < 1 ) {
-								requestAnimationFrame(
-									animateCurrency
-								);
+								requestAnimationFrame( animateCurrency );
 							}
 						}
 
 						requestAnimationFrame( animateCurrency );
 					} else {
 						// Animate regular counts.
-						animateCount( this, 0, endValue, 1500 );
+						animateCount( element, 0, endValue, 1500 );
 					}
 				} );
 			} )
-			.catch( ( error ) => {
-				console.error( 'Eventive Dashboard Error:', error );
+			.catch( function ( error ) {
+				console.error( '[eventive-dashboard] Error fetching dashboard data:', error && ( error.message || error.status || error ) );
 
-				const errorMessage = error.message || 'Unable to load dashboard data. Please try again later.';
+				const errorMessage = ( error && error.message ) || 'Unable to load dashboard data. Please try again later.';
 
-				$container.html( `
-					<div class="eventive-error">
-						<strong>Connection Error:</strong> ${ errorMessage }
-					</div>
-				` );
+				container.innerHTML = '<div class="eventive-error">' +
+					'<strong>Connection Error:</strong> ' + htmlEscape( errorMessage ) +
+					'</div>';
 			} );
-	}	// Initialize when document is ready.
-	$( document ).ready( function () {
-		// Load dashboard data when the page loads.
-		loadDashboardData();
+	}
 
-		// Reload data when the dashboard widgets are refreshed.
-		$( document ).on(
-			'click',
-			'#eventive_dashboard_widget .handle-actions',
-			function () {
-				setTimeout( loadDashboardData, 500 );
-			}
-		);
-	} );
-} )( jQuery );
+	/**
+	 * Initialize the dashboard widget.
+	 */
+	function initDashboard() {
+		// Load data immediately since wp.apiFetch should be available.
+		loadDashboardData();
+	}
+
+	// Initialize when document is ready.
+	if ( document.readyState === 'loading' ) {
+		document.addEventListener( 'DOMContentLoaded', initDashboard, { once: true } );
+	} else {
+		initDashboard();
+	}
+} )();

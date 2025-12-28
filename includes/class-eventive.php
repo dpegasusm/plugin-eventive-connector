@@ -39,16 +39,26 @@ class Eventive {
 	 */
 	public function eventive_admin_init() {
 		// Get the API secret key and bucket ID.
+		$api_public_key        = get_option( 'eventive_public_key', '' );
 		$api_secret_key        = get_option( 'eventive_secret_key', '' );
 		$api_default_bucket_id = get_option( 'eventive_default_bucket_id', '' );
 
 		// Display a notice if we dont have an API key or bucket ID.
-		if ( empty( $api_secret_key ) ) {
+		if ( empty( $api_public_key ) ) {
 			add_action(
 				'admin_notices',
 				function () {
 					echo '<div class="notice notice-warning is-dismissible">
-						<p><strong>Eventive:</strong> API Key is not set. Please set it in the <a href="' . esc_url( admin_url( 'admin.php?page=eventive_options' ) ) . '">settings page</a> to enable integration.</p>
+						<p><strong>Eventive:</strong> API Public Key is not set. Please set it in the <a href="' . esc_url( admin_url( 'admin.php?page=eventive_options' ) ) . '">settings page</a> to enable integration.</p>
+					</div>';
+				}
+			);
+		} elseif ( empty( $api_secret_key ) ) {
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-warning is-dismissible">
+						<p><strong>Eventive:</strong> API Secret Key is not set. Please set it in the <a href="' . esc_url( admin_url( 'admin.php?page=eventive_options' ) ) . '">settings page</a> to enable integration.</p>
 					</div>';
 				}
 			);

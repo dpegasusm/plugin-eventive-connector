@@ -32,7 +32,14 @@ class Eventive_API {
 	private $api_cache_duration = 3600; // 1 hour.
 
 	/**
-	 * The App API Key in memory.
+	 * The App API Public Key in memory.
+	 *
+	 * @var int $api_public_key
+	 */
+	private $api_public_key = '';
+
+	/**
+	 * The App API Secret Key in memory.
 	 *
 	 * @var int $api_secret_key
 	 */
@@ -182,6 +189,7 @@ class Eventive_API {
 		$this->api_cache_duration = apply_filters( 'eventive_api_cache_duration', 3600 ); // 1 hour
 
 		// Get the required Query Args for the API from the options.
+		$this->api_public_key        = get_option( 'eventive_public_key', '' );
 		$this->api_secret_key        = get_option( 'eventive_secret_key', '' );
 		$this->api_default_bucket_id = get_option( 'eventive_default_bucket_id', '' );
 
@@ -217,8 +225,8 @@ class Eventive_API {
 	 * @access public
 	 * @return string The API secret key.
 	 */
-	public function get_api_key() {
-		return $this->api_secret_key;
+	public function get_api_public_key() {
+		return $this->api_public_key;
 	}
 
 	/**
@@ -263,7 +271,7 @@ class Eventive_API {
 	public function get_api_localization_data() {
 		return array(
 			'apiBase'       => $this->get_api_base(),
-			'apiKey'        => $this->get_api_key(),
+			'apiKey'        => $this->get_api_public_key(),
 			'apiEndpoints'  => $this->get_api_endpoints(),
 			'defaultBucket' => $this->get_api_default_bucket_id(),
 			'restUrl'       => esc_url_raw( rest_url( 'eventive/v1' ) ),
@@ -288,15 +296,15 @@ class Eventive_API {
 				'permission_callback' => array( $this, 'check_api_nonce' ),
 				'args'                => array(
 					'bucket_id' => array(
-						'default'           => 0,
-						'sanitize_callback' => 'absint',
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_text_field',
 						'validate_callback' => function ( $param ) {
 							return is_int( $param ) && $param >= 0;
 						},
 					),
 					'tag_id'    => array(
-						'default'           => 0,
-						'sanitize_callback' => 'absint',
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_text_field',
 						'validate_callback' => function ( $param ) {
 							return is_int( $param ) && $param >= 0;
 						},
@@ -310,6 +318,27 @@ class Eventive_API {
 						'default'           => '',
 						'sanitize_callback' => 'sanitize_text_field',
 						'validate_callback' => array( $this, 'validate_event_bucket_tag_point' ),
+					),
+				),
+			)
+		);
+
+		// Charts rest route.
+		register_rest_route(
+			'eventive/v1',
+			'/charts',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_api_charts' ),
+				'permission_callback' => array( $this, 'check_api_nonce' ),
+				'args'                => array(
+					'event_bucket' => array(
+						'required'          => true,
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => function ( $param ) {
+							return is_string( $param ) && strlen( $param ) > 0;
+						},
 					),
 				),
 			)
@@ -611,7 +640,7 @@ class Eventive_API {
 	 * @param array  $args          Optional. Arguments for the API call.
 	 * @return WP_REST_Response|WP_Error The REST response or a WP_Error object on failure.
 	 */
-	public function eventive_make_api_call( $api_url, $response_body = '', $args = array() ) {
+	public function eventive_make_api_call( $api_url, $response_body = '', $args = array(), $secret = false ) {
 		// Set the default arguments for the API call.
 		$default_args = array(
 			'method'      => 'GET',
@@ -626,8 +655,8 @@ class Eventive_API {
 		// Merge the default arguments with the provided arguments.
 		$args = wp_parse_args( $args, $default_args );
 
-		// Add the API Key to the headers.
-		$args['headers']['x-api-key'] = $this->api_secret_key;
+		// Add the API Key to the headers, use secret if specified.
+		$args['headers']['x-api-key'] = $secret ? $this->api_secret_key : $this->api_public_key;
 
 		// Set the request body.
 		if ( ! empty( $response_body ) ) {
@@ -721,7 +750,7 @@ class Eventive_API {
 		switch ( $endpoint ) {
 			case 'tags':
 				if ( ! empty( $tag_id ) ) {
-					$api_url .= '/tags/' . absint( $tag_id ) . '/' . $tag_point;
+					$api_url .= '/tags/' . sanitize_text_field( $tag_id ) . '/' . sanitize_text_field( $tag_point );
 				}
 				break;
 			case 'active':
@@ -729,8 +758,8 @@ class Eventive_API {
 				break;
 			default:
 				// if the bucket is set use it.
-				if ( ! empty( $bucket_id ) && is_int( $bucket_id ) && absint( $bucket_id ) > 0 ) {
-					$api_url .= '/' . absint( $bucket_id );
+				if ( ! empty( $bucket_id ) && is_string( $bucket_id ) && strlen( $bucket_id ) > 0 ) {
+					$api_url .= '/' . sanitize_text_field( $bucket_id );
 				} else {
 					$bucket_refresh = true;
 				}
@@ -752,6 +781,34 @@ class Eventive_API {
 		// Make the API call.
 		return $bucket_response;
 	}
+
+	/**
+	 * Get API Charts
+	 *
+	 * @access public
+	 * @param string $request The request object to extract our data from.
+	 * @return WP_REST_Response|WP_Error The REST response or a WP_Error object on failure.
+	 */
+	public function get_api_charts( $request ) {
+		// Build the endpoint URL.
+		$api_url = $this->api_url_base . 'charts/overview';
+
+		// get the parameters.
+		$bucket_id = $request->get_param( 'event_bucket' );
+
+		// Modify the endpoint based on parameters.
+		if ( ! empty( $bucket_id ) && is_string( $bucket_id ) && strlen( $bucket_id ) > 0 ) {
+			$api_url .= '?event_bucket=' . sanitize_text_field( $bucket_id );
+		}
+
+		// Prepare other parameters.
+		$response_body = '';
+		$args          = array();
+
+		// Make the API call.
+		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, true );
+	}
+
 
 	/**
 	 * Get API Events
