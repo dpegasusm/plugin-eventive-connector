@@ -35,6 +35,9 @@ class Eventive_Settings {
 
 		// Enqueue scripts for the Eventive options page.
 		add_action( 'admin_enqueue_scripts', array( $this, 'eventive_enqueue_admin_scripts' ) );
+
+		// Hook into the settings saved to handle the update of the loader URL from bucket ID.
+		add_action( 'eventive_bucket_id_settings_saved', array( $this, 'eventive_sync_update_loader_url_on_bucket_change' ), 10, 2 );
 	}
 
 	/**
@@ -90,8 +93,14 @@ class Eventive_Settings {
 		// Create the Navbar section.
 		add_settings_section( 'eventive_info_section', __( 'Eventive Configuration Settings', 'eventive' ), array( $this, 'eventive_admin_options_section_info' ), 'eventive_options' );
 
-		// Add the Navbar settings.
-		register_setting( 'eventive_options', 'eventive_secret_key', 'sanitize_text_field' );
+		// Add the Navbar settings - with sanitize callback.
+		register_setting(
+			'eventive_options',
+			'eventive_secret_key',
+			array(
+				'sanitize_callback' => array( $this, 'eventive_sanitize_secret_key' ),
+			)
+		);
 
 		// Fields to be added to the Navbar section.
 		add_settings_field(
@@ -108,7 +117,13 @@ class Eventive_Settings {
 		);
 
 		// Add the Event Bucket ID field.
-		register_setting( 'eventive_options', 'eventive_default_bucket_id', 'sanitize_text_field' );
+		register_setting(
+			'eventive_options',
+			'eventive_default_bucket_id',
+			array(
+				'sanitize_callback' => array( $this, 'eventive_sanitize_bucket_id' ),
+			)
+		);
 
 		// add the settings field.
 		add_settings_field(
@@ -146,7 +161,7 @@ class Eventive_Settings {
 			</form>
 
 			<h2><?php esc_html_e( 'Sync with Eventive', 'eventive' ); ?></h2>
-			<p><?php esc_html_e( 'Click the buttons below to sync the events with Eventive.', 'eventive' ); ?></p>
+			<p><?php esc_html_e( 'Click the buttons below to sync the events with Eventive. This will also refresh the buckets list.', 'eventive' ); ?></p>
 
 			<!-- Eventive Events Button -->
 			<form method="post" action="">
@@ -307,6 +322,70 @@ class Eventive_Settings {
 		// Handle Festival Films Sync.
 		if ( isset( $_POST['eventive_sync_festival_films'] ) && check_admin_referer( 'eventive_sync_festival_films', 'eventive_sync_festival_films_nonce' ) ) {
 			$eventive_sync->sync_films_with_eventive();
+		}
+	}
+
+	/**
+	 * Sanitize secret key on save.
+	 *
+	 * This function runs when the eventive_secret_key option is saved.
+	 *
+	 * @param string $value The value being saved.
+	 * @return string Sanitized value.
+	 */
+	public function eventive_sanitize_secret_key( $value ) {
+		// Sanitize the input.
+		$sanitized_value = sanitize_text_field( $value );
+
+		// Hook to run custom functions when settings are saved.
+		do_action( 'eventive_api_key_settings_saved', 'eventive_secret_key', $sanitized_value );
+
+		return $sanitized_value;
+	}
+
+	/**
+	 * Sanitize bucket ID on save.
+	 *
+	 * This function runs when the eventive_default_bucket_id option is saved.
+	 *
+	 * @param string $value The value being saved.
+	 * @return string Sanitized value.
+	 */
+	public function eventive_sanitize_bucket_id( $value ) {
+		// Sanitize the input.
+		$sanitized_value = sanitize_text_field( $value );
+
+		// Hook to run custom functions when settings are saved.
+		do_action( 'eventive_bucket_id_settings_saved', 'eventive_default_bucket_id', $sanitized_value );
+
+		return $sanitized_value;
+	}
+
+	/**
+	 * Update the loader URL when the bucket ID changes.
+	 *
+	 * @param string $option_name The name of the option being saved.
+	 * @param string $new_value   The new value being saved.
+	 * @return void
+	 */
+	public function eventive_sync_update_loader_url_on_bucket_change( $option_name, $bucket_id ) {
+		// At this point the list of bickets is stored in the option 'eventive_buckets_list'.
+		$buckets_list = get_option( 'eventive_buckets_list', array() );
+
+		// Check that we have buckets.
+		if ( empty( $buckets_list ) || ! is_array( $buckets_list ) ) {
+			return;
+		}
+
+		// Get the loader url for our bucket from the list of buckets that match the bucket we are looking at.
+		foreach ( $buckets as $bucket ) {
+			$id = $bucket['id'] ?? '';
+			if ( $id === $bucket_id ) {
+				$root = $bucket['urls']['root'] ?? '';
+				$loader_url = untrailingslashit( $root ) . '/loader.js';
+				// Update the loader URL option.
+				update_option( 'eventive_default_bucket_root_url', esc_url_raw( $loader_url ) );
+			} 
 		}
 	}
 }

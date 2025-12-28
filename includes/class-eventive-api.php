@@ -698,6 +698,9 @@ class Eventive_API {
 		$endpoint  = $request->get_param( 'endpoint' );
 		$tag_point = $request->get_param( 'tag_point' );
 
+		// if this is a bucket refresh set the flag.
+		$bucket_refresh = false;
+
 		// Modify the endpoint based on parameters.
 		switch ( $endpoint ) {
 			case 'tags':
@@ -712,6 +715,8 @@ class Eventive_API {
 				// if the bucket is set use it.
 				if ( ! empty( $bucket_id ) && is_int( $bucket_id ) && absint( $bucket_id ) > 0 ) {
 					$api_url .= '/' . absint( $bucket_id );
+				} else {
+					$bucket_refresh = true;
 				}
 				break;
 		}
@@ -720,8 +725,16 @@ class Eventive_API {
 		$response_body = '';
 		$args          = array();
 
+		// Make the call.
+		$bucket_response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
+
+		// If this was a bucket refresh, update the buckets list.
+		if ( $bucket_refresh && ! is_wp_error( $bucket_response ) ) {
+			update_option( 'eventive_buckets_list', $bucket_response->get_data() );
+		}
+
 		// Make the API call.
-		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
+		return $bucket_response;
 	}
 
 	/**

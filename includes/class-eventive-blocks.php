@@ -186,8 +186,6 @@ class Eventive_Blocks {
 		foreach ( $blocks_with_views as $script_handle ) {
 			if ( wp_script_is( $script_handle, 'registered' ) ) {
 				// Add the WP REST API script as a dependency.
-				wp_enqueue_script( 'wp-api' );
-
 				wp_localize_script(
 					$script_handle,
 					'EventiveData',

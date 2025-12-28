@@ -29,34 +29,28 @@ jQuery( document ).ready( function ( $ ) {
 			'<option value="">Loading buckets...</option>'
 		);
 
-		// Fetch buckets using native fetch API
-		fetch( EventiveData.apiBase + 'event_buckets', {
-			method: 'GET',
+		// Fetch buckets using jQuery AJAX.
+		$.ajax( {
+			url: EventiveData.apiBase + 'event_buckets',
+			type: 'GET',
+			dataType: 'json',
 			headers: {
 				'x-api-key': apiKey,
-				'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-				'Pragma': 'no-cache',
 			},
-		} )
-			.then( function ( response ) {
-				if ( ! response.ok ) {
-					throw new Error( 'API request failed with status ' + response.status );
-				}
-				return response.json();
-			} )
-			.then( function ( data ) {
+			success: function ( data ) {
 				if ( data && data.event_buckets && data.event_buckets.length > 0 ) {
 					populateBucketDropdown( data.event_buckets );
 				} else {
 					disableBucketDropdown( 'No buckets found' );
 				}
-			} )
-			.catch( function ( error ) {
-				console.error( 'Error fetching event buckets:', error );
+			},
+			error: function ( xhr, status, error ) {
+				console.error( 'Error fetching event buckets:', status, error );
 				disableBucketDropdown(
 					'Error loading buckets. Check API key.'
 				);
-			} );
+			},
+		} );
 	}
 
 	/**
