@@ -377,16 +377,26 @@ class Eventive_Settings {
 			return;
 		}
 
+		// The event buckets are stored in an array inside called 'event_buckets'.
+		if ( isset( $buckets_list['event_buckets'] ) && is_array( $buckets_list['event_buckets'] ) ) {
+			$buckets_list = $buckets_list['event_buckets'];
+		} else {
+			$buckets_list = array();
+		}
+
 		// Get the loader url for our bucket from the list of buckets that match the bucket we are looking at.
 		foreach ( $buckets_list as $bucket ) {
+			// Check if this is the bucket we are looking for.
 			$id = $bucket['id'] ?? '';
 			if ( $id === $bucket_id ) {
+				// Get the root URL and build the loader URL.
 				$root = $bucket['urls']['root'] ?? '';
+				// If we have a root, build the loader URL and save it.
 				if ( ! empty( $root ) ) {
 					$loader_url = untrailingslashit( $root ) . '/loader.js';
 					// Update the loader URL option.
 					update_option( 'eventive_default_bucket_root_url', esc_url_raw( $loader_url ) );
-					break;
+					return;
 				}
 			}
 		}

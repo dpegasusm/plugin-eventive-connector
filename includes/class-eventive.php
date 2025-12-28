@@ -99,7 +99,7 @@ class Eventive {
 
 			// Enqueue your custom script here.
 			wp_enqueue_script(
-				'eventive-loader',
+				'eventive-load-assist',
 				EVENTIVE_PLUGIN . 'assets/js/eventive-loader.js',
 				array( 'jquery', 'eventive-loader' ),
 				EVENTIVE_CURRENT_VERSION,
