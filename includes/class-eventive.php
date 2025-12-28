@@ -29,6 +29,7 @@ class Eventive {
 
 		// Enqueue Eventive dynamic scripts on frontend.
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_eventive_loader_scripts' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_eventive_loader_scripts' ) );
 	}
 
 	/**
@@ -69,7 +70,7 @@ class Eventive {
 	 * @param string $loader_url URL to loader.js.
 	 * @return void
 	 */
-	private function enqueue_eventive_loader_scripts( $loader_url ) {
+	public function enqueue_eventive_loader_scripts( $loader_url ) {
 		wp_enqueue_script(
 			'stripe-v3',
 			'https://js.stripe.com/v3/',
