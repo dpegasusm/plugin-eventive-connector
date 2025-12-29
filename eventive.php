@@ -63,6 +63,11 @@ require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-sync.php';
 $eventive_sync = new Eventive_Sync();
 $eventive_sync->init();
 
+// Load the custom post type functionality.
+require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-post-type.php';
+$eventive_post_type = new Eventive_Post_Type();
+$eventive_post_type->init();
+
 // Check for the API key before loading any functionalty that uses API functionality.
 $api_key = get_option( 'eventive_public_key', '' );
 

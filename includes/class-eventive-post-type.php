@@ -16,23 +16,23 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Eventive_Post_Type Class
  */
 class Eventive_Post_Type {
-    /**
-     * Initialize the custom post type.
-     *
-     * @return void
-     */
-    public function init() {
-        // Register the Eventive custom post type.
-        add_action( 'init', array( $this, 'register_eventive_post_type' ) );
-    }
+	/**
+	 * Initialize the custom post type.
+	 *
+	 * @return void
+	 */
+	public function init() {
+		// Register the Eventive custom post type.
+		add_action( 'init', array( $this, 'register_eventive_post_type' ) );
+	}
 
-    /**
-     * Register the Eventive custom post type.
-     *
-     * @return void
-     */
-    public function register_eventive_post_type() {
-        $labels = array(
+	/**
+	 * Register the Eventive custom post type.
+	 *
+	 * @return void
+	 */
+	public function register_eventive_post_type() {
+		$labels = array(
 			'name'               => _x( 'Films', 'eventive' ),
 			'singular_name'      => _x( 'Film', 'eventive' ),
 			'add_new'            => _x( 'Add New', 'eventive' ),

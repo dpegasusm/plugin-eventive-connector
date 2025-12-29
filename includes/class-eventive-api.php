@@ -369,10 +369,8 @@ class Eventive_API {
 				'args'                => array(
 					'film_id' => array(
 						'default'           => '',
-						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
-							return is_int( $param ) && $param >= 0;
-						},
+						'sanitize_callback' => array( $this, 'sanitize_eventive_id' ),
+						'validate_callback' => array( $this, 'validate_eventive_id' ),
 					),
 				),
 			)
@@ -555,7 +553,7 @@ class Eventive_API {
 
 	/**
 	 * Sanitize the Eventive ID parameter.
-	 * 
+	 *
 	 * @param string $param The Eventive ID parameter to sanitize.
 	 * @return string The sanitized Eventive ID.
 	 */
@@ -669,6 +667,7 @@ class Eventive_API {
 	 * @param string $api_url       The API endpoint to call.
 	 * @param string $response_body Optional. The response body to send with the request.
 	 * @param array  $args          Optional. Arguments for the API call.
+	 * @param bool   $secret        Optional. Whether to use the secret API key. Default false.
 	 * @return WP_REST_Response|WP_Error The REST response or a WP_Error object on failure.
 	 */
 	public function eventive_make_api_call( $api_url, $response_body = '', $args = array(), $secret = false ) {
@@ -840,7 +839,6 @@ class Eventive_API {
 		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, true );
 	}
 
-
 	/**
 	 * Get API Events
 	 *
@@ -876,15 +874,20 @@ class Eventive_API {
 	 * @return WP_REST_Response|WP_Error The REST response or a WP_Error object on failure.
 	 */
 	public function get_api_films( $request ) {
-		// Build the endpoint URL.
-		$api_url = $this->api_url_base . $this->api_endpoint_films;
-
 		// Get the parameters.
-		$film_id = $request->get_param( 'film_id' );
+		$film_id   = $request->get_param( 'film_id' );
+		$bucket_id = $request->get_param( 'bucket_id' );
 
-		// Modify the endpoint based on parameters.
-		if ( ! empty( $film_id ) && is_int( $film_id ) && absint( $film_id ) > 0 ) {
-			$api_url .= '/' . absint( $film_id );
+		// Build the endpoint URL based on parameters.
+		if ( ! empty( $bucket_id ) && is_string( $bucket_id ) && strlen( $bucket_id ) > 0 ) {
+			// Fetch all films for a specific bucket.
+			$api_url = $this->api_url_base . $this->api_endpoint_event_buckets . '/' . sanitize_text_field( $bucket_id ) . '/films';
+		} elseif ( ! empty( $film_id ) && is_string( $film_id ) && strlen( $film_id ) > 0 ) {
+			// Fetch a specific film by ID.
+			$api_url = $this->api_url_base . $this->api_endpoint_films . '/' . sanitize_text_field( $film_id );
+		} else {
+			// No valid parameters provided.
+			return new WP_Error( 'invalid_parameters', 'Either film_id or bucket_id must be provided.', array( 'status' => 400 ) );
 		}
 
 		// Prepare other parameters.

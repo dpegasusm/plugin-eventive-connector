@@ -85,7 +85,7 @@ class Eventive {
 			'stripe-v3',
 			'https://js.stripe.com/v3/',
 			array(),
-			null,
+			EVENTIVE_CURRENT_VERSION,
 			true
 		);
 
@@ -98,7 +98,7 @@ class Eventive {
 				'eventive-loader',
 				esc_url_raw( $eventive_default_bucket_root_url ),
 				array( 'stripe-v3' ),
-				null,
+				EVENTIVE_CURRENT_VERSION,
 				true
 			);
 
