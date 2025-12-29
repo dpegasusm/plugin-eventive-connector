@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dumplings_Member_List
+ * Eventive main plugin class.
  */
 class Eventive {
 
