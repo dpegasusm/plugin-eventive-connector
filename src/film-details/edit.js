@@ -89,19 +89,13 @@ export default function Edit( { attributes, setAttributes } ) {
 			</InspectorControls>
 
 			<div { ...blockProps }>
-				<div
-					style={ {
-						padding: '20px',
-						border: '2px dashed #ccc',
-						borderRadius: '8px',
-						textAlign: 'center',
-						backgroundColor: '#f9f9f9',
-					} }
-				>
-					<p style={ { margin: 0, fontWeight: 600 } }>
-						🎬 { __( 'Eventive Film Details', 'eventive' ) }
+				<div className="eventive-block-placeholder">
+					<p className="eventive-block-placeholder__title">
+						<strong>
+							{ __( 'Eventive Film Details', 'eventive' ) }
+						</strong>
 					</p>
-					<p style={ { margin: '8px 0 0', fontSize: '14px' } }>
+					<p className="eventive-block-placeholder__description">
 						{ filmId
 							? __( `Film ID: ${ filmId }`, 'eventive' )
 							: __(

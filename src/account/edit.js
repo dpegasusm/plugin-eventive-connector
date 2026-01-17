@@ -18,19 +18,11 @@ export default function Edit() {
 
 	return (
 		<div { ...blockProps }>
-			<div
-				style={ {
-					padding: '20px',
-					backgroundColor: '#f5f5f5',
-					border: '1px solid #ddd',
-					borderRadius: '4px',
-					textAlign: 'center',
-				} }
-			>
-				<p style={ { margin: 0, color: '#666' } }>
+			<div className="eventive-block-placeholder">
+				<p className="eventive-block-placeholder__title">
 					<strong>{ __( 'Eventive Account', 'eventive' ) }</strong>
 				</p>
-				<p style={ { margin: '8px 0 0', fontSize: '14px' } }>
+				<p className="eventive-block-placeholder__description">
 					{ __(
 						'Displays user account with details, passes, and tickets',
 						'eventive'

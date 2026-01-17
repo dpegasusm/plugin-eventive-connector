@@ -18,19 +18,11 @@ export default function Edit() {
 
 	return (
 		<div { ...blockProps }>
-			<div
-				style={ {
-					padding: '20px',
-					border: '2px dashed #ccc',
-					borderRadius: '8px',
-					textAlign: 'center',
-					background: '#f9f9f9',
-				} }
-			>
-				<p style={ { margin: 0, color: '#666' } }>
+			<div className="eventive-block-placeholder">
+				<p className="eventive-block-placeholder__title">
 					<strong>{ __( 'Eventive Cart', 'eventive' ) }</strong>
 				</p>
-				<p style={ { margin: '8px 0 0', fontSize: '14px' } }>
+				<p className="eventive-block-placeholder__description">
 					{ __(
 						'Displays the shopping cart with checkout and reset functionality.',
 						'eventive'

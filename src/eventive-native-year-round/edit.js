@@ -57,34 +57,28 @@ export default function Edit( { attributes, setAttributes } ) {
 					<ToggleControl
 						label={ __( 'Show Details', 'eventive' ) }
 						checked={ details }
-						onChange={ ( value ) =>
-							setAttributes( { details: value } )
-						}
-					/>
-				</PanelBody>
-			</InspectorControls>
+					onChange={ ( value ) =>
+						setAttributes( { details: value } )
+					}
+				/>
+			</PanelBody>
+		</InspectorControls>
 
-			<div { ...blockProps }>
-				<div
-					style={ {
-						padding: '20px',
-						border: '2px dashed #ccc',
-						borderRadius: '8px',
-						textAlign: 'center',
-						backgroundColor: '#f9f9f9',
-					} }
-				>
-					<p style={ { margin: 0, fontWeight: 600 } }>
-						📅 { __( 'Eventive Native Year-Round', 'eventive' ) }
-					</p>
-					<p style={ { margin: '8px 0 0', fontSize: '14px' } }>
-						{ __(
-							'Weekly event calendar will display here',
-							'eventive'
-						) }
-					</p>
-				</div>
+		<div { ...blockProps }>
+			<div className="eventive-block-placeholder">
+				<p className="eventive-block-placeholder__title">
+					<strong>
+						{ __( 'Eventive Native Year-Round', 'eventive' ) }
+					</strong>
+				</p>
+				<p className="eventive-block-placeholder__description">
+					{ __(
+						'Weekly event calendar will display here',
+						'eventive'
+					) }
+				</p>
 			</div>
-		</>
-	);
+		</div>
+	</>
+);
 }

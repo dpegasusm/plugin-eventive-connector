@@ -3,25 +3,31 @@
  */
 
 .wp-block-eventive-fundraiser {
+	/* Editor-specific styles */
+	min-height: 100px;
+
 	.eventive-block-placeholder {
-		background: #f9f9f9;
-		border: 2px dashed #ddd;
-		padding: 2rem;
-		text-align: center;
+		padding: 20px;
+		background-color: #f5f5f5;
+		border: 1px solid #ddd;
 		border-radius: 4px;
+		text-align: center;
 
 		h3 {
 			margin-top: 0;
-			color: #333;
+			color: #666;
+			font-weight: 600;
+			font-size: 16px;
 		}
 
 		p {
 			color: #666;
-			margin: 0.5rem 0;
+			margin: 8px 0 0;
+			font-size: 14px;
 		}
 
 		strong {
-			color: #333;
+			color: #666;
 		}
 	}
 }

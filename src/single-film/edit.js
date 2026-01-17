@@ -74,7 +74,7 @@ export default function Edit( { attributes, setAttributes } ) {
 					{ ! attributes.filmId && ! attributes.eventId && (
 						<p className="warning">
 							{ __(
-								'⚠️ Please provide either a Film ID or Event ID in the block settings.',
+								'Please provide either a Film ID or Event ID in the block settings.',
 								'eventive'
 							) }
 						</p>

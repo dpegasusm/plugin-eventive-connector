@@ -6,15 +6,26 @@
  */
 
 .wp-block-eventive-eventive-venues {
-	.components-placeholder {
-		min-height: 200px;
+	min-height: 100px;
+}
 
-		.components-placeholder__label {
-			margin-bottom: 10px;
-		}
+.eventive-block-placeholder {
+	padding: 20px;
+	background-color: #f5f5f5;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	text-align: center;
 
-		.components-placeholder__instructions {
-			margin-bottom: 20px;
-		}
+	.eventive-block-placeholder__title {
+		margin: 0;
+		color: #666;
+		font-weight: 600;
+		font-size: 16px;
+	}
+
+	.eventive-block-placeholder__description {
+		margin: 8px 0 0;
+		font-size: 14px;
+		color: #666;
 	}
 }

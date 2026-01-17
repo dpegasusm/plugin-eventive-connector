@@ -95,32 +95,19 @@ export default function Edit( { attributes, setAttributes } ) {
 				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>
-				<div
-					style={ {
-						padding: '20px',
-						border: '2px dashed #ddd',
-						borderRadius: '4px',
-						backgroundColor: '#f9f9f9',
-						textAlign: 'center',
-					} }
-				>
-					<span
-						className="dashicons dashicons-tag"
-						style={ {
-							fontSize: '48px',
-							color: '#666',
-							marginBottom: '10px',
-							display: 'block',
-						} }
-					></span>
-					<strong>{ __( 'Eventive Tags Block', 'eventive' ) }</strong>
-					<p
-						style={ {
-							margin: '10px 0 0',
-							color: '#666',
-							fontSize: '14px',
-						} }
-					>
+				<div className="eventive-block-placeholder">
+					<p className="eventive-block-placeholder__title">
+						<span
+							className="dashicons dashicons-tag"
+							style={ {
+								fontSize: '20px',
+								verticalAlign: 'middle',
+								marginRight: '4px',
+							} }
+						></span>
+						<strong>{ __( 'Eventive Tags Block', 'eventive' ) }</strong>
+					</p>
+					<p className="eventive-block-placeholder__description">
 						{ view === 'dropdown'
 							? __(
 									'Tags will be displayed as a dropdown on the frontend',
@@ -131,13 +118,7 @@ export default function Edit( { attributes, setAttributes } ) {
 									'eventive'
 							  ) }
 					</p>
-					<p
-						style={ {
-							margin: '5px 0 0',
-							color: '#999',
-							fontSize: '12px',
-						} }
-					>
+					<p className="eventive-block-placeholder__description">
 						{ display === 'both' &&
 							__( 'Showing: Films & Events', 'eventive' ) }
 						{ display === 'films' &&

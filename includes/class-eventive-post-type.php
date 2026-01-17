@@ -24,6 +24,12 @@ class Eventive_Post_Type {
 	public function init() {
 		// Register the Eventive custom post type.
 		add_action( 'init', array( $this, 'register_eventive_post_type' ) );
+		
+		// Register meta fields for REST API.
+		add_action( 'init', array( $this, 'register_film_meta' ) );
+		
+		// Enqueue block editor assets.
+		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_film_properties_script' ) );
 	}
 
 	/**
@@ -85,5 +91,64 @@ class Eventive_Post_Type {
 		);
 
 		register_post_type( 'eventive_film', $args );
+	}
+
+	/**
+	 * Register film meta fields for REST API access.
+	 *
+	 * @return void
+	 */
+	public function register_film_meta() {
+		$meta_fields = array(
+			'_eventive_film_id'      => 'string',
+			'_eventive_bucket_id'    => 'string',
+			'_eventive_poster_image' => 'string',
+			'_eventive_cover_image'  => 'string',
+			'_eventive_trailer_url'  => 'string',
+			'_eventive_runtime'      => 'integer',
+			'_eventive_year'         => 'integer',
+			'_eventive_language'     => 'string',
+			'_eventive_country'      => 'string',
+			'_eventive_director'     => 'string',
+		);
+
+		foreach ( $meta_fields as $meta_key => $type ) {
+			register_post_meta(
+				'eventive_film',
+				$meta_key,
+				array(
+					'show_in_rest'  => true,
+					'single'        => true,
+					'type'          => $type,
+					'auth_callback' => function() {
+						return current_user_can( 'edit_films' );
+					},
+				)
+			);
+		}
+	}
+
+	/**
+	 * Enqueue the film properties script for the block editor.
+	 *
+	 * @return void
+	 */
+	public function enqueue_film_properties_script() {
+		global $post;
+
+		// Only enqueue on eventive_film post type.
+		if ( ! $post || 'eventive_film' !== get_post_type( $post ) ) {
+			return;
+		}
+
+		$asset_file = include plugin_dir_path( __DIR__ ) . 'build/film-properties/index.asset.php';
+
+		wp_enqueue_script(
+			'eventive-film-properties',
+			plugins_url( 'build/film-properties/index.js', __DIR__ ),
+			$asset_file['dependencies'],
+			$asset_file['version'],
+			true
+		);
 	}
 }
