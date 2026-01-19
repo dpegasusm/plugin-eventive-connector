@@ -64,9 +64,19 @@ $eventive_sync = new Eventive_Sync();
 $eventive_sync->init();
 
 // Load the custom post type functionality.
-require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-post-type.php';
-$eventive_post_type = new Eventive_Post_Type();
+require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-post-type-film.php';
+$eventive_post_type = new Eventive_Post_Type_Films();
 $eventive_post_type->init();
+
+// Load the venues custom post type functionality.
+require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-post-type-venues.php';
+$eventive_post_type_venues = new Eventive_Post_Type_Venues();
+$eventive_post_type_venues->init();
+
+// Load the film tags taxonomy functionality.
+require_once EVENTIVE_PLUGIN_PATH . 'includes/class-eventive-taxonomy-film-tags.php';
+$eventive_taxonomy_film_tags = new Eventive_Taxonomy_Film_Tags();
+$eventive_taxonomy_film_tags->init();
 
 // Check for the API key before loading any functionalty that uses API functionality.
 $api_key = get_option( 'eventive_public_key', '' );

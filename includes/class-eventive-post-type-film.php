@@ -59,7 +59,7 @@ class Eventive_Post_Type {
 			'labels'              => $labels,
 			'hierarchical'        => false,
 			'supports'            => array( 'title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'custom-fields' ),
-			'taxonomies'          => array( 'eventive_categories', 'eventive_tags' ),
+			'taxonomies'          => array( 'eventive_film_tags' ),
 			'public'              => true,
 			'show_ui'             => true,
 			'show_in_menu'        => true,
