@@ -9,7 +9,7 @@
 import { registerPlugin } from '@wordpress/plugins';
 import { PluginDocumentSettingPanel } from '@wordpress/edit-post';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { TextControl, SelectControl } from '@wordpress/components';
+import { TextControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 const FilmPropertiesPanel = () => {

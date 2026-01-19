@@ -1,6 +1,6 @@
 <?php
 /**
- * Eventive Plugin
+ * Eventive Plugin - Venues Post Type
  *
  * @package WordPress
  * @subpackage Eventive
@@ -13,58 +13,55 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Eventive_Post_Type Class
+ * Eventive_Post_Type_Venues Class
  */
-class Eventive_Post_Type_Films {
+class Eventive_Post_Type_Venues {
 	/**
 	 * Initialize the custom post type.
 	 *
 	 * @return void
 	 */
 	public function init() {
-		// Register the Eventive custom post type.
+		// Register the Eventive venues custom post type.
 		add_action( 'init', array( $this, 'register_eventive_post_type' ) );
 		
 		// Register meta fields for REST API.
-		add_action( 'init', array( $this, 'register_film_meta' ) );
+		add_action( 'init', array( $this, 'register_venue_meta' ) );
 		
 		// Enqueue block editor assets.
-		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_film_properties_script' ) );
+		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_venue_properties_script' ) );
 	}
 
 	/**
-	 * Register the Eventive custom post type.
+	 * Register the Eventive venues custom post type.
 	 *
 	 * @return void
 	 */
 	public function register_eventive_post_type() {
 		$labels = array(
-			'name'               => _x( 'Films', 'eventive' ),
-			'singular_name'      => _x( 'Film', 'eventive' ),
+			'name'               => _x( 'Venues', 'post type general name', 'eventive' ),
+			'singular_name'      => _x( 'Venue', 'post type singular name', 'eventive' ),
 			'add_new'            => _x( 'Add New', 'eventive' ),
-			'add_new_item'       => _x( 'Add New Film', 'eventive' ),
-			'edit_item'          => _x( 'Edit Film', 'eventive' ),
-			'new_item'           => _x( 'New Film', 'eventive' ),
-			'view_item'          => _x( 'View Film', 'eventive' ),
-			'search_items'       => _x( 'Search Films', 'eventive' ),
-			'not_found'          => _x( 'No films found', 'eventive' ),
-			'not_found_in_trash' => _x( 'No films found in trash', 'eventive' ),
-			'parent_item_colon'  => _x( 'Parent:', 'eventive' ),
-			'menu_name'          => _x( 'Films', 'eventive' ),
+			'add_new_item'       => _x( 'Add New Venue', 'eventive' ),
+			'edit_item'          => _x( 'Edit Venue', 'eventive' ),
+			'new_item'           => _x( 'New Venue', 'eventive' ),
+			'view_item'          => _x( 'View Venue', 'eventive' ),
+			'search_items'       => _x( 'Search Venues', 'eventive' ),
+			'not_found'          => _x( 'No venues found', 'eventive' ),
+			'not_found_in_trash' => _x( 'No venues found in trash', 'eventive' ),
+			'parent_item_colon'  => _x( 'Parent Venue:', 'eventive' ),
+			'menu_name'          => _x( 'Venues', 'eventive' ),
 		);
 
 		$args = array(
-			'label'               => __( 'Films', 'eventive' ),
-			'description'         => __( 'Films imported from Eventive.', 'eventive' ),
+			'label'               => __( 'Venues', 'eventive' ),
+			'description'         => __( 'Venues imported from Eventive.', 'eventive' ),
 			'labels'              => $labels,
 			'hierarchical'        => false,
-			'supports'            => array( 'title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'custom-fields' ),
-			'taxonomies'          => array( 'eventive_categories', 'eventive_tags' ),
+			'supports'            => array( 'title', 'editor', 'thumbnail', 'custom-fields' ),
 			'public'              => true,
 			'show_ui'             => true,
-			'show_in_menu'        => true,
-			'menu_position'       => 20,
-			'menu_icon'           => 'dashicons-video-alt',
+			'show_in_menu'        => 'edit.php?post_type=eventive_film',
 			'show_in_nav_menus'   => true,
 			'publicly_queryable'  => true,
 			'exclude_from_search' => false,
@@ -73,55 +70,55 @@ class Eventive_Post_Type_Films {
 			'query_var'           => true,
 			'can_export'          => true,
 			'rewrite'             => array(
-				'slug'       => 'films',
+				'slug'       => 'venues',
 				'with_front' => false,
 				'feeds'      => true,
 				'pages'      => true,
 			),
 			'map_meta_cap'        => true,
 			'capabilities'        => array(
-				'edit_post'          => 'edit_film',
-				'read_post'          => 'read_film',
-				'delete_post'        => 'delete_film',
-				'edit_posts'         => 'edit_films',
-				'edit_others_posts'  => 'edit_others_films',
-				'publish_posts'      => 'publish_films',
-				'read_private_posts' => 'read_private_films',
+				'edit_post'          => 'edit_venue',
+				'read_post'          => 'read_venue',
+				'delete_post'        => 'delete_venue',
+				'edit_posts'         => 'edit_venues',
+				'edit_others_posts'  => 'edit_others_venues',
+				'publish_posts'      => 'publish_venues',
+				'read_private_posts' => 'read_private_venues',
 			),
 		);
 
-		register_post_type( 'eventive_film', $args );
+		register_post_type( 'eventive_venue', $args );
 	}
 
 	/**
-	 * Register film meta fields for REST API access.
+	 * Register venue meta fields for REST API access.
 	 *
 	 * @return void
 	 */
-	public function register_film_meta() {
+	public function register_venue_meta() {
 		$meta_fields = array(
-			'_eventive_film_id'      => 'string',
-			'_eventive_bucket_id'    => 'string',
-			'_eventive_poster_image' => 'string',
-			'_eventive_cover_image'  => 'string',
-			'_eventive_trailer_url'  => 'string',
-			'_eventive_runtime'      => 'integer',
-			'_eventive_year'         => 'integer',
-			'_eventive_language'     => 'string',
-			'_eventive_country'      => 'string',
-			'_eventive_director'     => 'string',
+			'_eventive_venue_id'      => 'string',
+			'_eventive_bucket_id'     => 'string',
+			'_eventive_venue_address' => 'string',
+			'_eventive_venue_city'    => 'string',
+			'_eventive_venue_state'   => 'string',
+			'_eventive_venue_zip'     => 'string',
+			'_eventive_venue_country' => 'string',
+			'_eventive_venue_lat'     => 'string',
+			'_eventive_venue_long'    => 'string',
+			'_eventive_venue_url'     => 'string',
 		);
 
 		foreach ( $meta_fields as $meta_key => $type ) {
 			register_post_meta(
-				'eventive_film',
+				'eventive_venue',
 				$meta_key,
 				array(
 					'show_in_rest'  => true,
 					'single'        => true,
 					'type'          => $type,
 					'auth_callback' => function() {
-						return current_user_can( 'edit_films' );
+						return current_user_can( 'edit_venues' );
 					},
 				)
 			);
@@ -129,21 +126,21 @@ class Eventive_Post_Type_Films {
 	}
 
 	/**
-	 * Enqueue the film properties script for the block editor.
+	 * Enqueue the venue properties script for the block editor.
 	 *
 	 * @return void
 	 */
-	public function enqueue_film_properties_script() {
-		// Only enqueue on eventive_film post type.
-		if ( 'eventive_film' !== get_post_type() ) {
+	public function enqueue_venue_properties_script() {
+		// Only enqueue on eventive_venue post type.
+		if ( 'eventive_venue' !== get_post_type() ) {
 			return;
 		}
 
-		$asset_file = include plugin_dir_path( __DIR__ ) . 'build/film-properties/index.asset.php';
+		$asset_file = include plugin_dir_path( __DIR__ ) . 'build/venue-properties/index.asset.php';
 
 		wp_enqueue_script(
-			'eventive-film-properties',
-			EVENTIVE_PLUGIN . 'build/film-properties/index.js',
+			'eventive-venue-properties',
+			EVENTIVE_PLUGIN . 'build/venue-properties/index.js',
 			$asset_file['dependencies'],
 			$asset_file['version'],
 			true

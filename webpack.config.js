@@ -17,5 +17,7 @@ module.exports = {
 	entry: {
 		...defaultConfig.entry(),
 		'film-properties/index': './src/components/film-properties.js',
+		'venue-properties/index': './src/components/venue-properties.js',
+		'film-sync/index': './src/components/film-sync.js',
 	},
 };

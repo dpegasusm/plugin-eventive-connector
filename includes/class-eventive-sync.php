@@ -197,6 +197,15 @@ class Eventive_Sync {
 
 		$existing_post_id = ! empty( $existing_posts ) ? $existing_posts[0] : 0;
 
+		// Check if sync is disabled for this film.
+		if ( $existing_post_id ) {
+			$sync_enabled = get_post_meta( $existing_post_id, '_eventive_sync_enabled', true );
+			// If explicitly set to false, skip this film.
+			if ( false === $sync_enabled ) {
+				return new WP_Error( 'sync_disabled', 'Sync is disabled for this film.' );
+			}
+		}
+
 		// Prepare post data.
 		$post_data = array(
 			'post_title'   => $film_name,
@@ -230,6 +239,11 @@ class Eventive_Sync {
 		// Update post meta with Eventive data.
 		update_post_meta( $post_id, '_eventive_film_id', $film_id );
 		update_post_meta( $post_id, '_eventive_bucket_id', $bucket_id );
+
+		// Enable sync by default for new films.
+		if ( 'created' === $action ) {
+			update_post_meta( $post_id, '_eventive_sync_enabled', true );
+		}
 
 		// Handle poster image - sideload to media library if URL has changed.
 		if ( ! empty( $film['poster_image'] ) ) {
