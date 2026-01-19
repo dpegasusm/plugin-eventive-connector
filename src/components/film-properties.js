@@ -38,7 +38,6 @@ const FilmPropertiesPanel = () => {
 		<PluginDocumentSettingPanel
 			name="eventive-film-properties"
 			title={__('Eventive Film Properties', 'eventive')}
-			icon="video-alt"
 		>
 			<TextControl
 				label={__('Film ID', 'eventive')}

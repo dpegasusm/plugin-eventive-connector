@@ -231,9 +231,18 @@ class Eventive_Sync {
 		update_post_meta( $post_id, '_eventive_film_id', $film_id );
 		update_post_meta( $post_id, '_eventive_bucket_id', $bucket_id );
 
-		// Store additional film metadata.
+		// Handle poster image - sideload to media library if URL has changed.
 		if ( ! empty( $film['poster_image'] ) ) {
-			update_post_meta( $post_id, '_eventive_poster_image', esc_url_raw( $film['poster_image'] ) );
+			$new_poster_url = esc_url_raw( $film['poster_image'] );
+			$old_poster_url = get_post_meta( $post_id, '_eventive_poster_image', true );
+
+			// Only sideload if the URL has changed and is valid.
+			if ( $new_poster_url !== $old_poster_url && filter_var( $new_poster_url, FILTER_VALIDATE_URL ) ) {
+				$this->sideload_featured_image( $post_id, $new_poster_url, $film_name );
+			}
+
+			// Update the meta with the new URL.
+			update_post_meta( $post_id, '_eventive_poster_image', $new_poster_url );
 		}
 
 		if ( ! empty( $film['cover_image'] ) ) {
@@ -282,5 +291,37 @@ class Eventive_Sync {
 		do_action( 'eventive_film_synced', $post_id, $film, $action );
 
 		return $action;
+	}
+
+	/**
+	 * Sideload an image from a URL and set it as the featured image for a post.
+	 *
+	 * @param int    $post_id   The post ID to attach the image to.
+	 * @param string $image_url The URL of the image to download.
+	 * @param string $film_name The film name to use as the image title.
+	 * @return int|false The attachment ID on success, false on failure.
+	 */
+	private function sideload_featured_image( $post_id, $image_url, $film_name ) {
+		// Require WordPress file handling functions.
+		if ( ! function_exists( 'media_sideload_image' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/media.php';
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+		}
+
+		// Download the image and add it to the media library.
+		$attachment_id = media_sideload_image( $image_url, $post_id, $film_name, 'id' );
+
+		// Check if sideload was successful.
+		if ( is_wp_error( $attachment_id ) ) {
+			// Log the error but don't fail the entire sync.
+			error_log( 'Eventive Sync: Failed to sideload poster image for post ' . $post_id . ': ' . $attachment_id->get_error_message() );
+			return false;
+		}
+
+		// Set as featured image.
+		set_post_thumbnail( $post_id, $attachment_id );
+
+		return $attachment_id;
 	}
 }
