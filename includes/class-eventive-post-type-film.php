@@ -31,6 +31,10 @@ class Eventive_Post_Type {
 		// Enqueue block editor assets.
 		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_film_properties_script' ) );
 		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_film_sync_script' ) );
+		
+		// Add custom admin columns.
+		add_filter( 'manage_eventive_film_posts_columns', array( $this, 'add_sync_status_column' ) );
+		add_action( 'manage_eventive_film_posts_custom_column', array( $this, 'display_sync_status_column' ), 10, 2 );
 	}
 
 	/**
@@ -172,5 +176,47 @@ class Eventive_Post_Type {
 			$asset_file['version'],
 			true
 		);
+	}
+
+	/**
+	 * Add sync status column to the films list table.
+	 *
+	 * @param array $columns Existing columns.
+	 * @return array Modified columns.
+	 */
+	public function add_sync_status_column( $columns ) {
+		// Insert sync status column after the title column.
+		$new_columns = array();
+		foreach ( $columns as $key => $value ) {
+			$new_columns[ $key ] = $value;
+			if ( 'title' === $key ) {
+				$new_columns['sync_status'] = __( 'Sync Status', 'eventive' );
+			}
+		}
+		return $new_columns;
+	}
+
+	/**
+	 * Display sync status column content.
+	 *
+	 * @param string $column  Column name.
+	 * @param int    $post_id Post ID.
+	 * @return void
+	 */
+	public function display_sync_status_column( $column, $post_id ) {
+		if ( 'sync_status' === $column ) {
+			$sync_enabled = get_post_meta( $post_id, '_eventive_sync_enabled', true );
+			
+			// Default to true if not set (for backward compatibility).
+			if ( '' === $sync_enabled ) {
+				$sync_enabled = true;
+			}
+			
+			if ( false === $sync_enabled ) {
+				echo '<span class="dashicons dashicons-no-alt" style="color: #dc3232; font-size: 20px;" title="' . esc_attr__( 'Sync Disabled', 'eventive' ) . '"></span>';
+			} else {
+				echo '<span class="dashicons dashicons-yes-alt" style="color: #46b450; font-size: 20px;" title="' . esc_attr__( 'Sync Enabled', 'eventive' ) . '"></span>';
+			}
+		}
 	}
 }
