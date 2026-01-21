@@ -11,6 +11,7 @@ import {
 	SelectControl,
 	ToggleControl,
 } from '@wordpress/components';
+import '../common/editor-global.scss';
 import './editor.scss';
 
 /**

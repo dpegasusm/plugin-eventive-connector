@@ -5,6 +5,7 @@
  */
 import { __ } from '@wordpress/i18n';
 import { useBlockProps } from '@wordpress/block-editor';
+import '../common/editor-global.scss';
 import './editor.scss';
 
 /**

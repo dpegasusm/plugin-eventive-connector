@@ -12,6 +12,9 @@ import {
 	SelectControl,
 } from '@wordpress/components';
 
+import '../common/editor-global.scss';
+import './editor.scss';
+
 /**
  * Edit component - renders the block in the editor
  *
