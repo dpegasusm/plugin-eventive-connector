@@ -2,28 +2,4 @@
  * Eventive Account Details Block - Editor Styles
  */
 
-.wp-block-eventive-account-details {
-	/* Editor-specific styles */
-	min-height: 100px;
-}
-
-.eventive-block-placeholder {
-	padding: 20px;
-	background-color: #f5f5f5;
-	border: 1px solid #ddd;
-	border-radius: 4px;
-	text-align: center;
-}
-
-.eventive-block-placeholder__title {
-	margin: 0;
-	color: #666;
-	font-weight: 600;
-}
-
-.eventive-block-placeholder__description {
-	margin: 8px 0 0;
-	font-size: 14px;
-	color: #666;
-}
-
+@use '../common/editor-global.scss';
