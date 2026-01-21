@@ -81,6 +81,15 @@ class Eventive {
 	 * @return void
 	 */
 	public function enqueue_eventive_loader_scripts( $loader_url ) {
+		// Load our Global Eventive Stylesheet.
+		wp_enqueue_style(
+			'eventive-global-style',
+			EVENTIVE_PLUGIN . 'assets/css/eventive-global.css',
+			array(),
+			EVENTIVE_CURRENT_VERSION
+		);
+
+		// Enqueue Stripe v3 script.
 		wp_enqueue_script(
 			'stripe-v3',
 			'https://js.stripe.com/v3/',
