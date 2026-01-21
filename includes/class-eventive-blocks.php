@@ -51,11 +51,11 @@ class Eventive_Blocks {
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/account-details/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/calendar/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/carousel/' );
-		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/eventive-account-passes/' );
-		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/eventive-account-tickets/' );
-		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/eventive-cart/' );
-		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/eventive-login/' );
-		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/eventive-native-year-round/' );
+		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/account-passes/' );
+		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/account-tickets/' );
+		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/cart/' );
+		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/login/' );
+		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/native-year-round/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/events/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/events-list/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/events-week/' );
@@ -158,25 +158,25 @@ class Eventive_Blocks {
 
 		// List of blocks with view scripts.
 		$blocks_with_views = array(
-			'eventive-eventive-account-view-script',
-			'eventive-eventive-account-details-view-script',
-			'eventive-eventive-calendar-view-script',
-			'eventive-eventive-carousel-view-script',
-			'eventive-eventive-eventive-account-passes-view-script',
-			'eventive-eventive-eventive-account-tickets-view-script',
-			'eventive-eventive-eventive-cart-view-script',
-			'eventive-eventive-eventive-login-view-script',
-			'eventive-eventive-eventive-native-year-round-view-script',
-			'eventive-eventive-events-view-script',
-			'eventive-eventive-events-list-view-script',
-			'eventive-eventive-events-week-view-script',
-			'eventive-eventive-film-details-view-script',
-			'eventive-eventive-film-guide-view-script',
-			'eventive-eventive-fundraiser-view-script',
-			'eventive-eventive-marquee-view-script',
-			'eventive-eventive-single-film-view-script',
-			'eventive-eventive-tags-view-script',
-			'eventive-eventive-venues-view-script',
+			'eventive-account-view-script',
+			'eventive-account-details-view-script',
+			'eventive-calendar-view-script',
+			'eventive-carousel-view-script',
+			'eventive-account-passes-view-script',
+			'eventive-account-tickets-view-script',
+			'eventive-cart-view-script',
+			'eventive-login-view-script',
+			'eventive-native-year-round-view-script',
+			'eventive-events-view-script',
+			'eventive-events-list-view-script',
+			'eventive-events-week-view-script',
+			'eventive-film-details-view-script',
+			'eventive-film-guide-view-script',
+			'eventive-fundraiser-view-script',
+			'eventive-marquee-view-script',
+			'eventive-single-film-view-script',
+			'eventive-tags-view-script',
+			'eventive-venues-view-script',
 		);
 
 		// Allow for the blocks to be filtered with apply filters.
