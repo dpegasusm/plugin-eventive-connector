@@ -83,8 +83,8 @@ class Eventive {
 	public function enqueue_eventive_loader_scripts( $loader_url ) {
 		// Load our Global Eventive Stylesheet.
 		wp_enqueue_style(
-			'eventive-global-style',
-			EVENTIVE_PLUGIN . 'assets/css/eventive-global.css',
+			'eventive-style',
+			EVENTIVE_PLUGIN . 'assets/css/eventive-style.css',
 			array(),
 			EVENTIVE_CURRENT_VERSION
 		);
