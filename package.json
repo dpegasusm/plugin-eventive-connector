@@ -16,12 +16,12 @@
 		"start": "wp-scripts start --webpack-copy-php"
 	},
 	"devDependencies": {
-		"@wordpress/scripts": "^31.0.0"
+		"@wordpress/scripts": "^31.3.0"
 	},
 	"dependencies": {
-		"@wordpress/edit-post": "^8.35.0",
-		"@wordpress/i18n": "^6.8.0",
-		"@wordpress/icons": "^11.2.0",
-		"@wordpress/plugins": "^7.35.0"
+		"@wordpress/edit-post": "^8.38.0",
+		"@wordpress/i18n": "^6.11.0",
+		"@wordpress/icons": "^11.5.0",
+		"@wordpress/plugins": "^7.38.0"
 	}
 }
