@@ -691,9 +691,11 @@
     0% {
         transform: translateX(0);
     }
+
     50% {
         transform: translateX(-50%);
     }
+
     100% {
         transform: translateX(0);
     }
@@ -1119,97 +1121,139 @@
 #eventive-tickets-column h2,
 #eventive-passes-column h2 {
     display: block;
-    width: 100%; /* Full width of container */
-    text-align: center; /* Center-align the title text */
+    width: 100%;
+    /* Full width of container */
+    text-align: center;
+    /* Center-align the title text */
     margin-bottom: 15px;
     font-size: 1.5em;
-    color: #959595; /* Light text for dark background */
+    color: #959595;
+    /* Light text for dark background */
 }
 
 /* Ticket and Pass Box Styling */
-.ticket-box, .pass-box {
+.ticket-box,
+.pass-box {
     display: flex;
-    flex-wrap: wrap; /* Allow items to wrap when space is limited */
-    align-items: center; /* Center-align content vertically */
-    justify-content: space-between; /* Distribute items evenly */
-    border: 2px solid; /* Different border colors per box */
+    flex-wrap: wrap;
+    /* Allow items to wrap when space is limited */
+    align-items: center;
+    /* Center-align content vertically */
+    justify-content: space-between;
+    /* Distribute items evenly */
+    border: 2px solid;
+    /* Different border colors per box */
     padding: 10px;
-    background-color: rgba(0, 0, 0, 0.6); /* Dark semi-transparent background */
+    background-color: rgba(0, 0, 0, 0.6);
+    /* Dark semi-transparent background */
     border-radius: 8px;
-    color: #fff; /* Light text */
+    color: #fff;
+    /* Light text */
     transition: transform 0.2s, box-shadow 0.2s;
-    width: 100%; /* Full width for horizontal layout */
+    width: 100%;
+    /* Full width for horizontal layout */
     margin-bottom: 15px;
-    gap: 10px; /* Space between items */
+    gap: 10px;
+    /* Space between items */
 }
 
 /* Specific Ticket Styling */
 .ticket-box {
-    border-color: #007bff; /* Blue border for tickets */
-    background-color: rgba(0, 123, 255, 0.1); /* Light blue background */
-    color: #004085; /* Darker blue text for readability */
+    border-color: #007bff;
+    /* Blue border for tickets */
+    background-color: rgba(0, 123, 255, 0.1);
+    /* Light blue background */
+    color: #004085;
+    /* Darker blue text for readability */
 }
 
 /* Specific Pass Styling */
 .pass-box {
-    border-color: #28a745; /* Green border for passes */
-    background-color: rgba(40, 167, 69, 0.1); /* Light green background */
-    color: #155724; /* Darker green text for passes */
+    border-color: #28a745;
+    /* Green border for passes */
+    background-color: rgba(40, 167, 69, 0.1);
+    /* Light green background */
+    color: #155724;
+    /* Darker green text for passes */
 }
 
 /* Flex Item Behavior */
-.ticket-box .ticket-title, .pass-box .pass-title {
-    flex: 1 1 100%; /* Force title to always take full width */
+.ticket-box .ticket-title,
+.pass-box .pass-title {
+    flex: 1 1 100%;
+    /* Force title to always take full width */
     font-size: 1em;
     font-weight: bold;
     text-align: left;
-    margin-bottom: 5px; /* Space below title */
+    margin-bottom: 5px;
+    /* Space below title */
 }
 
-.ticket-box .ticket-details, .pass-box .pass-details {
-    flex: 2 1 calc(60% - 10px); /* Details take up 60% of the width */
+.ticket-box .ticket-details,
+.pass-box .pass-details {
+    flex: 2 1 calc(60% - 10px);
+    /* Details take up 60% of the width */
     font-size: 0.85em;
     line-height: 1.2;
-    color: #333; /* Neutral text color */
+    color: #333;
+    /* Neutral text color */
     text-align: left;
 }
 
-.ticket-box .view-barcode-button, .pass-box .view-barcode-button {
-    flex: 1 1 100px; /* Button has minimum size but can shrink */
+.ticket-box .view-barcode-button,
+.pass-box .view-barcode-button {
+    flex: 1 1 100px;
+    /* Button has minimum size but can shrink */
     padding: 6px 10px;
     font-size: 12px;
     color: #fff;
-    background-color: #212529; /* Neutral dark background for button */
+    background-color: #212529;
+    /* Neutral dark background for button */
     border: none;
     border-radius: 4px;
     cursor: pointer;
     text-align: center;
-    margin-top: auto; /* Push button to bottom when wrapping */
-    align-self: flex-end; /* Align button to the end */
+    margin-top: auto;
+    /* Push button to bottom when wrapping */
+    align-self: flex-end;
+    /* Align button to the end */
 }
 
-.ticket-box .view-barcode-button:hover, .pass-box .view-barcode-button:hover {
-    background-color: #343a40; /* Slightly lighter on hover */
+.ticket-box .view-barcode-button:hover,
+.pass-box .view-barcode-button:hover {
+    background-color: #343a40;
+    /* Slightly lighter on hover */
 }
 
 /* Responsive Behavior */
 @media (max-width: 600px) {
-    .ticket-box, .pass-box {
-        flex-direction: column; /* Stack all content vertically on small screens */
-        align-items: flex-start; /* Align items to the left */
+
+    .ticket-box,
+    .pass-box {
+        flex-direction: column;
+        /* Stack all content vertically on small screens */
+        align-items: flex-start;
+        /* Align items to the left */
         text-align: left;
     }
 
-    .ticket-box .ticket-details, .pass-box .pass-details {
-        flex: 1 1 100%; /* Make details take full width */
+    .ticket-box .ticket-details,
+    .pass-box .pass-details {
+        flex: 1 1 100%;
+        /* Make details take full width */
     }
 
-    .ticket-box .view-barcode-button, .pass-box .view-barcode-button {
-        flex: 1 1 auto; /* Let the button adapt naturally */
-        width: 100%; /* Button spans the full width */
-        margin-top: 10px; /* Add spacing above when stacked */
+    .ticket-box .view-barcode-button,
+    .pass-box .view-barcode-button {
+        flex: 1 1 auto;
+        /* Let the button adapt naturally */
+        width: 100%;
+        /* Button spans the full width */
+        margin-top: 10px;
+        /* Add spacing above when stacked */
     }
 }
+
 /* Modal Styling */
 #barcode-modal {
     position: fixed;
@@ -1218,9 +1262,12 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
-    display: none; /* Initially hidden */
-    align-items: center; /* Center vertically */
-    justify-content: center; /* Center horizontally */
+    display: none;
+    /* Initially hidden */
+    align-items: center;
+    /* Center vertically */
+    justify-content: center;
+    /* Center horizontally */
     flex-direction: column;
     z-index: 9999;
 }
@@ -1253,6 +1300,7 @@
     cursor: pointer;
     color: #333;
 }
+
 /* 
 
 /* SCHEDULE PAGE CSS */
@@ -1262,26 +1310,36 @@
 
 /* General Container Styling */
 .event-group {
-    margin-bottom: 16px; /* Reduced margin */
-    padding: 12px; /* Reduced padding */
-    border: 1px solid #ddd; /* Slightly lighter border */
-    border-radius: 6px; /* Reduced border radius */
-    background-color: #f5f5f5; /* Slightly darker background */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    margin-bottom: 16px;
+    /* Reduced margin */
+    padding: 12px;
+    /* Reduced padding */
+    border: 1px solid #ddd;
+    /* Slightly lighter border */
+    border-radius: 6px;
+    /* Reduced border radius */
+    background-color: #f5f5f5;
+    /* Slightly darker background */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow */
 }
 
 /* Group Header Styling */
 .event-group-header {
     margin: 0;
-    border-bottom: 2px solid #767575; /* Thinner border */
+    border-bottom: 2px solid #767575;
+    /* Thinner border */
     padding: 10px 0;
     margin: 15px auto;
-    margin-bottom: 15px; /* Reduced spacing */
+    margin-bottom: 15px;
+    /* Reduced spacing */
     text-align: center;
     max-width: 300px;
     background-color: #222 !important;
-    font-size: 1.25em; /* Slightly smaller font size */
-    color: #eeeaea; /* Darker color for emphasis */
+    font-size: 1.25em;
+    /* Slightly smaller font size */
+    color: #eeeaea;
+    /* Darker color for emphasis */
     font-weight: bold;
     padding: 8px;
 }
@@ -1289,7 +1347,8 @@
 /* Flex Container for Events */
 .event-group-items {
     display: flex;
-    gap: 12px; /* Reduced gap */
+    gap: 12px;
+    /* Reduced gap */
 }
 
 /* General Event Item Styling */
@@ -1324,7 +1383,8 @@
 .events-film-item {
     display: flex;
     align-items: flex-start;
-    gap: 12px; /* Space between image and content */
+    gap: 12px;
+    /* Space between image and content */
     margin-bottom: 12px;
     border-bottom: 1px solid #eee;
     padding-bottom: 8px;
@@ -1418,7 +1478,8 @@
     z-index: -1;
 }
 
-.film-details, .film-description {
+.film-details,
+.film-description {
     text-align: center;
     color: #fff;
     /* background-color: #000; */
@@ -1459,7 +1520,8 @@
     color: #fff;
 }
 
-.film-info div, .film-tag-pill {
+.film-info div,
+.film-tag-pill {
     background: #555;
     color: #fff;
     padding: 5px 10px;
@@ -1504,165 +1566,188 @@
     padding: 0 20px;
     text-align: left;
 }
+
 /* film details css */
 
 #film-details-container {
     margin-top: 20px;
-display: flex;
-flex-direction: column;
-align-items: center;
-padding: 20px;
-border: 1px solid #ddd;
-border-radius: 8px;
-box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
-margin: 0 auto;
-position: relative;
-overflow: hidden;
-background-color: #000; /* Slight white background to make text readable */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background-color: #000;
+    /* Slight white background to make text readable */
 }
 
 #film-details-container::before {
-content: '';
-position: absolute;
-top: 20px;
-left: 0;
-width: 100%;
-height: 100%;
-background-image: url(''); /* URL of the background image */
-background-size: cover;
-background-position: center;
-opacity: 0.3; /* Adjust this value to change the transparency */
-z-index: -1; /* Ensure the background is behind the content */
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('');
+    /* URL of the background image */
+    background-size: cover;
+    background-position: center;
+    opacity: 0.3;
+    /* Adjust this value to change the transparency */
+    z-index: -1;
+    /* Ensure the background is behind the content */
 }
-    
-    .film-details {
-        text-align: center;
-        padding: 15px;
-    }
-    
-    .film-title {
-        font-size: 2.5em;
-        font-weight: bold;
-        margin: 0;
-        margin: 20px 0;
-    }
-    
-    .film-description {
-        font-size: 1.2em;
-        color: #fff;
-        margin: 20px 10%;
-    }
 
-    .hero-section {
-position: relative;
-width: 100%;
-height: 30vh; /* Full viewport height */
-background-size: cover;
-background-position: center;
-display: flex;
-justify-content: flex-start;
-align-items: flex-end; /* Align items to the bottom */
-padding-left: 5%; /* Adjust padding as needed */
-padding-bottom: 2%; /* Adjust padding as needed */
+.film-details {
+    text-align: center;
+    padding: 15px;
+}
+
+.film-title {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin: 0;
+    margin: 20px 0;
+}
+
+.film-description {
+    font-size: 1.2em;
+    color: #fff;
+    margin: 20px 10%;
+}
+
+.hero-section {
+    position: relative;
+    width: 100%;
+    height: 30vh;
+    /* Full viewport height */
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;
+    /* Align items to the bottom */
+    padding-left: 5%;
+    /* Adjust padding as needed */
+    padding-bottom: 2%;
+    /* Adjust padding as needed */
 }
 
 .film-images {
-position: relative;
-display: flex;
-justify-content: center;
-align-items: center;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .film-poster {
-max-width: 75%; /* Adjust the max-width for the poster as needed */
-height: auto;
-box-shadow: 0 0 20px rgba(255, 255, 255, 0.7); /* Soft white outer glow */
-/* position: absolute;
+    max-width: 75%;
+    /* Adjust the max-width for the poster as needed */
+    height: auto;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+    /* Soft white outer glow */
+    /* position: absolute;
 bottom: 0; */
 }
-    
-    .film-info {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 10px;
-        color: #fff;
-    }
-    
-    .film-info div {
-        flex: 1;
-        min-width: 100px;
-        font-size: 1.2em;
-        color: #fff;
-        background: #555;
-    }
-    
-    .film-tags {
-        margin-top: 10px;
-        font-size: 1em;
-    }
-    
-    .film-tag-pill {
-        display: inline-block;
-        padding: 5px 10px;
-        margin: 2px;
-        background-color: #666; /* Blue background */
-        color: white; /* White text */
-        border-radius: 10px; /* Rounded corners */
-        font-size: 0.8em;
-        text-align: center;
-    }
-    
-    .film-tag-pill:hover {
-        background-color: #0056b3; /* Darker blue on hover */
-    }
-    
-    .film-events {
-margin-top: 20px;
-width: 100%;
-background: linear-gradient(to bottom, #333, #000); /* Dark gradient gray background */
-padding: 20px;
-border-radius: 8px;
+
+.film-info {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    color: #fff;
+}
+
+.film-info div {
+    flex: 1;
+    min-width: 100px;
+    font-size: 1.2em;
+    color: #fff;
+    background: #555;
+}
+
+.film-tags {
+    margin-top: 10px;
+    font-size: 1em;
+}
+
+.film-tag-pill {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 2px;
+    background-color: #666;
+    /* Blue background */
+    color: white;
+    /* White text */
+    border-radius: 10px;
+    /* Rounded corners */
+    font-size: 0.8em;
+    text-align: center;
+}
+
+.film-tag-pill:hover {
+    background-color: #0056b3;
+    /* Darker blue on hover */
+}
+
+.film-events {
+    margin-top: 20px;
+    width: 100%;
+    background: linear-gradient(to bottom, #333, #000);
+    /* Dark gradient gray background */
+    padding: 20px;
+    border-radius: 8px;
 }
 
 .event-box {
-display: flex;
-justify-content: space-between;
-align-items: center;
-padding: 10px;
-margin: 10px 0;
-border: 1px solid #555; /* Darker border color */
-border-radius: 8px;
-background-color: #444; /* Darker background color */
-color: #eee; /* Light text color */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #555;
+    /* Darker border color */
+    border-radius: 8px;
+    background-color: #444;
+    /* Darker background color */
+    color: #eee;
+    /* Light text color */
 }
 
 .event-date-time {
-flex: 1;
-font-size: 1.5em;
-font-weight: bold;
-color: #eee; /* Light text color */
-text-align: center;
-border-right: 2px dotted #666; /* Darker border color */
-padding-right: 10px;
-line-height: 1.5em;
+    flex: 1;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #eee;
+    /* Light text color */
+    text-align: center;
+    border-right: 2px dotted #666;
+    /* Darker border color */
+    padding-right: 10px;
+    line-height: 1.5em;
 }
 
 .event-date-time .date {
-font-size: 1.5em;
+    font-size: 1.5em;
 }
 
 .event-details {
-flex: 2;
-padding: 0 20px;
-text-align: left;
-color: #eee; /* Light text color */
+    flex: 2;
+    padding: 0 20px;
+    text-align: left;
+    color: #eee;
+    /* Light text color */
 }
 
 /* Optional: Styling for ticket buckets */
 .ticket-bucket {
-margin-top: 10px;
-color: #ddd; /* Light text color for ticket buckets */
+    margin-top: 10px;
+    color: #ddd;
+    /* Light text color for ticket buckets */
 }
 
 /* Catalog Container */
@@ -1672,7 +1757,8 @@ color: #ddd; /* Light text color for ticket buckets */
     gap: 10px;
     justify-content: center;
     padding: 20px;
-    background-color: #222; /* Dark background for the catalog */
+    background-color: #222;
+    /* Dark background for the catalog */
 }
 
 /* Film Box */
@@ -1680,7 +1766,8 @@ color: #ddd; /* Light text color for ticket buckets */
     width: 275px;
     border-radius: 8px;
     overflow: hidden;
-    background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent card background */
+    background-color: rgba(255, 255, 255, 0.1);
+    /* Semi-transparent card background */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -1701,7 +1788,8 @@ color: #ddd; /* Light text color for ticket buckets */
 /* Film Details */
 .catalog-film-details {
     padding: 15px;
-    color: #fff; /* White text */
+    color: #fff;
+    /* White text */
     text-align: left;
     line-height: 1.5;
 }
@@ -1710,7 +1798,8 @@ color: #ddd; /* Light text color for ticket buckets */
     font-size: 1.5em;
     margin-bottom: 10px;
     font-weight: bold;
-    color: #f9c74f; /* Highlighted text color */
+    color: #f9c74f;
+    /* Highlighted text color */
 }
 
 .catalog-film-description {
@@ -1729,7 +1818,8 @@ color: #ddd; /* Light text color for ticket buckets */
 .catalog-film-tag-pill {
     display: inline-block;
     padding: 5px 10px;
-    background-color: var(--tag-color, #444); /* Use dynamic tag color if available */
+    background-color: var(--tag-color, #444);
+    /* Use dynamic tag color if available */
     color: white;
     border-radius: 10px;
     font-size: 0.8em;
@@ -1738,8 +1828,10 @@ color: #ddd; /* Light text color for ticket buckets */
 }
 
 .catalog-film-tag-pill:hover {
-    background-color: #f9c74f; /* Highlight tag on hover */
-    color: #222; /* Darker text on hover */
+    background-color: #f9c74f;
+    /* Highlight tag on hover */
+    color: #222;
+    /* Darker text on hover */
 }
 
 /* Details Link */
@@ -1753,12 +1845,15 @@ color: #ddd; /* Light text color for ticket buckets */
 }
 
 .catalog-film-details-link a:hover {
-    color: #ffba08; /* Brighter highlight on hover */
+    color: #ffba08;
+    /* Brighter highlight on hover */
 }
 
 /* Fallback Messages */
-.catalog-no-films, .catalog-error {
-    color: #f00; /* Error or empty message in red */
+.catalog-no-films,
+.catalog-error {
+    color: #f00;
+    /* Error or empty message in red */
     font-size: 1.2em;
     text-align: center;
     margin: 20px;
@@ -1770,7 +1865,8 @@ color: #ddd; /* Light text color for ticket buckets */
 .eventive-marquee-container {
     position: relative;
     width: 100%;
-    height: 300px; /* Adjust height as needed */
+    height: 300px;
+    /* Adjust height as needed */
     overflow: hidden;
 }
 
@@ -1783,7 +1879,8 @@ color: #ddd; /* Light text color for ticket buckets */
 
 .marquee-content {
     display: flex;
-    width: 200%; /* Twice the width to ensure looping */
+    width: 200%;
+    /* Twice the width to ensure looping */
     animation: scrollMarquee 60s linear infinite;
 }
 
@@ -1791,9 +1888,11 @@ color: #ddd; /* Light text color for ticket buckets */
     0% {
         transform: translateX(0);
     }
+
     50% {
         transform: translateX(-50%);
     }
+
     100% {
         transform: translateX(0);
     }
@@ -1835,6 +1934,7 @@ color: #ddd; /* Light text color for ticket buckets */
     gap: 10px;
     margin-top: 10px;
 }
+
 .s_tag {
     background-color: #e0e0e0;
     padding: 5px 10px;
@@ -1844,11 +1944,12 @@ color: #ddd; /* Light text color for ticket buckets */
     text-decoration: none;
     transition: background-color 0.3s;
 }
+
 .s_tag a {
     color: inherit;
     text-decoration: none;
 }
+
 .s_tag:hover {
     background-color: #bdbdbd;
 }
-
