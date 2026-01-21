@@ -246,7 +246,7 @@ function EventiveCarousel( { limit, showDescription } ) {
  */
 document.addEventListener( 'DOMContentLoaded', () => {
 	const containers = document.querySelectorAll(
-		'.wp-block-eventive-eventive-carousel'
+		'.wp-block-eventive-carousel'
 	);
 
 	containers.forEach( ( container ) => {

@@ -400,7 +400,7 @@ const TagsContainer = ( { view, display, hideEmpty, excludeTags } ) => {
  */
 document.addEventListener( 'DOMContentLoaded', () => {
 	const tagContainers = document.querySelectorAll(
-		'.wp-block-eventive-eventive-tags'
+		'.wp-block-eventive-tags'
 	);
 
 	tagContainers.forEach( ( container ) => {

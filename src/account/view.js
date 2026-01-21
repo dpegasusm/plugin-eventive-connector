@@ -126,7 +126,7 @@ function EventiveAccount() {
  */
 document.addEventListener( 'DOMContentLoaded', () => {
 	const containers = document.querySelectorAll(
-		'.wp-block-eventive-eventive-account'
+		'.wp-block-eventive-account'
 	);
 
 	containers.forEach( ( container ) => {

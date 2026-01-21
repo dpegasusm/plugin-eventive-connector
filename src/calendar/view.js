@@ -372,7 +372,7 @@ function EventiveCalendar() {
  */
 document.addEventListener( 'DOMContentLoaded', () => {
 	const containers = document.querySelectorAll(
-		'.wp-block-eventive-eventive-calendar'
+		'.wp-block-eventive-calendar'
 	);
 
 	containers.forEach( ( container ) => {

@@ -205,7 +205,7 @@ const VenuesContainer = () => {
  */
 document.addEventListener( 'DOMContentLoaded', () => {
 	const venueContainers = document.querySelectorAll(
-		'.wp-block-eventive-eventive-venues'
+		'.wp-block-eventive-venues'
 	);
 
 	venueContainers.forEach( ( container ) => {
