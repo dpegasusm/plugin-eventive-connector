@@ -182,15 +182,18 @@ class Eventive_Blocks {
 		// Allow for the blocks to be filtered with apply filters.
 		$blocks_with_views = apply_filters( 'eventive_blocks_with_view_scripts', $blocks_with_views );
 
-		// Localize each view script.
+		// Find the first registered script and localize it only once.
+		$localized = false;
 		foreach ( $blocks_with_views as $script_handle ) {
-			if ( wp_script_is( $script_handle, 'registered' ) ) {
+			if ( ! $localized && wp_script_is( $script_handle, 'registered' ) ) {
 				// Add the WP REST API script as a dependency.
 				wp_localize_script(
 					$script_handle,
-					'EventiveData',
+					'EventiveBlockData',
 					$localization
 				);
+				$localized = true;
+				break;
 			}
 		}
 	}
