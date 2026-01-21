@@ -57,7 +57,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const nonce = window.EventiveBlockData?.eventNonce || '';
 		const eventBucket =
 			window.EventiveBlockData?.eventBucket ||
-			window.eventiveOptions?.eventBucket ||
+			window.EventiveBlockData?.eventBucket ||
 			'';
 
 		// Extract attributes
@@ -398,6 +398,12 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			renderTagsFilter( tags );
 			renderSearch();
 
+			// Remove loading text
+			const loadingText = block.querySelector( '.eventive-film-loading-text' );
+			if ( loadingText ) {
+				loadingText.remove();
+			}
+
 			let containerEl = block.querySelector(
 				'.eventive-films-container'
 			);
@@ -437,7 +443,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 						renderFilms();
 					} )
 					.catch( ( error ) => {
-						console.error( '[eventive-film-guide] Error fetching films:', error );
+						console.error(
+							'[eventive-film-guide] Error fetching films:',
+							error
+						);
 						block.innerHTML =
 							'<div class="eventive-error">Error loading films.</div>';
 					} );
@@ -445,14 +454,22 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 			if ( window.Eventive && window.Eventive._ready ) {
 				fetchData();
-			} else if ( window.Eventive && typeof window.Eventive.on === 'function' ) {
+			} else if (
+				window.Eventive &&
+				typeof window.Eventive.on === 'function'
+			) {
 				window.Eventive.on( 'ready', fetchData );
 			} else {
 				setTimeout( () => {
-					if ( window.Eventive && typeof window.Eventive.request === 'function' ) {
+					if (
+						window.Eventive &&
+						typeof window.Eventive.request === 'function'
+					) {
 						fetchData();
 					} else {
-						console.error( '[eventive-film-guide] Eventive API not available' );
+						console.error(
+							'[eventive-film-guide] Eventive API not available'
+						);
 						block.innerHTML =
 							'<div class="eventive-error">Error loading films.</div>';
 					}

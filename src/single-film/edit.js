@@ -7,6 +7,8 @@ import { __ } from '@wordpress/i18n';
 import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
 import { PanelBody, TextControl } from '@wordpress/components';
 
+import './editor.scss';
+
 /**
  * Edit component - renders the block in the editor
  *
@@ -52,33 +54,41 @@ export default function Edit( { attributes, setAttributes } ) {
 
 			<div { ...blockProps }>
 				<div className="eventive-block-placeholder">
-					<h3>{ __( 'Eventive Single Film', 'eventive' ) }</h3>
-					<p>
-						{ __(
-							'Film or event details will display on the frontend.',
-							'eventive'
-						) }
-					</p>
-					{ attributes.filmId && (
+					<h3 className="eventive-block-placeholder__title">
+						{ __( 'Eventive Single Film', 'eventive' ) }
+					</h3>
+					<div className="eventive-block-placeholder__description">
 						<p>
-							<strong>{ __( 'Film ID:', 'eventive' ) }</strong>{ ' ' }
-							{ attributes.filmId }
-						</p>
-					) }
-					{ attributes.eventId && (
-						<p>
-							<strong>{ __( 'Event ID:', 'eventive' ) }</strong>{ ' ' }
-							{ attributes.eventId }
-						</p>
-					) }
-					{ ! attributes.filmId && ! attributes.eventId && (
-						<p className="warning">
 							{ __(
-								'⚠️ Please provide either a Film ID or Event ID in the block settings.',
+								'Film or event details will display on the frontend.',
 								'eventive'
 							) }
 						</p>
-					) }
+						{ attributes.filmId && (
+							<p>
+								<strong>
+									{ __( 'Film ID:', 'eventive' ) }
+								</strong>{ ' ' }
+								{ attributes.filmId }
+							</p>
+						) }
+						{ attributes.eventId && (
+							<p>
+								<strong>
+									{ __( 'Event ID:', 'eventive' ) }
+								</strong>{ ' ' }
+								{ attributes.eventId }
+							</p>
+						) }
+						{ ! attributes.filmId && ! attributes.eventId && (
+							<p className="warning">
+								{ __(
+									'Please provide either a Film ID or Event ID in the block settings.',
+									'eventive'
+								) }
+							</p>
+						) }
+					</div>
 				</div>
 			</div>
 		</>

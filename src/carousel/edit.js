@@ -54,26 +54,18 @@ export default function Edit( { attributes, setAttributes } ) {
 				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>
-				<div
-					style={ {
-						padding: '20px',
-						backgroundColor: '#f5f5f5',
-						border: '1px solid #ddd',
-						borderRadius: '4px',
-						textAlign: 'center',
-					} }
-				>
-					<p style={ { margin: 0, color: '#666' } }>
-						<strong>
-							{ __( 'Eventive Carousel', 'eventive' ) }
-						</strong>
-					</p>
-					<p style={ { margin: '8px 0 0', fontSize: '14px' } }>
-						{ __(
-							`Displaying up to ${ limit } upcoming events`,
-							'eventive'
-						) }
-					</p>
+				<div className="eventive-block-placeholder">
+					<h3 className="eventive-block-placeholder__title">
+						{ __( 'Eventive Carousel', 'eventive' ) }
+					</h3>
+					<div className="eventive-block-placeholder__description">
+						<p>
+							{ __(
+								`Displaying up to ${ limit } upcoming events`,
+								'eventive'
+							) }
+						</p>
+					</div>
 				</div>
 			</div>
 		</>

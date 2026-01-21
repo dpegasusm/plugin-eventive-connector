@@ -21,14 +21,14 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const filmsBase = block.getAttribute( 'data-films-base' ) || '';
 
 		// Get WP options passed from PHP via global variables
-		const eventBucket = window.eventiveOptions?.eventBucket || '';
-		const apiKey = window.eventiveOptions?.apiKey || '';
+		const eventBucket = window.EventiveBlockData?.eventBucket || '';
+		const apiKey = window.EventiveBlockData?.apiKey || '';
 		const filmDetailBaseURL =
-			filmsBase || window.eventiveOptions?.filmDetailBaseURL || '';
+			filmsBase || window.EventiveBlockData?.filmDetailBaseURL || '';
 		const prettyPermalinks =
-			window.eventiveOptions?.usePrettyPermalinks || false;
+			window.EventiveBlockData?.usePrettyPermalinks || false;
 		const filmSyncEnabled =
-			window.eventiveOptions?.filmSyncEnabled || false;
+			window.EventiveBlockData?.filmSyncEnabled || false;
 
 		// Initialize the events display
 		const fetchAndRenderEvents = () => {
@@ -71,7 +71,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 					}
 				} )
 				.catch( ( error ) => {
-					console.error( '[eventive-events] Error fetching events:', error );
+					console.error(
+						'[eventive-events] Error fetching events:',
+						error
+					);
 					block.innerHTML =
 						'<p class="error-message">Failed to load events.</p>';
 				} );
@@ -79,25 +82,33 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 		if ( window.Eventive && window.Eventive._ready ) {
 			fetchAndRenderEvents();
-		} else if ( window.Eventive && typeof window.Eventive.on === 'function' ) {
+		} else if (
+			window.Eventive &&
+			typeof window.Eventive.on === 'function'
+		) {
 			window.Eventive.on( 'ready', fetchAndRenderEvents );
 		} else {
 			setTimeout( () => {
-				if ( window.Eventive && typeof window.Eventive.request === 'function' ) {
+				if (
+					window.Eventive &&
+					typeof window.Eventive.request === 'function'
+				) {
 					fetchAndRenderEvents();
 				} else {
-					console.error( '[eventive-events] Eventive API not available' );
+					console.error(
+						'[eventive-events] Eventive API not available'
+					);
 					block.innerHTML =
 						'<p class="error-message">Failed to load events.</p>';
 				}
 			}, 1000 );
 		}
 	} ); /**
-						 * Render events into the block
-						 * @param container
-						 * @param events
-						 * @param options
-						 */
+	 * Render events into the block
+	 * @param container
+	 * @param events
+	 * @param options
+	 */
 	function renderEvents( container, events, options ) {
 		if ( ! events.length ) {
 			container.innerHTML =

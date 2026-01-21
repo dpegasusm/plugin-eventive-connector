@@ -1,0 +1,78 @@
+/**
+ * Eventive Blocks - Global Editor Styles
+ * Common styles shared across all block editors
+ *
+ * @package Eventive
+ * @since 1.0.0
+ */
+
+/* ==========================================================================
+   BASE BLOCK EDITOR STYLES
+   Used in: ALL blocks (19 blocks)
+   ========================================================================== */
+
+[class*="wp-block-eventive-"] {
+
+	/* Base min-height for all Eventive blocks in the editor */
+	min-height: 100px;
+}
+
+/* ==========================================================================
+   EDITOR PLACEHOLDER STYLES
+   Used in: ALL blocks (19 blocks)
+   ========================================================================== */
+
+.eventive-block-placeholder {
+	padding: 15px;
+	background-color: #f5f5f5;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	text-align: center;
+	min-height: 100px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+
+	h3.eventive-block-placeholder__title {
+		margin: 0;
+		color: #666;
+		font-weight: 600;
+		font-size: 16px;
+		margin-top: 0;
+	}
+
+	.eventive-block-placeholder__description {
+		margin-top: 10px;
+		font-size: 14px;
+		color: #666;
+	}
+
+	p {
+		color: inherit;
+		margin: 8px 0 0;
+		font-size: inherit;
+
+		&.warning {
+			color: #d63638;
+			font-weight: 600;
+		}
+	}
+
+	strong {
+		color: #666;
+	}
+
+	ul {
+		text-align: left;
+		max-width: 600px;
+		margin: 1rem auto;
+		list-style-type: disc;
+		padding-left: 1.5rem;
+
+		li {
+			margin-bottom: 0.5rem;
+			color: #666;
+		}
+	}
+}

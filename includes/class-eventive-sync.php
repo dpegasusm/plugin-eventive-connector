@@ -197,6 +197,15 @@ class Eventive_Sync {
 
 		$existing_post_id = ! empty( $existing_posts ) ? $existing_posts[0] : 0;
 
+		// Check if sync is disabled for this film.
+		if ( $existing_post_id ) {
+			$sync_enabled = get_post_meta( $existing_post_id, '_eventive_sync_enabled', true );
+			// If explicitly set to false, skip this film.
+			if ( false === $sync_enabled ) {
+				return new WP_Error( 'sync_disabled', 'Sync is disabled for this film.' );
+			}
+		}
+
 		// Prepare post data.
 		$post_data = array(
 			'post_title'   => $film_name,
@@ -231,9 +240,23 @@ class Eventive_Sync {
 		update_post_meta( $post_id, '_eventive_film_id', $film_id );
 		update_post_meta( $post_id, '_eventive_bucket_id', $bucket_id );
 
-		// Store additional film metadata.
+		// Enable sync by default for new films.
+		if ( 'created' === $action ) {
+			update_post_meta( $post_id, '_eventive_sync_enabled', true );
+		}
+
+		// Handle poster image - sideload to media library if URL has changed.
 		if ( ! empty( $film['poster_image'] ) ) {
-			update_post_meta( $post_id, '_eventive_poster_image', esc_url_raw( $film['poster_image'] ) );
+			$new_poster_url = esc_url_raw( $film['poster_image'] );
+			$old_poster_url = get_post_meta( $post_id, '_eventive_poster_image', true );
+
+			// Only sideload if the URL has changed and is valid.
+			if ( $new_poster_url !== $old_poster_url && filter_var( $new_poster_url, FILTER_VALIDATE_URL ) ) {
+				$this->sideload_featured_image( $post_id, $new_poster_url, $film_name );
+			}
+
+			// Update the meta with the new URL.
+			update_post_meta( $post_id, '_eventive_poster_image', $new_poster_url );
 		}
 
 		if ( ! empty( $film['cover_image'] ) ) {
@@ -276,11 +299,237 @@ class Eventive_Sync {
 
 		if ( isset( $film['tags'] ) && is_array( $film['tags'] ) ) {
 			update_post_meta( $post_id, '_eventive_film_tags', $film['tags'] );
+
+			// Sync taxonomy terms from tags.
+			$this->sync_film_tags( $post_id, $film['tags'] );
+		}
+
+		// Handle venue syncing.
+		if ( isset( $film['venue'] ) && is_array( $film['venue'] ) ) {
+			$venue_id = $this->sync_venue( $film['venue'] );
+			if ( $venue_id ) {
+				update_post_meta( $post_id, '_eventive_venue_id', $venue_id );
+			}
 		}
 
 		// add a do action here so other functions can hook in after a film is created/updated.
 		do_action( 'eventive_film_synced', $post_id, $film, $action );
 
 		return $action;
+	}
+
+	/**
+	 * Sideload an image from a URL and set it as the featured image for a post.
+	 *
+	 * @param int    $post_id   The post ID to attach the image to.
+	 * @param string $image_url The URL of the image to download.
+	 * @param string $film_name The film name to use as the image title.
+	 * @return int|false The attachment ID on success, false on failure.
+	 */
+	private function sideload_featured_image( $post_id, $image_url, $film_name ) {
+		// Require WordPress file handling functions.
+		if ( ! function_exists( 'media_sideload_image' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/media.php';
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+		}
+
+		// Download the image and add it to the media library.
+		$attachment_id = media_sideload_image( $image_url, $post_id, $film_name, 'id' );
+
+		// Check if sideload was successful.
+		if ( is_wp_error( $attachment_id ) ) {
+			// Log the error but don't fail the entire sync.
+			error_log( 'Eventive Sync: Failed to sideload poster image for post ' . $post_id . ': ' . $attachment_id->get_error_message() );
+			return false;
+		}
+
+		// Set as featured image.
+		set_post_thumbnail( $post_id, $attachment_id );
+
+		return $attachment_id;
+	}
+
+	/**
+	 * Sync film tags from Eventive data to WordPress taxonomy terms.
+	 *
+	 * @param int   $post_id Post ID.
+	 * @param array $tags    Array of tag objects from Eventive API.
+	 * @return void
+	 */
+	private function sync_film_tags( $post_id, $tags ) {
+		if ( empty( $tags ) || ! is_array( $tags ) ) {
+			// Clear all tags if none provided.
+			wp_set_object_terms( $post_id, array(), 'eventive_film_tags' );
+			return;
+		}
+
+		$term_ids = array();
+
+		foreach ( $tags as $tag ) {
+			if ( empty( $tag['id'] ) || empty( $tag['name'] ) ) {
+				continue;
+			}
+
+			$eventive_tag_id = sanitize_text_field( $tag['id'] );
+			$tag_name        = sanitize_text_field( $tag['name'] );
+			$tag_color       = ! empty( $tag['color'] ) ? sanitize_hex_color( $tag['color'] ) : '';
+			$tag_slug        = sanitize_title( $tag_name );
+
+			// Check if term already exists by Eventive ID.
+			$existing_terms = get_terms(
+				array(
+					'taxonomy'   => 'eventive_film_tags',
+					'hide_empty' => false,
+					'meta_query' => array(
+						array(
+							'key'     => 'eventive_tag_id',
+							'value'   => $eventive_tag_id,
+							'compare' => '=',
+						),
+					),
+				)
+			);
+
+			if ( ! empty( $existing_terms ) && ! is_wp_error( $existing_terms ) ) {
+				// Term exists, use it and update color if changed.
+				$term       = $existing_terms[0];
+				$term_ids[] = $term->term_id;
+
+				if ( $tag_color ) {
+					$current_color = get_term_meta( $term->term_id, 'eventive_tag_color', true );
+					if ( $current_color !== $tag_color ) {
+						update_term_meta( $term->term_id, 'eventive_tag_color', $tag_color );
+					}
+				}
+			} else {
+				// Term doesn't exist, create it.
+				$term = wp_insert_term(
+					$tag_name,
+					'eventive_film_tags',
+					array(
+						'slug' => $tag_slug,
+					)
+				);
+
+				if ( ! is_wp_error( $term ) ) {
+					$term_id    = $term['term_id'];
+					$term_ids[] = $term_id;
+
+					// Store Eventive tag ID and color as term meta.
+					update_term_meta( $term_id, 'eventive_tag_id', $eventive_tag_id );
+					if ( $tag_color ) {
+						update_term_meta( $term_id, 'eventive_tag_color', $tag_color );
+					}
+				}
+			}
+		}
+
+		// Set the post terms to match exactly what came from Eventive.
+		if ( ! empty( $term_ids ) ) {
+			wp_set_object_terms( $post_id, $term_ids, 'eventive_film_tags' );
+		} else {
+			// Clear all tags if we couldn't process any.
+			wp_set_object_terms( $post_id, array(), 'eventive_film_tags' );
+		}
+	}
+
+	/**
+	 * Sync venue from Eventive data to WordPress post.
+	 *
+	 * @param array $venue Venue data from Eventive API.
+	 * @return int|false Venue post ID on success, false on failure.
+	 */
+	private function sync_venue( $venue ) {
+		if ( empty( $venue['id'] ) || empty( $venue['name'] ) ) {
+			return false;
+		}
+
+		$eventive_venue_id = sanitize_text_field( $venue['id'] );
+		$venue_name        = sanitize_text_field( $venue['name'] );
+		$venue_color       = ! empty( $venue['color'] ) ? sanitize_hex_color( $venue['color'] ) : '';
+		$use_reserved      = isset( $venue['use_reserved_seating'] ) ? (bool) $venue['use_reserved_seating'] : false;
+
+		// Check if venue post already exists by Eventive venue ID.
+		$existing_posts = get_posts(
+			array(
+				'post_type'      => 'eventive_venue',
+				'post_status'    => 'any',
+				'posts_per_page' => 1,
+				'meta_key'       => '_eventive_venue_id',
+				'meta_value'     => $eventive_venue_id,
+				'fields'         => 'ids',
+			)
+		);
+
+		$existing_post_id = ! empty( $existing_posts ) ? $existing_posts[0] : 0;
+
+		// Prepare post data.
+		$post_data = array(
+			'post_title'  => $venue_name,
+			'post_status' => 'publish',
+			'post_type'   => 'eventive_venue',
+		);
+
+		if ( $existing_post_id ) {
+			// Update existing venue.
+			$post_data['ID'] = $existing_post_id;
+			$post_id         = wp_update_post( $post_data, true );
+
+			if ( is_wp_error( $post_id ) ) {
+				return false;
+			}
+		} else {
+			// Create new venue.
+			$post_id = wp_insert_post( $post_data, true );
+
+			if ( is_wp_error( $post_id ) ) {
+				return false;
+			}
+		}
+
+		// Update venue meta.
+		update_post_meta( $post_id, '_eventive_venue_id', $eventive_venue_id );
+
+		if ( $venue_color ) {
+			update_post_meta( $post_id, '_eventive_venue_color', $venue_color );
+		}
+
+		update_post_meta( $post_id, '_eventive_use_reserved_seating', $use_reserved );
+
+		// Store any additional venue data that comes from the API.
+		if ( ! empty( $venue['address'] ) ) {
+			update_post_meta( $post_id, '_eventive_venue_address', sanitize_text_field( $venue['address'] ) );
+		}
+
+		if ( ! empty( $venue['city'] ) ) {
+			update_post_meta( $post_id, '_eventive_venue_city', sanitize_text_field( $venue['city'] ) );
+		}
+
+		if ( ! empty( $venue['state'] ) ) {
+			update_post_meta( $post_id, '_eventive_venue_state', sanitize_text_field( $venue['state'] ) );
+		}
+
+		if ( ! empty( $venue['zip'] ) ) {
+			update_post_meta( $post_id, '_eventive_venue_zip', sanitize_text_field( $venue['zip'] ) );
+		}
+
+		if ( ! empty( $venue['country'] ) ) {
+			update_post_meta( $post_id, '_eventive_venue_country', sanitize_text_field( $venue['country'] ) );
+		}
+
+		if ( isset( $venue['latitude'] ) ) {
+			update_post_meta( $post_id, '_eventive_venue_lat', sanitize_text_field( $venue['latitude'] ) );
+		}
+
+		if ( isset( $venue['longitude'] ) ) {
+			update_post_meta( $post_id, '_eventive_venue_long', sanitize_text_field( $venue['longitude'] ) );
+		}
+
+		if ( ! empty( $venue['url'] ) ) {
+			update_post_meta( $post_id, '_eventive_venue_url', esc_url_raw( $venue['url'] ) );
+		}
+
+		return $post_id;
 	}
 }

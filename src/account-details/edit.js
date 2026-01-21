@@ -18,26 +18,18 @@ export default function Edit() {
 
 	return (
 		<div { ...blockProps }>
-			<div
-				style={ {
-					padding: '20px',
-					border: '2px dashed #ccc',
-					borderRadius: '8px',
-					textAlign: 'center',
-					background: '#f9f9f9',
-				} }
-			>
-				<p style={ { margin: 0, color: '#666' } }>
-					<strong>
-						{ __( 'Eventive Account Details', 'eventive' ) }
-					</strong>
-				</p>
-				<p style={ { margin: '8px 0 0', fontSize: '14px' } }>
-					{ __(
-						'Displays editable account information for logged-in users.',
-						'eventive'
-					) }
-				</p>
+			<div className="eventive-block-placeholder">
+				<h3 className="eventive-block-placeholder__title">
+					{ __( 'Eventive Account Details', 'eventive' ) }
+				</h3>
+				<div className="eventive-block-placeholder__description">
+					<p>
+						{ __(
+							'Displays editable account information for logged-in users.',
+							'eventive'
+						) }
+					</p>
+				</div>
 			</div>
 		</div>
 	);

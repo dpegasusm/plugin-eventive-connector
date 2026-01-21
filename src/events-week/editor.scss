@@ -2,9 +2,4 @@
  * Eventive Events Week Block - Editor Styles
  */
 
-.wp-block-eventive-events-week {
-	// Editor-specific styles
-	.block-editor-block-list__block & {
-		min-height: 100px;
-	}
-}
+@use "../common/editor-global";

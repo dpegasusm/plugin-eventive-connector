@@ -50,7 +50,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const nonce = window.EventiveBlockData?.eventNonce || '';
 		const eventBucket =
 			window.EventiveBlockData?.eventBucket ||
-			window.eventiveOptions?.eventBucket ||
+			window.EventiveBlockData?.eventBucket ||
 			'';
 
 		// Extract attributes
@@ -417,6 +417,12 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 			renderTagsFilter( tags, block );
 
+			// Remove loading text
+			const loadingText = block.querySelector( '.eventive-film-loading-text' );
+			if ( loadingText ) {
+				loadingText.remove();
+			}
+
 			let listEl = block.querySelector( '.eventive-events-container' );
 			if ( ! listEl ) {
 				listEl = document.createElement( 'div' );
@@ -461,7 +467,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 						renderEvents();
 					} )
 					.catch( ( error ) => {
-						console.error( '[eventive-events-list] Error fetching events:', error );
+						console.error(
+							'[eventive-events-list] Error fetching events:',
+							error
+						);
 						block.innerHTML =
 							'<div class="eventive-error">Error loading events.</div>';
 					} );
@@ -469,14 +478,22 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 			if ( window.Eventive && window.Eventive._ready ) {
 				fetchData();
-			} else if ( window.Eventive && typeof window.Eventive.on === 'function' ) {
+			} else if (
+				window.Eventive &&
+				typeof window.Eventive.on === 'function'
+			) {
 				window.Eventive.on( 'ready', fetchData );
 			} else {
 				setTimeout( () => {
-					if ( window.Eventive && typeof window.Eventive.request === 'function' ) {
+					if (
+						window.Eventive &&
+						typeof window.Eventive.request === 'function'
+					) {
 						fetchData();
 					} else {
-						console.error( '[eventive-events-list] Eventive API not available' );
+						console.error(
+							'[eventive-events-list] Eventive API not available'
+						);
 						block.innerHTML =
 							'<div class="eventive-error">Error loading events.</div>';
 					}

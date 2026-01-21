@@ -81,13 +81,8 @@ function EventiveAccount() {
 
 	if ( ! isLoggedIn ) {
 		return (
-			<div className="eventive-account-container">
-				<p style={ { textAlign: 'center' } }>
-					You are not logged in. Please log in to view your account.
-				</p>
-				<div className="eventive-login-placeholder">
-					{ /* Login form would be rendered by eventive-login block */ }
-				</div>
+			<div className="eventive-notice" style={ { textAlign: 'center' } }>
+				Please log in to view your account details.
 			</div>
 		);
 	}
@@ -126,7 +121,7 @@ function EventiveAccount() {
  */
 document.addEventListener( 'DOMContentLoaded', () => {
 	const containers = document.querySelectorAll(
-		'.wp-block-eventive-eventive-account'
+		'.wp-block-eventive-account'
 	);
 
 	containers.forEach( ( container ) => {

@@ -18,24 +18,18 @@ export default function Edit() {
 
 	return (
 		<div { ...blockProps }>
-			<div
-				style={ {
-					padding: '20px',
-					border: '2px dashed #ccc',
-					borderRadius: '8px',
-					textAlign: 'center',
-					backgroundColor: '#f9f9f9',
-				} }
-			>
-				<p style={ { margin: 0, fontWeight: 600 } }>
-					📅 { __( 'Eventive Events Week', 'eventive' ) }
-				</p>
-				<p style={ { margin: '8px 0 0', fontSize: '14px' } }>
-					{ __(
-						'Weekly calendar grid will display here',
-						'eventive'
-					) }
-				</p>
+			<div className="eventive-block-placeholder">
+				<h3 className="eventive-block-placeholder__title">
+					{ __( 'Eventive Events Week', 'eventive' ) }
+				</h3>
+				<div className="eventive-block-placeholder__description">
+					<p>
+						{ __(
+							'Weekly calendar grid will display here',
+							'eventive'
+						) }
+					</p>
+				</div>
 			</div>
 		</div>
 	);

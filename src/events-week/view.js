@@ -25,8 +25,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	}
 
 	async function initializeWeeklyCalendar( block ) {
-		const eventBucket = window.eventiveOptions?.eventBucket || '';
-		const apiKey = window.eventiveOptions?.apiKey || '';
+		const eventBucket = window.EventiveBlockData?.eventBucket || '';
+		const apiKey = window.EventiveBlockData?.apiKey || '';
 
 		if ( ! eventBucket ) {
 			block.innerHTML =
@@ -58,7 +58,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		} )
 			.then( ( response ) => response.events || [] )
 			.catch( ( error ) => {
-				console.error( '[eventive-events-week] Error fetching all events:', error );
+				console.error(
+					'[eventive-events-week] Error fetching all events:',
+					error
+				);
 				return [];
 			} );
 	}

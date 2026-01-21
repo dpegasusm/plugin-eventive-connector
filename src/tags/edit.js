@@ -95,56 +95,31 @@ export default function Edit( { attributes, setAttributes } ) {
 				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>
-				<div
-					style={ {
-						padding: '20px',
-						border: '2px dashed #ddd',
-						borderRadius: '4px',
-						backgroundColor: '#f9f9f9',
-						textAlign: 'center',
-					} }
-				>
-					<span
-						className="dashicons dashicons-tag"
-						style={ {
-							fontSize: '48px',
-							color: '#666',
-							marginBottom: '10px',
-							display: 'block',
-						} }
-					></span>
-					<strong>{ __( 'Eventive Tags Block', 'eventive' ) }</strong>
-					<p
-						style={ {
-							margin: '10px 0 0',
-							color: '#666',
-							fontSize: '14px',
-						} }
-					>
-						{ view === 'dropdown'
-							? __(
-									'Tags will be displayed as a dropdown on the frontend',
-									'eventive'
-							  )
-							: __(
-									'Tags will be displayed as filter pills on the frontend',
-									'eventive'
-							  ) }
-					</p>
-					<p
-						style={ {
-							margin: '5px 0 0',
-							color: '#999',
-							fontSize: '12px',
-						} }
-					>
-						{ display === 'both' &&
-							__( 'Showing: Films & Events', 'eventive' ) }
-						{ display === 'films' &&
-							__( 'Showing: Films Only', 'eventive' ) }
-						{ display === 'events' &&
-							__( 'Showing: Events Only', 'eventive' ) }
-					</p>
+				<div className="eventive-block-placeholder">
+					<h3 className="eventive-block-placeholder__title">
+						{ __( 'Eventive Tags Block', 'eventive' ) }
+					</h3>
+					<div className="eventive-block-placeholder__description">
+						<p>
+							{ view === 'dropdown'
+								? __(
+										'Tags will be displayed as a dropdown on the frontend',
+										'eventive'
+								  )
+								: __(
+										'Tags will be displayed as filter pills on the frontend',
+										'eventive'
+								  ) }
+						</p>
+						<p className="eventive-block-placeholder__description">
+							{ display === 'both' &&
+								__( 'Showing: Films & Events', 'eventive' ) }
+							{ display === 'films' &&
+								__( 'Showing: Films Only', 'eventive' ) }
+							{ display === 'events' &&
+								__( 'Showing: Events Only', 'eventive' ) }
+						</p>
+					</div>
 				</div>
 			</div>
 		</>

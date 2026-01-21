@@ -5,7 +5,7 @@
  * @since 1.0.0
  */
 
-.wp-block-eventive-eventive-venues {
+.wp-block-eventive-venues {
 	width: 100%;
 	max-width: 1200px;
 	margin: 0 auto;
@@ -83,7 +83,9 @@
 
 // Responsive design
 @media screen and (max-width: 768px) {
-	.wp-block-eventive-eventive-venues {
+
+	.wp-block-eventive-venues {
+
 		.eventive-venue-card {
 			flex-direction: column;
 
