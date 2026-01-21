@@ -1,82 +1,303 @@
 /**
- * Film Guide Block - Frontend Styles
+ * Eventive Film Guide Block - Frontend Styles
  */
+
+/* ==========================================================================
+   BLOCK WRAPPER
+   ========================================================================== */
 
 .wp-block-eventive-film-guide {
 	width: 100%;
-}
 
-.eventive-film-guide-header {
-	margin-bottom: 2rem;
-}
+	/* ==========================================================================
+	   HEADER & CONTROLS
+	   ========================================================================== */
 
-.eventive-film-guide-header-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 1rem;
-	margin-bottom: 1rem;
-}
-
-.eventive-film-guide-search {
-	flex: 1;
-	min-width: 250px;
-
-	input[type="search"] {
-		width: 100%;
-		padding: 0.5rem;
-		border: 1px solid #ddd;
-		border-radius: 4px;
-		font-size: 1rem;
+	.eventive-film-guide-header {
+		margin-bottom: 2rem;
 	}
-}
 
-.eventive-film-guide-controls {
-	display: flex;
-	gap: 1rem;
-
-	label {
+	.eventive-film-guide-header-row {
 		display: flex;
+		justify-content: space-between;
 		align-items: center;
-		gap: 0.5rem;
+		flex-wrap: wrap;
+		gap: 1rem;
+		margin-bottom: 1rem;
 	}
 
-	select {
-		padding: 0.5rem;
-		border: 1px solid #ddd;
-		border-radius: 4px;
+	.eventive-film-guide-search {
+		flex: 1;
+		min-width: 250px;
+
+		input[type="search"] {
+			width: 100%;
+			padding: 0.5rem;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			font-size: 1rem;
+
+			&:focus {
+				outline: none;
+				border-color: var(--primary-color, #0073aa);
+				box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.1);
+			}
+		}
 	}
-}
 
-.catalog-film-container-wrapper {
-	width: 100%;
-}
-
-.catalog-film-container {
-	width: 100%;
-
-	&.grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-		gap: 1.5rem;
-	}
-
-	&.list {
+	.eventive-film-guide-controls {
 		display: flex;
-		flex-direction: column;
-		gap: 1.5rem;
-	}
-}
+		gap: 1rem;
+		flex-wrap: wrap;
 
-.screen-reader-text {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
-	white-space: nowrap;
-	border-width: 0;
+		label {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			font-weight: 500;
+		}
+
+		select {
+			padding: 0.5rem;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			cursor: pointer;
+
+			&:focus {
+				outline: none;
+				border-color: var(--primary-color, #0073aa);
+			}
+		}
+	}
+
+	/* ==========================================================================
+	   FILM CATALOG CONTAINER
+	   ========================================================================== */
+
+	.catalog-film-container-wrapper {
+		width: 100%;
+	}
+
+	.catalog-film-container,
+	#catalog-film-container {
+		width: 100%;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		justify-content: center;
+		padding: 20px;
+		background-color: #222;
+		border-radius: 8px;
+
+		&.grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+			gap: 1.5rem;
+		}
+
+		&.list {
+			display: flex;
+			flex-direction: column;
+			gap: 1.5rem;
+		}
+	}
+
+	/* ==========================================================================
+	   FILM CARD
+	   ========================================================================== */
+
+	.catalog-film-box {
+		width: 275px;
+		border-radius: 8px;
+		overflow: hidden;
+		background-color: rgba(255, 255, 255, 0.1);
+		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+		transition: transform 0.2s, box-shadow 0.2s;
+
+		&:hover {
+			transform: scale(1.03);
+			box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7);
+		}
+	}
+
+	.catalog-film-image {
+		width: 100%;
+		height: auto;
+		display: block;
+		border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+	}
+
+	/* ==========================================================================
+	   FILM DETAILS
+	   ========================================================================== */
+
+	.catalog-film-details {
+		padding: 15px;
+		color: #fff;
+		text-align: left;
+		line-height: 1.5;
+	}
+
+	.catalog-film-title {
+		font-size: 1.5em;
+		margin-bottom: 10px;
+		font-weight: bold;
+		color: #f9c74f;
+	}
+
+	.catalog-film-description {
+		font-size: 0.9em;
+		margin-bottom: 10px;
+		color: #ddd;
+		line-height: 1.6;
+	}
+
+	/* ==========================================================================
+	   FILM TAGS
+	   ========================================================================== */
+
+	.catalog-film-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 5px;
+		margin-top: 10px;
+	}
+
+	.catalog-film-tag-pill {
+		display: inline-block;
+		padding: 5px 10px;
+		background-color: var(--tag-color, #444);
+		color: white;
+		border-radius: 10px;
+		font-size: 0.8em;
+		text-align: center;
+		transition: background-color 0.2s;
+
+		&:hover {
+			background-color: #f9c74f;
+			color: #222;
+		}
+	}
+
+	/* ==========================================================================
+	   FILM LINK
+	   ========================================================================== */
+
+	.catalog-film-details-link {
+		a {
+			display: inline-block;
+			margin-top: 10px;
+			color: #f9c74f;
+			text-decoration: none;
+			font-weight: bold;
+			transition: color 0.2s;
+
+			&:hover {
+				color: #ffba08;
+			}
+		}
+	}
+
+	/* ==========================================================================
+	   STATES (EMPTY, ERROR, LOADING)
+	   ========================================================================== */
+
+	.catalog-no-films,
+	.catalog-error {
+		color: #ff6b6b;
+		font-size: 1.2em;
+		text-align: center;
+		margin: 20px;
+		padding: 20px;
+		background: rgba(255, 107, 107, 0.1);
+		border-radius: 8px;
+	}
+
+	.catalog-no-films {
+		color: #aaa;
+		background: rgba(255, 255, 255, 0.05);
+		font-style: italic;
+	}
+
+	/* ==========================================================================
+	   ACCESSIBILITY
+	   ========================================================================== */
+
+	.screen-reader-text {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
+	}
+
+	/* ==========================================================================
+	   RESPONSIVE DESIGN
+	   ========================================================================== */
+
+	@media (max-width: 1024px) {
+		.catalog-film-container.grid,
+		#catalog-film-container.grid {
+			grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		}
+	}
+
+	@media (max-width: 768px) {
+		.eventive-film-guide-header-row {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.eventive-film-guide-search {
+			min-width: 100%;
+		}
+
+		.eventive-film-guide-controls {
+			flex-direction: column;
+			width: 100%;
+
+			label {
+				width: 100%;
+			}
+
+			select {
+				width: 100%;
+			}
+		}
+
+		.catalog-film-container,
+		#catalog-film-container {
+			padding: 15px;
+
+			&.grid {
+				grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+				gap: 1rem;
+			}
+		}
+
+		.catalog-film-box {
+			width: 100%;
+			max-width: 275px;
+			margin: 0 auto;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.catalog-film-container.grid,
+		#catalog-film-container.grid {
+			grid-template-columns: 1fr;
+		}
+
+		.catalog-film-title {
+			font-size: 1.3em;
+		}
+
+		.catalog-film-description {
+			font-size: 0.85em;
+		}
+	}
 }

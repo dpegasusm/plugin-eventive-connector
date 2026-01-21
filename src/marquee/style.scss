@@ -1,10 +1,47 @@
 /**
- * Marquee Block - Frontend Styles
+ * Eventive Marquee Block - Frontend Styles
  */
 
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+@keyframes scrollMarquee {
+	0% {
+		transform: translateX(0);
+	}
+
+	50% {
+		transform: translateX(-50%);
+	}
+
+	100% {
+		transform: translateX(0);
+	}
+}
+
+@keyframes marquee-scroll {
+	0% {
+		transform: translate3d(0, 0, 0);
+	}
+
+	100% {
+		transform: translate3d(-50%, 0, 0);
+	}
+}
+
+/* ==========================================================================
+   BLOCK WRAPPER
+   ========================================================================== */
+
 .wp-block-eventive-marquee {
+	position: relative;
 	overflow: hidden;
 	min-height: 300px;
+
+	/* ==========================================================================
+	   OVERLAY BACKGROUND
+	   ========================================================================== */
 
 	.eventive-marquee-overlay {
 		position: absolute;
@@ -17,6 +54,10 @@
 		background-position: center;
 		z-index: 1;
 	}
+
+	/* ==========================================================================
+	   MARQUEE CONTAINER
+	   ========================================================================== */
 
 	.eventive-marquee-container {
 		position: relative;
@@ -41,6 +82,10 @@
 		animation: scrollMarquee 60s linear infinite;
 	}
 
+	/* ==========================================================================
+	   POSTER SLIDES
+	   ========================================================================== */
+
 	.poster-slide {
 		flex: 0 0 auto;
 		width: 200px;
@@ -50,6 +95,7 @@
 		margin-right: 10px;
 		transition: transform 0.3s ease;
 		position: relative;
+		cursor: pointer;
 
 		&::after {
 			content: "";
@@ -65,8 +111,18 @@
 
 		&:hover {
 			transform: scale(1.1);
+			z-index: 2;
+		}
+
+		&.placeholder {
+			background-color: rgba(255, 255, 255, 0.1);
+			background-image: none;
 		}
 	}
+
+	/* ==========================================================================
+	   CAPTION
+	   ========================================================================== */
 
 	.eventive-marquee-caption {
 		position: absolute;
@@ -88,31 +144,50 @@
 		padding-left: 100%;
 		animation: marquee-scroll 30s linear infinite;
 	}
-}
 
-@keyframes marquee-scroll {
+	/* ==========================================================================
+	   RESPONSIVE DESIGN
+	   ========================================================================== */
 
-	0% {
-		transform: translate3d(0, 0, 0);
+	@media (max-width: 768px) {
+		min-height: 200px;
+
+		.eventive-marquee-container,
+		.eventive-marquee {
+			height: 200px;
+			min-height: 200px;
+		}
+
+		.poster-slide {
+			width: 150px;
+			height: 200px;
+		}
+
+		.eventive-marquee-caption {
+			font-size: 1.2rem;
+			padding: 0.75rem 0;
+		}
 	}
 
-	100% {
-		transform: translate3d(-50%, 0, 0);
-	}
-}
+	@media (max-width: 480px) {
+		min-height: 180px;
 
-@keyframes scrollMarquee {
+		.eventive-marquee-container,
+		.eventive-marquee {
+			height: 180px;
+			min-height: 180px;
+		}
 
-	0% {
-		transform: translateX(0);
-	}
+		.poster-slide {
+			width: 120px;
+			height: 180px;
+			margin-right: 8px;
+		}
 
-	50% {
-		transform: translateX(-50%);
-	}
-
-	100% {
-		transform: translateX(0);
+		.eventive-marquee-caption {
+			font-size: 1rem;
+			padding: 0.5rem 0;
+		}
 	}
 }
 

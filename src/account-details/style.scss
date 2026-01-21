@@ -42,6 +42,10 @@
 		border-radius: 8px;
 	}
 
+	.eventive-account-details {
+		padding: 20px;
+	}
+
 	.eventive-account-details-content {
 
 		h2 {
@@ -96,6 +100,10 @@
 
 		tbody td:last-child {
 			width: 20%;
+		}
+
+		.static-value {
+			font-weight: normal;
 		}
 	}
 
@@ -164,6 +172,12 @@
 			&:checked + .slider::before {
 				transform: translateX(26px);
 			}
+		}
+
+		.sms-toggle {
+			opacity: 0;
+			width: 0;
+			height: 0;
 		}
 
 		.slider {

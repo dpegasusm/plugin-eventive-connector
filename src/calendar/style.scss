@@ -150,6 +150,12 @@
 						}
 					}
 
+					.details-right {
+						display: flex;
+						flex-direction: column;
+						gap: 12px;
+					}
+
 					.films-container {
 						grid-column: 1 / -1;
 						margin-top: 20px;
@@ -162,6 +168,10 @@
 							background: #f9f9f9;
 							border-radius: 8px;
 							margin-bottom: 16px;
+
+							&-content {
+								flex: 1;
+							}
 
 							.film-poster {
 
