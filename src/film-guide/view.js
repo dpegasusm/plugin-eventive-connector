@@ -433,11 +433,11 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			}
 
 			let containerEl = block.querySelector(
-				'.eventive-films-container'
+				'.eventive-film-guide-container'
 			);
 			if ( ! containerEl ) {
 				containerEl = document.createElement( 'div' );
-				containerEl.className = 'eventive-films-container';
+				containerEl.className = 'eventive-film-guide-container';
 				block.appendChild( containerEl );
 			}
 
