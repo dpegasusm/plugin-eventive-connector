@@ -217,21 +217,19 @@ const VenuesContainer = () => {
  * Initialize venues blocks on page load
  */
 document.addEventListener( 'DOMContentLoaded', () => {
-	const venueContainers = document.querySelectorAll(
+	const venueBlocks = document.querySelectorAll(
 		'.wp-block-eventive-venues'
 	);
 
-	venueContainers.forEach( ( container ) => {
+	venueBlocks.forEach( ( block ) => {
 		// Check if already initialized
-		if (
-			container.querySelector(
-				'.eventive-venues-container, .eventive-venues-loading'
-			)
-		) {
+		if ( block.__venuesInitialized ) {
 			return;
 		}
+		block.__venuesInitialized = true;
 
-		const root = createRoot( container );
+		// Render React app directly into the block container
+		const root = createRoot( block );
 		root.render( <VenuesContainer /> );
 	} );
 } );
