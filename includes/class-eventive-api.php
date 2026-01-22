@@ -350,10 +350,8 @@ class Eventive_API {
 				'args'                => array(
 					'event_id' => array(
 						'default'           => '',
-						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
-							return is_int( $param ) && $param >= 0;
-						},
+						'sanitize_callback' => array( $this, 'sanitize_eventive_id' ),
+						'validate_callback' => array( $this, 'validate_eventive_id' ),
 					),
 				),
 			)
@@ -425,6 +423,20 @@ class Eventive_API {
 				'methods'             => 'GET',
 				'callback'            => array( $this, 'get_api_ledger' ),
 				'permission_callback' => array( $this, 'check_api_nonce' ),
+				'args'                => array(
+					'start' => array(
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+					'end'   => array(
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+					'type'  => array(
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+				),
 			)
 		);
 
@@ -864,7 +876,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
+		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, true );
 	}
 
 	/**
@@ -875,20 +887,16 @@ class Eventive_API {
 	 * @return WP_REST_Response|WP_Error The REST response or a WP_Error object on failure.
 	 */
 	public function get_api_films( $request ) {
+		// Fetch all films.
+		$api_url = $this->api_url_base . $this->api_endpoint_films;
+
 		// Get the parameters.
 		$film_id   = $request->get_param( 'film_id' );
-		$bucket_id = $request->get_param( 'bucket_id' );
 
 		// Build the endpoint URL based on parameters.
-		if ( ! empty( $bucket_id ) && is_string( $bucket_id ) && strlen( $bucket_id ) > 0 ) {
-			// Fetch all films for a specific bucket.
-			$api_url = $this->api_url_base . $this->api_endpoint_event_buckets . '/' . sanitize_text_field( $bucket_id ) . '/films';
-		} elseif ( ! empty( $film_id ) && is_string( $film_id ) && strlen( $film_id ) > 0 ) {
+		if ( ! empty( $film_id ) && is_string( $film_id ) && strlen( $film_id ) > 0 ) {
 			// Fetch a specific film by ID.
-			$api_url = $this->api_url_base . $this->api_endpoint_films . '/' . sanitize_text_field( $film_id );
-		} else {
-			// No valid parameters provided.
-			return new WP_Error( 'invalid_parameters', 'Either film_id or bucket_id must be provided.', array( 'status' => 400 ) );
+			$api_url .= '/' . sanitize_text_field( $film_id );
 		}
 
 		// Prepare other parameters.
@@ -896,7 +904,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
+		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, true );
 	}
 
 	/**
@@ -914,8 +922,8 @@ class Eventive_API {
 		$item_bucket_id = $request->get_param( 'item_bucket_id' );
 
 		// Modify the endpoint based on parameters.
-		if ( ! empty( $item_bucket_id ) && is_int( $item_bucket_id ) && absint( $item_bucket_id ) > 0 ) {
-			$api_url .= '/' . absint( $item_bucket_id );
+		if ( ! empty( $item_bucket_id ) && is_string( $item_bucket_id ) && strlen( $item_bucket_id ) > 0 ) {
+			$api_url .= '/' . sanitize_text_field( $item_bucket_id );
 		}
 
 		// Prepare other parameters.
@@ -962,7 +970,29 @@ class Eventive_API {
 	 */
 	public function get_api_ledger( $request ) {
 		// Build the endpoint URL.
-		$api_url = $this->api_url_base . $this->api_endpoint_ledger;
+		$api_url = $this->api_url_base . $this->api_endpoint_ledger . '/transactions';
+
+		// Get the parameters.
+		$start = $request->get_param( 'start' );
+		$end   = $request->get_param( 'end' );
+		$type  = $request->get_param( 'type' );
+
+		// Build query string.
+		$query_params = array();
+		if ( ! empty( $start ) ) {
+			$query_params[] = 'start=' . rawurlencode( $start );
+		}
+		if ( ! empty( $end ) ) {
+			$query_params[] = 'end=' . rawurlencode( $end );
+		}
+		if ( ! empty( $type ) ) {
+			$query_params[] = 'type=' . rawurlencode( $type );
+		}
+
+		// Append query string if we have parameters.
+		if ( ! empty( $query_params ) ) {
+			$api_url .= '?' . implode( '&', $query_params );
+		}
 
 		// Prepare other parameters.
 		$response_body = '';

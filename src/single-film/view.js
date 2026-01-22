@@ -77,39 +77,73 @@ document.addEventListener( 'DOMContentLoaded', () => {
 								</div>
 								<div id="film-events-container">
 									<h2>Upcoming Screenings</h2>
+									<p class="loading-message">Loading screenings...</p>
 								</div>`;
+						}
 
-							// Fetch Film Events
-							return window.Eventive.request( {
-								method: 'GET',
-								path: `event_buckets/${ eventBucket }/films/${ filmId }/events`,
-								authenticatePerson: false,
+						// Fetch Film Events separately
+						window.Eventive.request( {
+							method: 'GET',
+							path: `event_buckets/${ eventBucket }/films/${ filmId }/events`,
+							authenticatePerson: false,
+						} )
+							.then( ( eventsResponse ) => {
+								const eventsContainer = document.getElementById(
+									'film-events-container'
+								);
+								if ( ! eventsContainer ) {
+									return;
+								}
+
+								// Remove loading message
+								const loadingMsg = eventsContainer.querySelector(
+									'.loading-message'
+								);
+								if ( loadingMsg ) {
+									loadingMsg.remove();
+								}
+
+								const events = eventsResponse.events || [];
+								if ( events.length === 0 ) {
+									eventsContainer.innerHTML +=
+										'<p>No upcoming screenings found for this film.</p>';
+								} else {
+									eventsContainer.innerHTML += events
+										.map(
+											( event ) => `
+												<div class="event-item">
+													<h3>${ event.name }</h3>
+													<p>${ new Date( event.start_time ).toLocaleString() }</p>
+													<div class="eventive-button" data-event="${ event.id }"></div>
+												</div>`
+										)
+										.join( '' );
+								}
+								if ( window.Eventive?.rebuild ) {
+									window.Eventive.rebuild();
+								}
+							} )
+							.catch( ( error ) => {
+								console.error(
+									'[eventive-single-film] Error fetching film events:',
+									error
+								);
+								const eventsContainer = document.getElementById(
+									'film-events-container'
+								);
+								if ( eventsContainer ) {
+									// Remove loading message
+									const loadingMsg = eventsContainer.querySelector(
+										'.loading-message'
+									);
+									if ( loadingMsg ) {
+										loadingMsg.remove();
+									}
+									// Add error message but keep container
+									eventsContainer.innerHTML +=
+										'<p class="error-message">Unable to load screenings at this time.</p>';
+								}
 							} );
-						}
-					} )
-					.then( ( eventsResponse ) => {
-						const eventsContainer = document.getElementById(
-							'film-events-container'
-						);
-						const events = eventsResponse.events || [];
-						if ( events.length === 0 ) {
-							eventsContainer.innerHTML +=
-								'<p>No upcoming screenings found for this film.</p>';
-						} else {
-							eventsContainer.innerHTML += events
-								.map(
-									( event ) => `
-										<div class="event-item">
-											<h3>${ event.name }</h3>
-											<p>${ new Date( event.start_time ).toLocaleString() }</p>
-											<div class="eventive-button" data-event="${ event.id }"></div>
-										</div>`
-								)
-								.join( '' );
-						}
-						if ( window.Eventive?.rebuild ) {
-							window.Eventive.rebuild();
-						}
 					} )
 					.catch( ( error ) => {
 						console.error(
@@ -118,7 +152,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 						);
 						if ( detailsContainer ) {
 							detailsContainer.innerHTML =
-								'<p>Error loading film details.</p>';
+								'<p class="error-message">Unable to load film details. Please try again later.</p>';
 						}
 					} );
 			} else if ( eventId ) {
@@ -141,19 +175,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 								</div>`;
 						}
 
-						// Event Details
-						const filmsHTML = ( event.films || [] )
-							.map(
-								( film ) => `
-							<div class="film-card">
-								<img src="${ film.poster_image }" alt="${ film.name }" class="film-poster">
-								<h3>${ film.name }</h3>
-								<p>${ film.description || 'No description available.' }</p>
-							</div>
-						`
-							)
-							.join( '' );
-
+						// Event Details - Load basic info first
 						if ( detailsContainer ) {
 							detailsContainer.innerHTML = `
 								<div class="event-details">
@@ -168,10 +190,35 @@ document.addEventListener( 'DOMContentLoaded', () => {
 								</div>
 								<div class="event-films">
 									<h2>Featured Films</h2>
-									<div class="films-container">
-										${ filmsHTML }
+									<div class="films-container" id="films-container">
+										<p class="loading-message">Loading films...</p>
 									</div>
 								</div>`;
+
+							// Load films
+							const filmsHTML = ( event.films || [] )
+								.map(
+									( film ) => `
+								<div class="film-card">
+									<img src="${ film.poster_image }" alt="${ film.name }" class="film-poster">
+									<h3>${ film.name }</h3>
+									<p>${ film.description || 'No description available.' }</p>
+								</div>
+							`
+								)
+								.join( '' );
+
+							const filmsContainer = document.getElementById(
+								'films-container'
+							);
+							if ( filmsContainer ) {
+								if ( filmsHTML ) {
+									filmsContainer.innerHTML = filmsHTML;
+								} else {
+									filmsContainer.innerHTML =
+										'<p>No films associated with this event.</p>';
+								}
+							}
 						}
 						if ( window.Eventive?.rebuild ) {
 							window.Eventive.rebuild();
@@ -184,7 +231,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 						);
 						if ( detailsContainer ) {
 							detailsContainer.innerHTML =
-								'<p>Error loading event details.</p>';
+								'<p class="error-message">Unable to load event details. Please try again later.</p>';
 						}
 					} );
 			}
