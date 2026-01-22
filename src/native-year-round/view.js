@@ -160,9 +160,11 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const navRow = document.createElement( 'div' );
 		navRow.className = 'eventive-nyr-nav';
 		navRow.innerHTML = `
-			<button class="eventive-nyr-btn eventive-nyr-prev" type="button">‹ Prev</button>
+			<div class="eventive-nyr-nav-controls">
+				<button class="eventive-nyr-btn eventive-nyr-prev" type="button">‹ Prev</button>
+				<button class="eventive-nyr-btn eventive-nyr-next" type="button">Next ›</button>
+			</div>
 			<div class="eventive-nyr-buttons"></div>
-			<button class="eventive-nyr-btn eventive-nyr-next" type="button">Next ›</button>
 		`;
 		calWrap.appendChild( navRow );
 

@@ -82,6 +82,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		let activeTagFilter = '';
 		let searchTerm = '';
 		let allFilms = [];
+		let allTags = [];
 
 		// Collect tags from films
 		const collectTags = ( films ) => {
@@ -126,6 +127,21 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				return;
 			}
 
+			// Only render if tags haven't been rendered yet or tags have changed
+			const existingButtons = filterEl.querySelectorAll( '.eventive-tag-btn' );
+			if ( existingButtons.length === tags.length + 1 ) {
+				// Just update active states
+				existingButtons.forEach( ( btn ) => {
+					const btnTagId = btn.getAttribute( 'data-tag-id' );
+					if ( btnTagId === activeTagFilter ) {
+						btn.classList.add( 'active' );
+					} else {
+						btn.classList.remove( 'active' );
+					}
+				} );
+				return;
+			}
+
 			const allBtn = `<button class="eventive-tag-btn ${
 				! activeTagFilter ? 'active' : ''
 			}" data-tag-id="">All</button>`;
@@ -151,6 +167,14 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				.querySelectorAll( '.eventive-tag-btn' )
 				.forEach( ( btn ) => {
 					btn.addEventListener( 'click', () => {
+						// Remove active class from all buttons
+						filterEl
+							.querySelectorAll( '.eventive-tag-btn' )
+							.forEach( ( b ) => b.classList.remove( 'active' ) );
+						
+						// Add active class to clicked button
+						btn.classList.add( 'active' );
+						
 						activeTagFilter =
 							btn.getAttribute( 'data-tag-id' ) || '';
 						renderFilms();
@@ -393,9 +417,13 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		// Render films
 		const renderFilms = () => {
 			const filtered = filterFilms( allFilms );
-			const tags = collectTags( filtered );
 
-			renderTagsFilter( tags );
+			// Collect tags once from all films, not filtered films
+			if ( ! allTags.length ) {
+				allTags = collectTags( allFilms );
+			}
+
+			renderTagsFilter( allTags );
 			renderSearch();
 
 			// Remove loading text
