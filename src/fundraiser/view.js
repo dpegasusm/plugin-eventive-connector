@@ -31,9 +31,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const fetchData = () => {
 			window.Eventive.request( {
 				method: 'GET',
-				path: `ledger?start_time=${ encodeURIComponent(
+				path: `ledger/transactions?start=${ encodeURIComponent(
 					startDate
-				) }&end_time=${ encodeURIComponent( endDate ) }&type=PAYMENT`,
+				) }&end=${ encodeURIComponent( endDate ) }&type=PAYMENT`,
 				authenticatePerson: false,
 			} )
 				.then( ( data ) => {

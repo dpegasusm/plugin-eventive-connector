@@ -969,7 +969,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
+		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, true );
 	}
 
 	/**
