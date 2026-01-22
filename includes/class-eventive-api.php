@@ -69,6 +69,7 @@ class Eventive_API {
 	private $api_endpoint_event_bucket_endpoints = array(
 		'tags',
 		'active',
+		'venues',
 	);
 
 	/**
@@ -512,10 +513,8 @@ class Eventive_API {
 				'args'                => array(
 					'tag_id' => array(
 						'default'           => '',
-						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
-							return is_int( $param ) && $param >= 0;
-						},
+						'sanitize_callback' => array( $this, 'sanitize_eventive_id' ),
+						'validate_callback' => array( $this, 'validate_eventive_id' ),
 					),
 				),
 			)
@@ -799,6 +798,13 @@ class Eventive_API {
 			case 'active':
 				$api_url = $api_url . '/active';
 				break;
+			case 'venues':
+				// Use default bucket if none provided.
+				if ( empty( $bucket_id ) ) {
+					$bucket_id = $this->api_default_bucket_id;
+				}
+				$api_url .= '/' . sanitize_text_field( $bucket_id ) . '/venues';
+				break;
 			default:
 				// if the bucket is set use it.
 				if ( ! empty( $bucket_id ) && is_string( $bucket_id ) && strlen( $bucket_id ) > 0 ) {
@@ -812,9 +818,10 @@ class Eventive_API {
 		// Prepare other parameters.
 		$response_body = '';
 		$args          = array();
+		$use_secret    = ( 'venues' === $endpoint ) ? true : false; // Venues require secret key.
 
 		// Make the call.
-		$bucket_response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
+		$bucket_response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, $use_secret );
 
 		// If this was a bucket refresh, update the buckets list.
 		if ( $bucket_refresh && ! is_wp_error( $bucket_response ) ) {
@@ -891,7 +898,7 @@ class Eventive_API {
 		$api_url = $this->api_url_base . $this->api_endpoint_films;
 
 		// Get the parameters.
-		$film_id   = $request->get_param( 'film_id' );
+		$film_id = $request->get_param( 'film_id' );
 
 		// Build the endpoint URL based on parameters.
 		if ( ! empty( $film_id ) && is_string( $film_id ) && strlen( $film_id ) > 0 ) {
@@ -1098,8 +1105,8 @@ class Eventive_API {
 		$tag_id = $request->get_param( 'tag_id' );
 
 		// Modify the endpoint based on parameters.
-		if ( ! empty( $tag_id ) && is_int( $tag_id ) && absint( $tag_id ) > 0 ) {
-			$api_url .= '/' . absint( $tag_id );
+		if ( ! empty( $tag_id ) && is_string( $tag_id ) && strlen( $tag_id ) > 0 ) {
+			$api_url .= '/' . sanitize_text_field( $tag_id );
 		}
 
 		// Prepare other parameters.
@@ -1107,7 +1114,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
+		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, true );
 	}
 
 	/**

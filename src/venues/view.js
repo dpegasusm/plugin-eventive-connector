@@ -6,6 +6,7 @@
  */
 
 import { createRoot, useState, useEffect } from '@wordpress/element';
+import apiFetch from '@wordpress/api-fetch';
 
 /**
  * Venue component to render individual venue card
@@ -103,9 +104,10 @@ const VenuesContainer = () => {
 	const [ error, setError ] = useState( null );
 
 	useEffect( () => {
-		const loadVenues = () => {
-			// Get event bucket from localized data
+		const loadVenues = async () => {
+			// Get event bucket and nonce from localized data
 			const eventBucket = window.EventiveBlockData?.eventBucket || '';
+			const nonce = window.EventiveBlockData?.eventNonce || '';
 
 			if ( ! eventBucket ) {
 				setError( 'Event bucket not configured.' );
@@ -113,57 +115,41 @@ const VenuesContainer = () => {
 				return;
 			}
 
-			// Fetch venues from Eventive API
-			window.Eventive.request( {
-				method: 'GET',
-				path: `event_buckets/${ eventBucket }/venues`,
-				authenticatePerson: false,
-			} )
-				.then( ( data ) => {
-					if ( data && Array.isArray( data.venues ) ) {
-						setVenues( data.venues );
-					} else {
-						setError( 'No venues found.' );
-					}
-					setLoading( false );
-				} )
-				.catch( ( err ) => {
-					console.error(
-						'[eventive-venues] Error fetching venues:',
-						err
-					);
-					setError(
-						`Error fetching venues: ${
-							err.message || 'Unknown error'
-						}`
-					);
-					setLoading( false );
+			try {
+				// Build query parameters
+				const params = new URLSearchParams( {
+					bucket_id: eventBucket,
+					endpoint: 'venues',
+					eventive_nonce: nonce,
 				} );
+
+				// Fetch venues from WordPress REST API via event_buckets endpoint
+				const data = await apiFetch( {
+					path: `eventive/v1/event_buckets?${ params.toString() }`,
+					method: 'GET',
+				} );
+
+				if ( data && Array.isArray( data.venues ) ) {
+					setVenues( data.venues );
+				} else {
+					setError( 'No venues found.' );
+				}
+			} catch ( err ) {
+				console.error(
+					'[eventive-venues] Error fetching venues:',
+					err
+				);
+				setError(
+					`Error fetching venues: ${
+						err.message || 'Unknown error'
+					}`
+				);
+			} finally {
+				setLoading( false );
+			}
 		};
 
-		if ( window.Eventive && window.Eventive._ready ) {
-			loadVenues();
-		} else if (
-			window.Eventive &&
-			typeof window.Eventive.on === 'function'
-		) {
-			window.Eventive.on( 'ready', loadVenues );
-		} else {
-			setTimeout( () => {
-				if (
-					window.Eventive &&
-					typeof window.Eventive.request === 'function'
-				) {
-					loadVenues();
-				} else {
-					console.error(
-						'[eventive-venues] Eventive API not available'
-					);
-					setError( 'Eventive API not available' );
-					setLoading( false );
-				}
-			}, 1000 );
-		}
+		loadVenues();
 	}, [] );
 
 	if ( loading ) {

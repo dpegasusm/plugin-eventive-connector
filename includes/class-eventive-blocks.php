@@ -67,7 +67,6 @@ class Eventive_Blocks {
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/fundraiser/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/marquee/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/single-film/' );
-		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/tags/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/venues/' );
 	}
 
@@ -178,7 +177,6 @@ class Eventive_Blocks {
 			'eventive-fundraiser-view-script',
 			'eventive-marquee-view-script',
 			'eventive-single-film-view-script',
-			'eventive-tags-view-script',
 			'eventive-venues-view-script',
 		);
 

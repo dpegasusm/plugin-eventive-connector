@@ -464,11 +464,18 @@ class Eventive_Sync {
 
 		$existing_post_id = ! empty( $existing_posts ) ? $existing_posts[0] : 0;
 
+		// Prepare venue description as block content.
+		$venue_description = '';
+		if ( ! empty( $venue['description'] ) ) {
+			$venue_description = '<!-- wp:paragraph --><p>' . wp_kses_post( $venue['description'] ) . '</p><!-- /wp:paragraph -->';
+		}
+
 		// Prepare post data.
 		$post_data = array(
-			'post_title'  => $venue_name,
-			'post_status' => 'publish',
-			'post_type'   => 'eventive_venue',
+			'post_title'   => $venue_name,
+			'post_content' => $venue_description,
+			'post_status'  => 'publish',
+			'post_type'    => 'eventive_venue',
 		);
 
 		if ( $existing_post_id ) {
@@ -498,6 +505,18 @@ class Eventive_Sync {
 		update_post_meta( $post_id, '_eventive_use_reserved_seating', $use_reserved );
 
 		// Store any additional venue data that comes from the API.
+		if ( ! empty( $venue['short_name'] ) ) {
+			update_post_meta( $post_id, '_eventive_venue_short_name', sanitize_text_field( $venue['short_name'] ) );
+		}
+
+		if ( isset( $venue['default_capacity'] ) && $venue['default_capacity'] !== null ) {
+			update_post_meta( $post_id, '_eventive_venue_default_capacity', absint( $venue['default_capacity'] ) );
+		}
+
+		if ( isset( $venue['comscore_include'] ) ) {
+			update_post_meta( $post_id, '_eventive_venue_comscore_include', (bool) $venue['comscore_include'] );
+		}
+
 		if ( ! empty( $venue['address'] ) ) {
 			update_post_meta( $post_id, '_eventive_venue_address', sanitize_text_field( $venue['address'] ) );
 		}
