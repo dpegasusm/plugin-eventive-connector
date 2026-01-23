@@ -418,7 +418,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			renderTagsFilter( tags, block );
 
 			// Remove loading text
-			const loadingText = block.querySelector( '.eventive-film-loading-text' );
+			const loadingText = block.querySelector(
+				'.eventive-film-loading-text'
+			);
 			if ( loadingText ) {
 				loadingText.remove();
 			}

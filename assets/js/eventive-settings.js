@@ -16,6 +16,7 @@ jQuery( document ).ready( function ( $ ) {
 
 	/**
 	 * Fetch event buckets from WordPress REST API
+	 * @param apiKey
 	 */
 	function fetchEventBuckets( apiKey ) {
 		if ( ! apiKey || apiKey.trim() === '' ) {
@@ -56,6 +57,7 @@ jQuery( document ).ready( function ( $ ) {
 
 	/**
 	 * Populate the bucket dropdown with options
+	 * @param buckets
 	 */
 	function populateBucketDropdown( buckets ) {
 		const selectedValue =
@@ -81,6 +83,7 @@ jQuery( document ).ready( function ( $ ) {
 
 	/**
 	 * Disable bucket dropdown with message
+	 * @param message
 	 */
 	function disableBucketDropdown( message ) {
 		$bucketDropdown

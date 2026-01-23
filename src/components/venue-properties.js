@@ -2,7 +2,7 @@
  * Venue Properties Plugin
  * Adds Eventive venue metadata to the block editor sidebar
  *
- * @package Eventive
+ * @package
  * @since 1.0.0
  */
 
@@ -173,10 +173,7 @@ const VenuePropertiesPanel = () => {
 				onChange={ ( value ) =>
 					updateMeta( '_eventive_venue_comscore_include', value )
 				}
-				help={ __(
-					'Include in Comscore reporting',
-					'eventive'
-				) }
+				help={ __( 'Include in Comscore reporting', 'eventive' ) }
 			/>
 		</PluginDocumentSettingPanel>
 	);

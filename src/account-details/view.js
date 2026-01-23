@@ -146,37 +146,72 @@ function AccountDetailsApp() {
 				setIsLoggedIn( loggedIn );
 
 				if ( loggedIn ) {
+					// Use people/self endpoint
 					const resp = await window.Eventive.request( {
 						method: 'GET',
-						path: 'people?self=true',
+						path: 'people/self',
 						authenticatePerson: true,
 					} );
 					const person = resp && ( resp.person || resp );
 					window.eventivePersonId = person && person.id;
 					const normalized = normalizePerson( person || {} );
-					setDetails( normalized ); // Render buttons if available
-					if ( window.Eventive.renderButtons ) {
-						setTimeout(
-							() => window.Eventive.renderButtons(),
-							100
+
+					if (
+						! normalized ||
+						Object.keys( normalized ).length === 0
+					) {
+						console.warn(
+							'[account-details] Empty/unknown person payload from people/self',
+							resp
+						);
+					} else {
+						console.debug(
+							'[account-details] normalized person',
+							normalized
 						);
 					}
+
+					setDetails( normalized );
+
+					// Render Eventive buttons if available
+					setTimeout( () => {
+						if (
+							window.Eventive &&
+							typeof window.Eventive.renderButtons === 'function'
+						) {
+							try {
+								window.Eventive.renderButtons();
+							} catch ( _ ) {}
+						}
+					}, 100 );
 				}
 			} catch ( error ) {
 				console.error(
 					'[eventive-account-details] Error fetching account details:',
 					error
 				);
+
+				if (
+					error &&
+					( error.code === 'InvalidCredentials' ||
+						error.message === 'InvalidCredentials' )
+				) {
+					setIsLoggedIn( false );
+				}
 			} finally {
 				setIsLoading( false );
 			}
 		};
 
-		if ( window.Eventive && window.Eventive.on ) {
-			window.Eventive.on( 'ready', checkLoginAndFetch );
+		if ( ! window.Eventive || ! window.Eventive.on ) {
+			// If Eventive not available, show error after timeout
+			const fallbackTimer = setTimeout( () => {
+				setIsLoading( false );
+			}, 2500 );
+			return () => clearTimeout( fallbackTimer );
 		}
 
-		checkLoginAndFetch();
+		window.Eventive.on( 'ready', checkLoginAndFetch );
 	}, [] );
 
 	const handleEdit = ( key, currentValue ) => {
@@ -200,6 +235,7 @@ function AccountDetailsApp() {
 			const payload = {};
 			payload[ key ] = editValue;
 
+			// Use people/{id} endpoint with POST
 			await window.Eventive.request( {
 				method: 'POST',
 				path: `people/${ personId }`,
@@ -246,15 +282,7 @@ function AccountDetailsApp() {
 
 	if ( isLoading ) {
 		return (
-			<div
-				className="eventive-login-container"
-				style={ {
-					display: 'flex',
-					justifyContent: 'center',
-					alignItems: 'center',
-					height: '100px',
-				} }
-			>
+			<div className="eventive-login-container">
 				<div className="loader"></div>
 			</div>
 		);
@@ -262,7 +290,7 @@ function AccountDetailsApp() {
 
 	if ( ! isLoggedIn ) {
 		return (
-			<div className="eventive-notice" style={ { textAlign: 'center' } }>
+			<div className="eventive-notice">
 				Please log in to view your account details.
 			</div>
 		);
@@ -270,7 +298,7 @@ function AccountDetailsApp() {
 
 	if ( ! details ) {
 		return (
-			<div className="eventive-notice" style={ { textAlign: 'center' } }>
+			<div className="eventive-notice">
 				Unable to load account details.
 			</div>
 		);
@@ -305,7 +333,71 @@ function AccountDetailsApp() {
 					<tbody>
 						{ Object.keys( fields ).map( ( key ) => {
 							const label = fields[ key ];
-							const rawValue = details[ key ];
+							let rawValue = details[ key ];
+
+							// Common fallbacks for known fields
+							if ( rawValue === undefined ) {
+								const R = details._raw || {};
+								if ( key === 'phone_number' ) {
+									rawValue =
+										details.phone ||
+										details.phoneNumber ||
+										( R.details &&
+											( R.details.phone ||
+												R.details.phone_number ) ) ||
+										( R.phones &&
+											firstIn( R.phones, 'number' ) );
+								}
+								if ( key === 'mailing_address' ) {
+									rawValue =
+										details.address ||
+										details.mailingAddress ||
+										details.mailing_address ||
+										( R.details &&
+											( R.details.address ||
+												R.details.mailing_address ) ) ||
+										joinAddress( firstIn( R.addresses ) );
+								}
+								if ( key === 'name' ) {
+									rawValue =
+										R &&
+										( R.name ||
+											R.full_name ||
+											( R.first_name &&
+												R.last_name &&
+												R.first_name +
+													' ' +
+													R.last_name ) );
+								}
+								if ( key === 'email' ) {
+									rawValue =
+										R &&
+										( R.email ||
+											( R.emails &&
+												firstIn(
+													R.emails,
+													'email'
+												) ) );
+								}
+							}
+
+							// Normalize mailing_address object -> string
+							if (
+								key === 'mailing_address' &&
+								rawValue &&
+								typeof rawValue === 'object'
+							) {
+								const parts = [
+									rawValue.street || rawValue.line1,
+									rawValue.line2,
+									rawValue.city,
+									rawValue.region || rawValue.state,
+									rawValue.postal_code || rawValue.postalCode,
+									rawValue.country,
+								].filter( Boolean );
+								rawValue = parts.join( ', ' );
+							}
+
 							const value =
 								rawValue !== undefined &&
 								rawValue !== null &&
@@ -409,10 +501,7 @@ function AccountDetailsApp() {
 						} ) }
 					</tbody>
 				</table>
-				<div
-					className="eventive-account-actions"
-					style={ { marginTop: '16px' } }
-				>
+				<div className="eventive-account-actions">
 					<div
 						className="eventive-button"
 						data-payment="true"
@@ -433,6 +522,12 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	);
 
 	blocks.forEach( ( block ) => {
+		// Idempotent guard - don't initialize twice
+		if ( block.__evtInited ) {
+			return;
+		}
+		block.__evtInited = true;
+
 		const root = createRoot( block );
 		root.render( <AccountDetailsApp /> );
 	} );

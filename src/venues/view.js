@@ -140,9 +140,7 @@ const VenuesContainer = () => {
 					err
 				);
 				setError(
-					`Error fetching venues: ${
-						err.message || 'Unknown error'
-					}`
+					`Error fetching venues: ${ err.message || 'Unknown error' }`
 				);
 			} finally {
 				setLoading( false );

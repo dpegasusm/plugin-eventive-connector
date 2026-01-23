@@ -1,7 +1,41 @@
 /**
  * Film Guide Block - Frontend View Script
  */
-import { createRoot } from '@wordpress/element';
+
+// Utility functions
+function debounce( fn, wait ) {
+	let t;
+	return function () {
+		const args = arguments,
+			ctx = this;
+		clearTimeout( t );
+		t = setTimeout( function () {
+			fn.apply( ctx, args );
+		}, wait );
+	};
+}
+
+function lower( v ) {
+	return v == null ? '' : String( v ).toLowerCase();
+}
+
+function esc( v ) {
+	return v == null ? '' : String( v );
+}
+
+function slugify( str ) {
+	if ( ! str ) {
+		return '';
+	}
+	return String( str )
+		.normalize( 'NFD' )
+		.replace( /[\u0300-\u036f]/g, '' )
+		.toLowerCase()
+		.replace( /[^a-z0-9\s-]/g, '' )
+		.replace( /\s+/g, '-' )
+		.replace( /-+/g, '-' )
+		.replace( /^-|-$/g, '' );
+}
 
 function textColor( bg ) {
 	if ( ! bg ) {
@@ -20,473 +54,843 @@ function textColor( bg ) {
 	return ( r * 299 + g * 587 + b * 114 ) / 1000 > 128 ? '#000' : '#fff';
 }
 
-/**
- * Initialize Film Guide blocks on page load
- */
-document.addEventListener( 'DOMContentLoaded', () => {
-	const filmGuideBlocks = document.querySelectorAll(
-		'.wp-block-eventive-film-guide'
-	);
+function normalizeImageType( v ) {
+	const s = ( v || '' ).toString().toLowerCase();
+	if ( s === 'poster' || s === 'poster-image' || s === 'poster_image' ) {
+		return 'poster_image';
+	}
+	if ( s === 'cover' || s === 'cover-image' || s === 'cover_image' ) {
+		return 'cover_image';
+	}
+	if ( s === 'still' || s === 'still-image' || s === 'still_image' ) {
+		return 'still_image';
+	}
+	return s;
+}
 
-	filmGuideBlocks.forEach( ( block ) => {
-		if ( block.__inited ) {
+// URL helpers
+function setURLTagParam( tagId, method ) {
+	try {
+		const u = new URL( window.location.href );
+		if ( ! tagId ) {
+			u.searchParams.delete( 'tag-id' );
+		} else {
+			u.searchParams.set( 'tag-id', tagId );
+		}
+		if ( method === 'replace' ) {
+			history.replaceState( {}, '', u.toString() );
+		} else {
+			history.pushState( {}, '', u.toString() );
+		}
+	} catch ( _ ) {}
+}
+
+// Film cache
+window.__Eventive_FilmCache = window.__Eventive_FilmCache || {};
+function fetchFilmsOnce( bucket, yearRound ) {
+	const key = bucket + '::' + ( yearRound ? 'marquee' : 'all' );
+	const C = window.__Eventive_FilmCache;
+	if ( C[ key ] ) {
+		return Promise.resolve( C[ key ] );
+	}
+	if ( ! window.Eventive ) {
+		return Promise.reject( new Error( 'Eventive not ready' ) );
+	}
+	const opts = {
+		method: 'GET',
+		path: 'event_buckets/' + encodeURIComponent( bucket ) + '/films',
+		qs: { include: 'tags' },
+		authenticatePerson: false,
+	};
+	if ( yearRound ) {
+		opts.qs.marquee = true;
+	}
+	return window.Eventive.request( opts ).then( function ( res ) {
+		const list = ( res && res.films ) || [];
+		C[ key ] = list;
+		return list;
+	} );
+}
+
+function buildTagSets( list ) {
+	const ids = new Set(),
+		names = new Set();
+	( list || [] ).forEach( function ( v ) {
+		if ( v == null ) {
 			return;
 		}
-		block.__inited = true;
-
-		// Get API configuration
-		const endpoints = window.EventiveBlockData?.apiEndpoints || {};
-		const nonce = window.EventiveBlockData?.eventNonce || '';
-		const eventBucket =
-			window.EventiveBlockData?.eventBucket ||
-			window.EventiveBlockData?.eventBucket ||
-			'';
-
-		// Extract attributes
-		const includeTags = JSON.parse(
-			block.getAttribute( 'data-include-tags' ) || '[]'
-		);
-		const excludeTags = JSON.parse(
-			block.getAttribute( 'data-exclude-tags' ) || '[]'
-		);
-		const imageType =
-			block.getAttribute( 'data-image-type' ) || 'poster_image';
-		const viewMode = block.getAttribute( 'data-view' ) || 'grid';
-		const showEvents = block.getAttribute( 'data-show-events' ) === 'true';
-		const showDetails =
-			block.getAttribute( 'data-show-details' ) === 'true';
-		const showDescription =
-			block.getAttribute( 'data-show-description' ) === 'true';
-		const showTags = block.getAttribute( 'data-show-tags' ) === 'true';
-		const yearRound = block.getAttribute( 'data-year-round' ) === 'true';
-		const showSearch = block.getAttribute( 'data-show-search' ) === 'true';
-
-		let activeTagFilter = '';
-		let searchTerm = '';
-		let allFilms = [];
-		let allTags = [];
-
-		// Collect tags from films
-		const collectTags = ( films ) => {
-			const tagMap = new Map();
-			films.forEach( ( film ) => {
-				const tags = Array.isArray( film.tags ) ? film.tags : [];
-				tags.forEach( ( t ) => {
-					if ( ! t || ! t.id ) {
-						return;
-					}
-					const id = String( t.id );
-					if ( ! tagMap.has( id ) ) {
-						tagMap.set( id, {
-							id,
-							name: t.name || '',
-							color: t.color || '#ccc',
-							count: 0,
-						} );
-					}
-					const tag = tagMap.get( id );
-					tag.count++;
-				} );
-			} );
-			return Array.from( tagMap.values() ).sort( ( a, b ) =>
-				a.name.localeCompare( b.name )
-			);
-		};
-
-		// Render tags filter
-		const renderTagsFilter = ( tags ) => {
-			let filterEl = block.querySelector(
-				'.eventive-film-guide-tags-filter'
-			);
-			if ( ! filterEl ) {
-				filterEl = document.createElement( 'div' );
-				filterEl.className = 'eventive-film-guide-tags-filter';
-				block.insertBefore( filterEl, block.firstChild );
-			}
-
-			if ( ! tags.length ) {
-				filterEl.innerHTML = '';
-				return;
-			}
-
-			// Only render if tags haven't been rendered yet or tags have changed
-			const existingButtons = filterEl.querySelectorAll( '.eventive-tag-btn' );
-			if ( existingButtons.length === tags.length + 1 ) {
-				// Just update active states
-				existingButtons.forEach( ( btn ) => {
-					const btnTagId = btn.getAttribute( 'data-tag-id' );
-					if ( btnTagId === activeTagFilter ) {
-						btn.classList.add( 'active' );
-					} else {
-						btn.classList.remove( 'active' );
-					}
-				} );
-				return;
-			}
-
-			const allBtn = `<button class="eventive-tag-btn ${
-				! activeTagFilter ? 'active' : ''
-			}" data-tag-id="">All</button>`;
-			const tagBtns = tags
-				.map( ( tag ) => {
-					const color = tag.color || '#ccc';
-					const txtColor = textColor( color );
-					const isActive = activeTagFilter === tag.id;
-					return `<button class="eventive-tag-btn ${
-						isActive ? 'active' : ''
-					}" data-tag-id="${
-						tag.id
-					}" style="background-color:${ color };color:${ txtColor };">${
-						tag.name
-					}</button>`;
-				} )
-				.join( '' );
-
-			filterEl.innerHTML = `<div class="eventive-tags-list">${ allBtn }${ tagBtns }</div>`;
-
-			// Add click handlers
-			filterEl
-				.querySelectorAll( '.eventive-tag-btn' )
-				.forEach( ( btn ) => {
-					btn.addEventListener( 'click', () => {
-						// Remove active class from all buttons
-						filterEl
-							.querySelectorAll( '.eventive-tag-btn' )
-							.forEach( ( b ) => b.classList.remove( 'active' ) );
-						
-						// Add active class to clicked button
-						btn.classList.add( 'active' );
-						
-						activeTagFilter =
-							btn.getAttribute( 'data-tag-id' ) || '';
-						renderFilms();
-					} );
-				} );
-		};
-
-		// Render search bar
-		const renderSearch = () => {
-			if ( ! showSearch ) {
-				return;
-			}
-
-			let searchEl = block.querySelector( '.eventive-film-guide-search' );
-			if ( ! searchEl ) {
-				searchEl = document.createElement( 'div' );
-				searchEl.className = 'eventive-film-guide-search';
-				const filterEl = block.querySelector(
-					'.eventive-film-guide-tags-filter'
-				);
-				if ( filterEl ) {
-					filterEl.after( searchEl );
-				} else {
-					block.insertBefore( searchEl, block.firstChild );
-				}
-			}
-
-			searchEl.innerHTML =
-				'<input type="search" placeholder="Search films..." class="eventive-search-input" />';
-
-			const input = searchEl.querySelector( '.eventive-search-input' );
-			input.addEventListener( 'input', ( e ) => {
-				searchTerm = e.target.value.toLowerCase();
-				renderFilms();
-			} );
-		};
-
-		// Filter films
-		const filterFilms = ( films ) => {
-			let filtered = [ ...films ];
-
-			// Filter by include tags
-			if ( includeTags.length ) {
-				filtered = filtered.filter( ( film ) => {
-					const filmTags = Array.isArray( film.tags )
-						? film.tags
-						: [];
-					return filmTags.some( ( t ) =>
-						includeTags.includes( String( t.id ) )
-					);
-				} );
-			}
-
-			// Filter by exclude tags
-			if ( excludeTags.length ) {
-				filtered = filtered.filter( ( film ) => {
-					const filmTags = Array.isArray( film.tags )
-						? film.tags
-						: [];
-					return ! filmTags.some( ( t ) =>
-						excludeTags.includes( String( t.id ) )
-					);
-				} );
-			}
-
-			// Filter by active tag
-			if ( activeTagFilter ) {
-				filtered = filtered.filter( ( film ) => {
-					const filmTags = Array.isArray( film.tags )
-						? film.tags
-						: [];
-					return filmTags.some(
-						( t ) => String( t.id ) === activeTagFilter
-					);
-				} );
-			}
-
-			// Filter by search term
-			if ( searchTerm ) {
-				filtered = filtered.filter( ( film ) => {
-					const name = ( film.name || '' ).toLowerCase();
-					const desc = (
-						film.description ||
-						film.short_description ||
-						''
-					).toLowerCase();
-					return (
-						name.includes( searchTerm ) ||
-						desc.includes( searchTerm )
-					);
-				} );
-			}
-
-			// Sort by name
-			filtered.sort( ( a, b ) =>
-				( a.name || '' ).localeCompare( b.name || '' )
-			);
-
-			return filtered;
-		};
-
-		// Render films grid
-		const renderFilmsGrid = ( films ) => {
-			if ( ! films.length ) {
-				return '<div class="eventive-no-films">No films found.</div>';
-			}
-
-			return `<div class="catalog-film-container grid">${ films
-				.map( ( film ) => {
-					const imageUrl =
-						film[ imageType ] ||
-						film.poster_image ||
-						film.cover_image;
-					const tagsHTML = showTags
-						? ( film.tags || [] )
-								.map(
-									( tag ) =>
-										`<span class="film-tag-pill" style="background-color:${
-											tag.color || '#ccc'
-										};color:${ textColor( tag.color ) };">${
-											tag.name
-										}</span>`
-								)
-								.join( '' )
-						: '';
-
-					return `
-						<div class="film-card">
-							${
-								imageUrl
-									? `<div class="film-card-image"><img src="${ imageUrl }" alt="${
-											film.name || ''
-									  }" /></div>`
-									: ''
-							}
-							<div class="film-card-content">
-								<h3 class="film-card-title">${ film.name || '' }</h3>
-								${
-									showDescription && film.short_description
-										? `<p class="film-card-description">${ film.short_description }</p>`
-										: ''
-								}
-								${ tagsHTML ? `<div class="film-card-tags">${ tagsHTML }</div>` : '' }
-								${
-									showDetails
-										? `<div class="film-card-details">
-									${
-										film.credits?.director
-											? `<div><strong>Director:</strong> ${ film.credits.director }</div>`
-											: ''
-									}
-									${
-										film.details?.runtime
-											? `<div><strong>Runtime:</strong> ${ film.details.runtime } min</div>`
-											: ''
-									}
-									${
-										film.details?.year
-											? `<div><strong>Year:</strong> ${ film.details.year }</div>`
-											: ''
-									}
-								</div>`
-										: ''
-								}
-							</div>
-						</div>`;
-				} )
-				.join( '' ) }</div>`;
-		};
-
-		// Render films list
-		const renderFilmsList = ( films ) => {
-			if ( ! films.length ) {
-				return '<div class="eventive-no-films">No films found.</div>';
-			}
-
-			return `<div class="catalog-film-container list">${ films
-				.map( ( film ) => {
-					const imageUrl =
-						film[ imageType ] ||
-						film.poster_image ||
-						film.cover_image;
-					const tagsHTML = showTags
-						? ( film.tags || [] )
-								.map(
-									( tag ) =>
-										`<span class="film-tag-pill" style="background-color:${
-											tag.color || '#ccc'
-										};color:${ textColor( tag.color ) };">${
-											tag.name
-										}</span>`
-								)
-								.join( '' )
-						: '';
-
-					return `
-						<div class="film-list-item">
-							${
-								imageUrl
-									? `<div class="film-list-image"><img src="${ imageUrl }" alt="${
-											film.name || ''
-									  }" /></div>`
-									: ''
-							}
-							<div class="film-list-content">
-								<h3 class="film-list-title">${ film.name || '' }</h3>
-								${
-									showDescription && film.description
-										? `<div class="film-list-description">${ film.description }</div>`
-										: ''
-								}
-								${ tagsHTML ? `<div class="film-list-tags">${ tagsHTML }</div>` : '' }
-								${
-									showDetails
-										? `<div class="film-list-details">
-									${
-										film.credits?.director
-											? `<div><strong>Director:</strong> ${ film.credits.director }</div>`
-											: ''
-									}
-									${
-										film.details?.runtime
-											? `<div><strong>Runtime:</strong> ${ film.details.runtime } min</div>`
-											: ''
-									}
-									${
-										film.details?.year
-											? `<div><strong>Year:</strong> ${ film.details.year }</div>`
-											: ''
-									}
-								</div>`
-										: ''
-								}
-							</div>
-						</div>`;
-				} )
-				.join( '' ) }</div>`;
-		};
-
-		// Render films
-		const renderFilms = () => {
-			const filtered = filterFilms( allFilms );
-
-			// Collect tags once from all films, not filtered films
-			if ( ! allTags.length ) {
-				allTags = collectTags( allFilms );
-			}
-
-			renderTagsFilter( allTags );
-			renderSearch();
-
-			// Remove loading text
-			const loadingText = block.querySelector( '.eventive-film-loading-text' );
-			if ( loadingText ) {
-				loadingText.remove();
-			}
-
-			let containerEl = block.querySelector(
-				'.eventive-film-guide-container'
-			);
-			if ( ! containerEl ) {
-				containerEl = document.createElement( 'div' );
-				containerEl.className = 'eventive-film-guide-container';
-				block.appendChild( containerEl );
-			}
-
-			containerEl.innerHTML =
-				viewMode === 'list'
-					? renderFilmsList( filtered )
-					: renderFilmsGrid( filtered );
-		};
-
-		// Fetch and render
-		const init = () => {
-			const fetchData = () => {
-				const params = new URLSearchParams();
-				params.append( 'include', 'tags' );
-				if ( yearRound ) {
-					params.append( 'marquee', 'true' );
-				}
-
-				let path = `event_buckets/${ eventBucket }/films`;
-				if ( params.toString() ) {
-					path += `?${ params.toString() }`;
-				}
-
-				window.Eventive.request( {
-					method: 'GET',
-					path,
-					authenticatePerson: false,
-				} )
-					.then( ( response ) => {
-						allFilms = ( response && response.films ) || [];
-						renderFilms();
-					} )
-					.catch( ( error ) => {
-						console.error(
-							'[eventive-film-guide] Error fetching films:',
-							error
-						);
-						block.innerHTML =
-							'<div class="eventive-error">Error loading films.</div>';
-					} );
-			};
-
-			if ( window.Eventive && window.Eventive._ready ) {
-				fetchData();
-			} else if (
-				window.Eventive &&
-				typeof window.Eventive.on === 'function'
-			) {
-				window.Eventive.on( 'ready', fetchData );
-			} else {
-				setTimeout( () => {
-					if (
-						window.Eventive &&
-						typeof window.Eventive.request === 'function'
-					) {
-						fetchData();
-					} else {
-						console.error(
-							'[eventive-film-guide] Eventive API not available'
-						);
-						block.innerHTML =
-							'<div class="eventive-error">Error loading films.</div>';
-					}
-				}, 1000 );
-			}
-		};
-
-		init();
+		const s = String( v ).trim();
+		if ( ! s ) {
+			return;
+		}
+		ids.add( s );
+		names.add( s.toLowerCase() );
 	} );
-} );
+	return { ids, names };
+}
+
+function filmHasAnyTag( film, idsSet, namesSet, candidate ) {
+	const tags = film.tags || [];
+	if ( ! tags.length ) {
+		return false;
+	}
+	const cand = candidate ? String( candidate ).trim().toLowerCase() : null;
+	for ( let i = 0; i < tags.length; i++ ) {
+		const t = tags[ i ];
+		const tid = t && t.id != null ? String( t.id ) : '';
+		const tname = t && t.name != null ? String( t.name ).toLowerCase() : '';
+		if ( cand && ! ( tid === candidate || tname === cand ) ) {
+			continue;
+		}
+		if ( idsSet.has( tid ) || namesSet.has( tname ) ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+function preprocess( list ) {
+	return ( list || [] ).map( function ( f ) {
+		if ( ! f ) {
+			return f;
+		}
+		const d = String( f.description || f.short_description || '' );
+		let creditsText = '';
+		if ( f.credits && typeof f.credits === 'object' ) {
+			try {
+				creditsText = Object.values( f.credits ).flat().join( ' ' );
+			} catch ( _ ) {
+				creditsText = Object.values( f.credits ).join( ' ' );
+			}
+		}
+		return Object.assign( {}, f, {
+			_lc_name: lower( f.name ),
+			_lc_desc: lower( d ),
+			_lc_credits: lower( creditsText ),
+		} );
+	} );
+}
+
+/**
+ * Initialize Film Guide blocks on page load
+ * @param block
+ */
+function initInstance( block ) {
+	// Prevent double initialization
+	if ( ! block || block.__efgInited ) {
+		return;
+	}
+	block.__efgInited = true;
+
+	// Assign unique ID if missing
+	if ( ! block.id ) {
+		block.id = 'efg-' + Math.random().toString( 36 ).slice( 2 );
+	}
+
+	// Get configuration from window
+	const bucket = window.EventiveBlockData?.eventBucket || '';
+	const filmSyncEnabled = window.EventiveBlockData?.filmSyncEnabled || false;
+	const prettyPermalinks =
+		window.EventiveBlockData?.prettyPermalinks || false;
+	const detailBaseURL = window.EventiveBlockData?.filmDetailUrl || '';
+
+	// Parse attributes from data-* on block wrapper
+	let includeTags = [];
+	try {
+		const tagNameAttr = block.getAttribute( 'data-tag-name' ) || '';
+		includeTags = tagNameAttr
+			.split( ',' )
+			.map( ( s ) => s.trim() )
+			.filter( Boolean );
+	} catch ( e ) {}
+
+	let excludeTags = [];
+	try {
+		const excludeAttr = block.getAttribute( 'data-exclude-tag' ) || '';
+		excludeTags = excludeAttr
+			.split( ',' )
+			.map( ( s ) => s.trim() )
+			.filter( Boolean );
+	} catch ( e ) {}
+
+	const specificFilmId = block.getAttribute( 'data-film-id' ) || '';
+	let imageType = block.getAttribute( 'data-image' ) || 'poster';
+	imageType = normalizeImageType( imageType );
+	let view = block.getAttribute( 'data-view' ) || 'grid';
+	const showEvents = block.getAttribute( 'data-show-events' ) === 'true';
+	const showDetails = block.getAttribute( 'data-show-details' ) === 'true';
+	const showDescription =
+		block.getAttribute( 'data-show-description' ) === 'true';
+	const showTags = block.getAttribute( 'data-show-tags' ) === 'true';
+	const yearRound = block.getAttribute( 'data-year-round' ) === 'true';
+	const showSearch = block.getAttribute( 'data-search' ) === 'true';
+	const showFilter = block.getAttribute( 'data-show-filter' ) === 'true';
+	const showViewSwitcher =
+		block.getAttribute( 'data-show-view-switcher' ) === 'true';
+
+	// Get or create container elements
+	let tagsWrap = block.querySelector( '.eventive-film-guide-tags-filter' );
+	if ( showFilter && ! tagsWrap ) {
+		tagsWrap = document.createElement( 'div' );
+		tagsWrap.className = 'eventive-film-guide-tags-filter';
+		block.insertBefore( tagsWrap, block.firstChild );
+	}
+
+	let searchWrap = block.querySelector( '.eventive-film-guide-search' );
+	if ( showSearch && ! searchWrap ) {
+		searchWrap = document.createElement( 'div' );
+		searchWrap.className = 'eventive-film-guide-search';
+		const input = document.createElement( 'input' );
+		input.type = 'search';
+		input.placeholder = 'Search films (title, cast, crew)…';
+		input.className = 'eventive-search-input';
+		searchWrap.appendChild( input );
+		if ( tagsWrap ) {
+			tagsWrap.after( searchWrap );
+		} else {
+			block.insertBefore( searchWrap, block.firstChild );
+		}
+	}
+
+	let controlsWrap = block.querySelector( '.eventive-film-guide-controls' );
+	if ( showViewSwitcher && ! controlsWrap ) {
+		controlsWrap = document.createElement( 'div' );
+		controlsWrap.className = 'eventive-film-guide-controls';
+		controlsWrap.innerHTML = `
+			<label>
+				View:
+				<select class="view-selector">
+					<option value="grid" ${ view === 'grid' ? 'selected' : '' }>Grid</option>
+					<option value="list" ${ view === 'list' ? 'selected' : '' }>List</option>
+				</select>
+			</label>
+			<label>
+				Image:
+				<select class="image-selector">
+					<option value="poster_image" ${
+						imageType === 'poster_image' ? 'selected' : ''
+					}>Poster</option>
+					<option value="cover_image" ${
+						imageType === 'cover_image' ? 'selected' : ''
+					}>Cover</option>
+					<option value="still_image" ${
+						imageType === 'still_image' ? 'selected' : ''
+					}>Still</option>
+				</select>
+			</label>
+		`;
+		if ( searchWrap ) {
+			searchWrap.after( controlsWrap );
+		} else if ( tagsWrap ) {
+			tagsWrap.after( controlsWrap );
+		} else {
+			block.insertBefore( controlsWrap, block.firstChild );
+		}
+	}
+
+	let containerEl = block.querySelector( '.eventive-film-guide-container' );
+	if ( ! containerEl ) {
+		containerEl = document.createElement( 'div' );
+		containerEl.className = 'eventive-film-guide-container';
+		block.appendChild( containerEl );
+	}
+
+	// Create grid and list containers
+	let grid = containerEl.querySelector( '.catalog-film-container.grid' );
+	let list = containerEl.querySelector( '.catalog-film-container.list' );
+	if ( ! grid ) {
+		grid = document.createElement( 'div' );
+		grid.className = 'catalog-film-container grid';
+		containerEl.appendChild( grid );
+	}
+	if ( ! list ) {
+		list = document.createElement( 'div' );
+		list.className = 'catalog-film-container list';
+		containerEl.appendChild( list );
+	}
+
+	// Set initial display
+	grid.style.display = view === 'grid' ? 'grid' : 'none';
+	list.style.display = view === 'list' ? 'block' : 'none';
+
+	// State
+	const urlParams = new URLSearchParams( window.location.search );
+	let activeTag = urlParams.get( 'tag-id' ) || '';
+	let searchTerm = '';
+	let films = [];
+
+	const inc = buildTagSets( includeTags );
+	const exc = buildTagSets( excludeTags );
+
+	let renderScheduled = false;
+	function scheduleRender() {
+		if ( renderScheduled ) {
+			return;
+		}
+		renderScheduled = true;
+		requestAnimationFrame( function () {
+			renderScheduled = false;
+			renderNow();
+		} );
+	}
+
+	// Event listeners
+	if ( controlsWrap ) {
+		const viewSel = controlsWrap.querySelector( '.view-selector' );
+		const imgSel = controlsWrap.querySelector( '.image-selector' );
+		if ( viewSel ) {
+			viewSel.addEventListener( 'change', function ( e ) {
+				view = e.target.value;
+				grid.style.display = view === 'grid' ? 'grid' : 'none';
+				list.style.display = view === 'list' ? 'block' : 'none';
+				scheduleRender();
+			} );
+		}
+		if ( imgSel ) {
+			imgSel.addEventListener( 'change', function ( e ) {
+				imageType = normalizeImageType( e.target.value );
+				scheduleRender();
+			} );
+		}
+	}
+
+	if ( searchWrap ) {
+		const searchInput = searchWrap.querySelector(
+			'.eventive-search-input'
+		);
+		if ( searchInput ) {
+			const apply = debounce( function () {
+				searchTerm = ( searchInput.value || '' ).trim().toLowerCase();
+				scheduleRender();
+			}, 150 );
+			searchInput.addEventListener( 'input', apply );
+			searchInput.addEventListener( 'change', apply );
+			searchInput.addEventListener( 'keydown', function ( ev ) {
+				if ( ev.key === 'Enter' ) {
+					ev.preventDefault();
+					apply();
+				}
+			} );
+		}
+	}
+
+	// Global tag selection event
+	document.addEventListener( 'eventive:setActiveTag', function ( ev ) {
+		try {
+			const tid =
+				ev &&
+				ev.detail &&
+				( ev.detail.tagId !== undefined ? ev.detail.tagId : ev.detail );
+			if ( tid === undefined ) {
+				return;
+			}
+			activeTag = String( tid || '' );
+			setURLTagParam( activeTag, 'replace' );
+			highlightActiveTag();
+			scheduleRender();
+		} catch ( _ ) {}
+	} );
+
+	// Tag pill clicks
+	if ( tagsWrap ) {
+		tagsWrap.addEventListener(
+			'click',
+			function ( ev ) {
+				const a =
+					ev.target && ev.target.closest
+						? ev.target.closest( 'a.external-tag-filter' )
+						: null;
+				if ( ! a ) {
+					return;
+				}
+				if (
+					ev.metaKey ||
+					ev.ctrlKey ||
+					ev.shiftKey ||
+					ev.altKey ||
+					a.target === '_blank'
+				) {
+					return;
+				}
+				ev.preventDefault();
+				ev.stopPropagation();
+				const tid = a.getAttribute( 'data-tag-id' ) || '';
+				activeTag = String( tid );
+				setURLTagParam( activeTag, 'replace' );
+				highlightActiveTag();
+				scheduleRender();
+			},
+			true
+		);
+	}
+
+	// Back/forward navigation
+	window.addEventListener( 'popstate', function () {
+		try {
+			const v =
+				new URL( window.location.href ).searchParams.get( 'tag-id' ) ||
+				'';
+			activeTag = v;
+			highlightActiveTag();
+			scheduleRender();
+		} catch ( _ ) {}
+	} );
+
+	function collectAvailableTagsFromFilms( list ) {
+		const map = new Map();
+		( list || [] ).forEach( function ( f ) {
+			const tags = Array.isArray( f.tags ) ? f.tags : [];
+			tags.forEach( function ( t ) {
+				if ( ! t ) {
+					return;
+				}
+				const id = t.id != null ? String( t.id ) : '';
+				const name =
+					t.name || t.title || t.label || ( id ? '#' + id : '' );
+				if ( ! id && ! name ) {
+					return;
+				}
+				const cur = map.get( id || name ) || {
+					id,
+					name,
+					color: t.color || '#e0e0e0',
+					count: 0,
+				};
+				cur.count += 1;
+				map.set( id || name, cur );
+			} );
+		} );
+		return Array.from( map.values() );
+	}
+
+	function renderTagPillsFromFilms( list ) {
+		if ( ! tagsWrap ) {
+			return;
+		}
+		let baseFiltered = list.slice();
+		if ( ! specificFilmId && ( inc.ids.size || inc.names.size ) ) {
+			baseFiltered = baseFiltered.filter( function ( f ) {
+				return filmHasAnyTag( f, inc.ids, inc.names );
+			} );
+		}
+		if ( exc.ids.size || exc.names.size ) {
+			baseFiltered = baseFiltered.filter( function ( f ) {
+				return ! filmHasAnyTag( f, exc.ids, exc.names );
+			} );
+		}
+		const tags = collectAvailableTagsFromFilms( baseFiltered );
+		if ( ! tags.length ) {
+			tagsWrap.innerHTML = '';
+			return;
+		}
+
+		const resetUrl = ( function () {
+			try {
+				const u = new URL( window.location.href );
+				u.searchParams.delete( 'tag-id' );
+				return u.toString();
+			} catch ( _ ) {
+				return '#';
+			}
+		} )();
+
+		let html = '';
+		html +=
+			'<div class="eventive-tags-list">';
+		html +=
+			'<button class="eventive-tag-btn" data-tag-id=""><a class="external-tag-filter" data-tag-id="" href="' +
+			resetUrl +
+			'">All</a></button>';
+		tags.sort( function ( a, b ) {
+			return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
+		} );
+		html += tags
+			.map( function ( t ) {
+				const fg = textColor( t.color || '#e0e0e0' );
+				const href = ( function () {
+					try {
+						const u = new URL( resetUrl );
+						u.searchParams.set( 'tag-id', t.id || t.name );
+						return u.toString();
+					} catch ( _ ) {
+						return '#';
+					}
+				} )();
+				return (
+					'<button class="eventive-tag-btn" style="background-color:' +
+					esc( t.color || '#e0e0e0' ) +
+					';color:' +
+					fg +
+					'" data-tag-id="' +
+					esc( t.id || t.name ) +
+					'">' +
+					'<a class="external-tag-filter" data-tag-id="' +
+					esc( t.id || t.name ) +
+					'" href="' +
+					href +
+					'">' +
+					esc( t.name ) +
+					'</a>' +
+					'</button>'
+				);
+			} )
+			.join( '' );
+		html += '</div>';
+		tagsWrap.innerHTML = html;
+		highlightActiveTag();
+	}
+
+	function highlightActiveTag() {
+		if ( ! tagsWrap ) {
+			return;
+		}
+		try {
+			const buttons = tagsWrap.querySelectorAll( '.eventive-tag-btn' );
+			buttons.forEach( function ( btn ) {
+				btn.classList.remove( 'active' );
+			} );
+			buttons.forEach( function ( btn ) {
+				const id = btn.getAttribute( 'data-tag-id' );
+				if ( ! activeTag ) {
+					if ( ! id ) {
+						btn.classList.add( 'active' );
+					}
+				} else if ( id === activeTag ) {
+					btn.classList.add( 'active' );
+				}
+			} );
+		} catch ( _ ) {}
+	}
+
+	function renderNow() {
+		let filtered = films.slice();
+		if ( specificFilmId ) {
+			filtered = filtered.filter( function ( f ) {
+				return String( f.id ) === String( specificFilmId );
+			} );
+		}
+		if ( ! specificFilmId && ( inc.ids.size || inc.names.size ) ) {
+			filtered = filtered.filter( function ( f ) {
+				return filmHasAnyTag( f, inc.ids, inc.names );
+			} );
+		}
+		if ( ! specificFilmId && activeTag ) {
+			const at = String( activeTag ).trim();
+			filtered = filtered.filter( function ( f ) {
+				return filmHasAnyTag(
+					f,
+					new Set( [ at ] ),
+					new Set( [ at.toLowerCase() ] )
+				);
+			} );
+		}
+		if ( exc.ids.size || exc.names.size ) {
+			filtered = filtered.filter( function ( f ) {
+				return ! filmHasAnyTag( f, exc.ids, exc.names );
+			} );
+		}
+		if ( searchTerm ) {
+			filtered = filtered.filter( function ( f ) {
+				return (
+					f._lc_name.indexOf( searchTerm ) > -1 ||
+					f._lc_desc.indexOf( searchTerm ) > -1 ||
+					f._lc_credits.indexOf( searchTerm ) > -1
+				);
+			} );
+		}
+		filtered.sort( function ( a, b ) {
+			const A = ( a.name || '' ).toLowerCase(),
+				B = ( b.name || '' ).toLowerCase();
+			return A < B ? -1 : A > B ? 1 : 0;
+		} );
+
+		const target = view === 'list' ? list || grid : grid || list;
+		if ( ! target ) {
+			return;
+		}
+		if ( ! filtered.length ) {
+			target.innerHTML =
+				'<div class="catalog-no-films">No films found for the selected criteria.</div>';
+			return;
+		}
+
+		target.innerHTML = '';
+		let i = 0,
+			batch = 20;
+		function renderChunk() {
+			const frag = document.createDocumentFragment();
+			const end = Math.min( i + batch, filtered.length );
+			for ( ; i < end; i++ ) {
+				const f = filtered[ i ];
+				const runtime = showDetails
+					? ( f.details && f.details.runtime ) || 'N/A'
+					: null;
+				const director = showDetails
+					? ( f.credits && f.credits.director ) || 'Unknown'
+					: null;
+				const year = showDetails
+					? ( f.details && f.details.year ) || 'N/A'
+					: null;
+				const language = showDetails
+					? ( f.details && f.details.language ) || 'N/A'
+					: null;
+				const imgKey = normalizeImageType( imageType );
+				const imageSrc =
+					f[ imgKey ] || f[ imageType ] || 'default-placeholder.jpg';
+				const shortDesc = f.short_description || '';
+				const slug = slugify( f.name );
+				let filmLink = '';
+				if ( filmSyncEnabled ) {
+					filmLink =
+						esc( detailBaseURL ).replace( /\/$/, '' ) + '/' + slug;
+				} else {
+					filmLink = prettyPermalinks
+						? detailBaseURL +
+						  '?film-id=' +
+						  encodeURIComponent( f.id )
+						: detailBaseURL +
+						  '&film-id=' +
+						  encodeURIComponent( f.id );
+				}
+
+				let tagsHTML = '';
+				const filmTagsArr = Array.isArray( f.tags ) ? f.tags : [];
+				if ( showTags && filmTagsArr && filmTagsArr.length ) {
+					const tagMap = new Map();
+					filmTagsArr.forEach( function ( t ) {
+						if ( ! t ) {
+							return;
+						}
+						const id = t.id != null ? String( t.id ) : '';
+						const name = t.name || t.title || id;
+						if ( ! name ) {
+							return;
+						}
+						tagMap.set( id || name, t );
+					} );
+					tagsHTML =
+						'<div class="catalog-film-tags">' +
+						Array.from( tagMap.values() )
+							.map( function ( t ) {
+								const fg = textColor( t.color || '#e0e0e0' );
+								return (
+									'<span class="catalog-film-tag-pill" style="background-color:' +
+									esc( t.color || '#e0e0e0' ) +
+									';color:' +
+									fg +
+									'" data-tag-id="' +
+									esc( t.id || t.name ) +
+									'">' +
+									esc( t.name ) +
+									'</span>'
+								);
+							} )
+							.join( '' ) +
+						'</div>';
+				}
+
+				const el = document.createElement( 'div' );
+				if ( view === 'list' ) {
+					el.className = 'catalog-film-list-item';
+					el.innerHTML =
+						'<a href="' +
+						filmLink +
+						'"><img class="catalog-film-image" loading="lazy" decoding="async" src="' +
+						imageSrc +
+						'" alt="' +
+						( f.name || 'Film' ) +
+						'"/></a>' +
+						'<div class="catalog-film-details">' +
+						'<h2 class="catalog-film-title">' +
+						( f.name || '' ) +
+						'</h2>' +
+						tagsHTML +
+						'<span class="catalog-film-description">' +
+						( showDetails
+							? 'Directed by: ' +
+							  director +
+							  '<br />' +
+							  ( runtime + ' min | ' + year + ' | ' + language )
+							: '' ) +
+						'</span>' +
+						( showDescription && shortDesc
+							? '<div class="catalog-film-short">' +
+							  shortDesc +
+							  '</div>'
+							: '' ) +
+						( showEvents
+							? '<div class="catalog-film-details-link"><a href="' +
+							  filmLink +
+							  '">Details & Showtimes</a></div>'
+							: '' ) +
+						'</div>';
+				} else {
+					el.className = 'catalog-film-box';
+					el.setAttribute( 'role', 'article' );
+					el.innerHTML =
+						'<a href="' +
+						filmLink +
+						'"><img class="catalog-film-image" loading="lazy" decoding="async" src="' +
+						imageSrc +
+						'" alt="' +
+						( f.name || 'Film' ) +
+						'"/></a>' +
+						'<div class="catalog-film-details">' +
+						'<h3 class="catalog-film-title">' +
+						( f.name || '' ) +
+						'</h3>' +
+						tagsHTML +
+						( showDetails
+							? '<span class="catalog-film-description">' +
+							  director +
+							  '<br />' +
+							  ( runtime +
+									' min | ' +
+									year +
+									' | ' +
+									language ) +
+							  '</span>'
+							: '' ) +
+						( showDescription && shortDesc
+							? '<div class="catalog-film-short">' +
+							  shortDesc +
+							  '</div>'
+							: '' ) +
+						( showEvents
+							? '<div class="catalog-film-details-link"><a href="' +
+							  filmLink +
+							  '">Details & Showtimes</a></div>'
+							: '' ) +
+						'</div>';
+				}
+				frag.appendChild( el );
+			}
+			target.appendChild( frag );
+			if ( i < filtered.length ) {
+				requestAnimationFrame( renderChunk );
+			}
+		}
+		requestAnimationFrame( renderChunk );
+	}
+
+	function boot() {
+		if ( ! window.Eventive ) {
+			const t = view === 'list' ? list : grid;
+			if ( t ) {
+				t.innerHTML =
+					'<div class="catalog-error">Eventive API is not available.</div>';
+			}
+			return;
+		}
+		const run = function () {
+			fetchFilmsOnce( bucket, yearRound )
+				.then( function ( all ) {
+					films = preprocess( all );
+					renderTagPillsFromFilms( films );
+					scheduleRender();
+				} )
+				.catch( function () {
+					const t = view === 'list' ? list : grid;
+					if ( t ) {
+						t.innerHTML =
+							'<div class="catalog-error">Failed to load films.</div>';
+					}
+				} );
+		};
+
+		let attached = false;
+		try {
+			if (
+				window.Eventive &&
+				typeof window.Eventive.ready === 'function'
+			) {
+				window.Eventive.ready( run );
+				attached = true;
+			}
+		} catch ( _ ) {}
+		if ( ! attached ) {
+			try {
+				if (
+					window.Eventive &&
+					window.Eventive.on &&
+					typeof window.Eventive.on === 'function'
+				) {
+					window.Eventive.on( 'ready', run );
+					attached = true;
+				}
+			} catch ( _ ) {}
+		}
+		if ( ! attached ) {
+			let tries = 0;
+			( function poll() {
+				if (
+					window.Eventive &&
+					typeof window.Eventive.request === 'function'
+				) {
+					run();
+					return;
+				}
+				if ( ++tries > 60 ) {
+					run();
+					return;
+				}
+				setTimeout( poll, 50 );
+			} )();
+		}
+	}
+
+	if ( document.readyState === 'loading' ) {
+		document.addEventListener( 'DOMContentLoaded', boot, { once: true } );
+	} else {
+		boot();
+	}
+}
+
+function autoInit() {
+	const candidates = document.querySelectorAll(
+		'.wp-block-eventive-film-guide'
+	);
+	if ( ! candidates || ! candidates.length ) {
+		return;
+	}
+	candidates.forEach( function ( node ) {
+		if ( ! node.getAttribute ) {
+			return;
+		}
+		const parentGuide =
+			node.parentElement &&
+			node.parentElement.closest &&
+			node.parentElement.closest( '.wp-block-eventive-film-guide' );
+		if ( parentGuide && parentGuide !== node ) {
+			return;
+		}
+		initInstance( node );
+	} );
+}
+
+if ( document.readyState === 'loading' ) {
+	document.addEventListener( 'DOMContentLoaded', autoInit, { once: true } );
+} else {
+	autoInit();
+}
+
+// Elementor support
+if ( window.jQuery && window.elementorFrontend ) {
+	window.jQuery( window ).on( 'elementor/frontend/init', function () {
+		try {
+			window.elementorFrontend.hooks.addAction(
+				'frontend/element_ready/shortcode.default',
+				function ( scope ) {
+					if ( scope && scope[ 0 ] ) {
+						const wraps = scope[ 0 ].querySelectorAll(
+							'.wp-block-eventive-film-guide'
+						);
+						if ( wraps && wraps.length ) {
+							wraps.forEach( initInstance );
+						}
+					}
+				}
+			);
+		} catch ( _ ) {}
+	} );
+}

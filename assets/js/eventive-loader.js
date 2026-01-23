@@ -1,11 +1,19 @@
 ( function () {
-	if ( ! window.__EventiveEE ) window.__EventiveEE = {};
-	if ( window.__EventiveEE._inlineInjected ) return;
+	if ( ! window.__EventiveEE ) {
+		window.__EventiveEE = {};
+	}
+	if ( window.__EventiveEE._inlineInjected ) {
+		return;
+	}
 	window.__EventiveEE._inlineInjected = true;
 
 	function runRebuildOnce() {
-		if ( ! window.Eventive ) return;
-		if ( window.__EventiveEE._rebuilt ) return;
+		if ( ! window.Eventive ) {
+			return;
+		}
+		if ( window.__EventiveEE._rebuilt ) {
+			return;
+		}
 		try {
 			window.Eventive.rebuild();
 		} catch ( e ) {}

@@ -5,7 +5,12 @@
  */
 import { __ } from '@wordpress/i18n';
 import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
-import { PanelBody, SelectControl, ToggleControl, Spinner } from '@wordpress/components';
+import {
+	PanelBody,
+	SelectControl,
+	ToggleControl,
+	Spinner,
+} from '@wordpress/components';
 import { useState, useEffect } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import './editor.scss';
@@ -66,8 +71,7 @@ export default function Edit( { attributes, setAttributes } ) {
 				>
 					{ loadingFilms ? (
 						<div style={ { padding: '10px 0' } }>
-							<Spinner />{ ' ' }
-							{ __( 'Loading films...', 'eventive' ) }
+							<Spinner /> { __( 'Loading films…', 'eventive' ) }
 						</div>
 					) : (
 						<SelectControl
@@ -75,7 +79,10 @@ export default function Edit( { attributes, setAttributes } ) {
 							value={ filmId }
 							options={ [
 								{
-									label: __( '-- Select a Film --', 'eventive' ),
+									label: __(
+										'-- Select a Film --',
+										'eventive'
+									),
 									value: '',
 								},
 								...films,
@@ -147,8 +154,9 @@ export default function Edit( { attributes, setAttributes } ) {
 						<p>
 							{ filmId
 								? `${ __( 'Selected Film:', 'eventive' ) } ${
-										films.find( ( f ) => f.value === filmId )
-											?.label || filmId
+										films.find(
+											( f ) => f.value === filmId
+										)?.label || filmId
 								  }`
 								: __(
 										'Film details will display here (set Film ID or use URL parameter)',

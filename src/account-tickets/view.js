@@ -27,7 +27,9 @@ function ensureAbsolute( url ) {
 		return url;
 	}
 	return (
-		'https://api.eventive.org' + ( url.charAt( 0 ) === '/' ? '' : '/' ) + url
+		'https://api.eventive.org' +
+		( url.charAt( 0 ) === '/' ? '' : '/' ) +
+		url
 	);
 }
 
@@ -107,11 +109,7 @@ function virtualUrl( t ) {
 
 function ticketQR( t ) {
 	return ensureAbsolute(
-		pickFirst(
-			t.qr_code_path,
-			t.barcode_path,
-			t.barcode && t.barcode.path
-		)
+		pickFirst( t.qr_code_path, t.barcode_path, t.barcode && t.barcode.path )
 	);
 }
 
@@ -180,6 +178,8 @@ function getEventId( t ) {
 
 /**
  * Account Tickets Component
+ * @param root0
+ * @param root0.bucket
  */
 function AccountTicketsApp( { bucket } ) {
 	const [ isLoggedIn, setIsLoggedIn ] = useState( false );
@@ -339,9 +339,7 @@ function AccountTicketsApp( { bucket } ) {
 		return (
 			<div key={ idx } className="eventive-ticket-card">
 				<div className="eventive-ticket-card__body">
-					<div className="eventive-ticket-card__title">
-						{ title }
-					</div>
+					<div className="eventive-ticket-card__title">{ title }</div>
 					<div>
 						{ scanned && (
 							<span className="evt-badge evt-badge-scanned">
@@ -359,9 +357,7 @@ function AccountTicketsApp( { bucket } ) {
 							</span>
 						) }
 					</div>
-					<div className="eventive-ticket-card__meta">
-						{ meta }
-					</div>
+					<div className="eventive-ticket-card__meta">{ meta }</div>
 					{ seat && (
 						<div className="eventive-ticket-card__seat">
 							{ seat }
@@ -531,10 +527,7 @@ function AccountTicketsApp( { bucket } ) {
 								const past = isPastEvent( selectedTicket );
 								return code ? (
 									<div className="barcode-qr-container">
-										<img
-											src={ code }
-											alt="Ticket QR"
-										/>
+										<img src={ code } alt="Ticket QR" />
 										{ past && (
 											<div className="past-event-overlay">
 												<div className="overlay-content">

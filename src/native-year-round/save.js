@@ -25,7 +25,9 @@ export default function Save( { attributes } ) {
 			data-details={ details ? 'true' : 'false' }
 		>
 			<div className="eventive-native-year-round-placeholder">
-				<p className='eventive-film-loading-text'>Loading year-round events...</p>
+				<p className="eventive-film-loading-text">
+					Loading year-round events...
+				</p>
 			</div>
 		</div>
 	);

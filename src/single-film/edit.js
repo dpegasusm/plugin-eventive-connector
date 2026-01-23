@@ -92,8 +92,7 @@ export default function Edit( { attributes, setAttributes } ) {
 				<PanelBody title={ __( 'Single Film Settings', 'eventive' ) }>
 					{ loadingFilms ? (
 						<div style={ { padding: '10px 0' } }>
-							<Spinner />{ ' ' }
-							{ __( 'Loading films...', 'eventive' ) }
+							<Spinner /> { __( 'Loading films…', 'eventive' ) }
 						</div>
 					) : (
 						<SelectControl
@@ -101,7 +100,10 @@ export default function Edit( { attributes, setAttributes } ) {
 							value={ attributes.filmId }
 							options={ [
 								{
-									label: __( '-- Select a Film --', 'eventive' ),
+									label: __(
+										'-- Select a Film --',
+										'eventive'
+									),
 									value: '',
 								},
 								...films,
@@ -121,8 +123,7 @@ export default function Edit( { attributes, setAttributes } ) {
 
 					{ loadingEvents ? (
 						<div style={ { padding: '10px 0' } }>
-							<Spinner />{ ' ' }
-							{ __( 'Loading events...', 'eventive' ) }
+							<Spinner /> { __( 'Loading events…', 'eventive' ) }
 						</div>
 					) : (
 						<SelectControl
@@ -130,7 +131,10 @@ export default function Edit( { attributes, setAttributes } ) {
 							value={ attributes.eventId }
 							options={ [
 								{
-									label: __( '-- Select an Event --', 'eventive' ),
+									label: __(
+										'-- Select an Event --',
+										'eventive'
+									),
 									value: '',
 								},
 								...events,
@@ -174,11 +178,9 @@ export default function Edit( { attributes, setAttributes } ) {
 								<strong>
 									{ __( 'Selected Film:', 'eventive' ) }
 								</strong>{ ' ' }
-								{
-									films.find(
-										( f ) => f.value === attributes.filmId
-									)?.label || attributes.filmId
-								}
+								{ films.find(
+									( f ) => f.value === attributes.filmId
+								)?.label || attributes.filmId }
 							</p>
 						) }
 						{ attributes.eventId && (
@@ -186,11 +188,9 @@ export default function Edit( { attributes, setAttributes } ) {
 								<strong>
 									{ __( 'Selected Event:', 'eventive' ) }
 								</strong>{ ' ' }
-								{
-									events.find(
-										( e ) => e.value === attributes.eventId
-									)?.label || attributes.eventId
-								}
+								{ events.find(
+									( e ) => e.value === attributes.eventId
+								)?.label || attributes.eventId }
 							</p>
 						) }
 						{ ! attributes.filmId && ! attributes.eventId && (

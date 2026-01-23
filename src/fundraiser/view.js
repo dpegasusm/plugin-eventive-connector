@@ -59,9 +59,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				// Process donations
 				if ( data && Array.isArray( data.transactions ) ) {
 					data.transactions.forEach( ( transaction ) => {
-						if (
-							transaction.category?.ref_label === 'Donation'
-						) {
+						if ( transaction.category?.ref_label === 'Donation' ) {
 							totalDonations +=
 								parseFloat( transaction.gross ) / 100;
 						}

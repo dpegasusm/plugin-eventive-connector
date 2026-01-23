@@ -10,7 +10,7 @@ import { createRoot, useState, useEffect } from '@wordpress/element';
 /**
  * Account component
  */
-function EventiveAccount() {
+function EventiveAccount( { children } ) {
 	const [ isLoggedIn, setIsLoggedIn ] = useState( false );
 	const [ isLoading, setIsLoading ] = useState( true );
 
@@ -21,52 +21,101 @@ function EventiveAccount() {
 				window.Eventive &&
 				typeof window.Eventive.isLoggedIn === 'function'
 			) {
-				setIsLoggedIn( window.Eventive.isLoggedIn() );
-				setIsLoading( false );
+				try {
+					const loggedIn = window.Eventive.isLoggedIn();
+					setIsLoggedIn( loggedIn );
+				} catch ( e ) {
+					console.error( '[eventive-account] login check error', e );
+					setIsLoggedIn( false );
+				} finally {
+					setIsLoading( false );
+				}
 			}
 		};
 
-		if ( window.Eventive && window.Eventive.ready ) {
-			window.Eventive.ready( checkLogin );
-		} else if ( window.Eventive && window.Eventive.on ) {
-			window.Eventive.on( 'ready', checkLogin );
-		} else {
-			// Fallback polling
-			let attempts = 0;
-			const poll = setInterval( () => {
-				if (
-					window.Eventive &&
-					typeof window.Eventive.isLoggedIn === 'function'
-				) {
-					checkLogin();
-					clearInterval( poll );
-				} else if ( ++attempts > 50 ) {
-					setIsLoading( false );
-					clearInterval( poll );
-				}
-			}, 100 );
-		}
-	}, [] );
-
-	const handleLogout = ( e ) => {
-		e.preventDefault();
-		if ( typeof window.handleLogout === 'function' ) {
-			window.handleLogout();
+		if ( ! window.Eventive || ! window.Eventive.on ) {
+			// If loader not present yet, show login prompt as safe default
+			setIsLoading( false );
+			setIsLoggedIn( false );
 			return;
 		}
-		// Fallback logout
-		try {
-			localStorage.clear();
-		} catch ( _ ) {}
-		try {
-			sessionStorage.clear();
-		} catch ( _ ) {}
-		document.cookie = 'eventive-personState=; path=/; max-age=0';
-		if ( window.Eventive && window.Eventive.logout ) {
-			window.Eventive.logout()
-				.then( () => window.location.reload() )
-				.catch( () => window.location.reload() );
+
+		// Check if Eventive is already ready
+		if ( window.Eventive._ready || window.Eventive.ready ) {
+			checkLogin();
 		} else {
+			window.Eventive.on( 'ready', checkLogin );
+		}
+
+		// Also listen for auth state changes
+		try {
+			window.Eventive.on( 'login', () => {
+				setIsLoggedIn( true );
+			} );
+			window.Eventive.on( 'logout', () => {
+				setIsLoggedIn( false );
+			} );
+		} catch ( _ ) {}
+	}, [] );
+
+	const handleLogout = async ( e ) => {
+		e.preventDefault();
+
+		// Use global handler when available
+		if ( typeof window.handleLogout === 'function' ) {
+			try {
+				window.handleLogout();
+				return;
+			} catch ( err ) {
+				console.error( 'handleLogout error:', err );
+			}
+		}
+
+		// Fallback logout flow
+		try {
+			// Clear storage
+			const keys = [
+				'eventivePersonToken',
+				'eventiveAppPersonToken',
+				'eventive_token',
+				'eventive_person_token',
+			];
+			keys.forEach( ( k ) => {
+				try {
+					localStorage.removeItem( k );
+				} catch ( _ ) {}
+			} );
+
+			try {
+				sessionStorage.clear();
+			} catch ( _ ) {}
+
+			document.cookie = 'eventive-personState=; path=/; max-age=0';
+
+			// Call Eventive logout
+			if ( window.Eventive && window.Eventive.logout ) {
+				try {
+					await window.Eventive.logout();
+				} catch ( err ) {
+					console.error( 'Eventive.logout() failed:', err );
+				}
+			}
+
+			// Call logout endpoint
+			if ( window.Eventive && window.Eventive.request ) {
+				try {
+					await window.Eventive.request( {
+						method: 'POST',
+						path: 'people/logout',
+						authenticatePerson: true,
+					} );
+				} catch ( _ ) {}
+			}
+
+			// Reload page
+			window.location.reload();
+		} catch ( err ) {
+			console.error( 'Unexpected logout error:', err );
 			window.location.reload();
 		}
 	};
@@ -74,15 +123,20 @@ function EventiveAccount() {
 	if ( isLoading ) {
 		return (
 			<div className="eventive-account-container">
-				<p style={ { textAlign: 'center' } }>Loading...</p>
+				<p className="eventive-loading">Loading...</p>
 			</div>
 		);
 	}
 
 	if ( ! isLoggedIn ) {
 		return (
-			<div className="eventive-notice" style={ { textAlign: 'center' } }>
-				Please log in to view your account details.
+			<div className="eventive-account-container">
+				<div className="eventive-notice">
+					<p>
+						You are not logged in. Please log in to view your
+						account.
+					</p>
+				</div>
 			</div>
 		);
 	}
@@ -98,20 +152,7 @@ function EventiveAccount() {
 					Log out
 				</a>
 			</div>
-			<div className="top-section">
-				<div className="account-details">
-					{ /* Account details would be rendered by eventive-account-details block */ }
-					<div className="eventive-account-details-placeholder" />
-				</div>
-				<div className="account-passes">
-					{ /* Passes would be rendered by eventive-account-passes block */ }
-					<div className="eventive-account-passes-placeholder" />
-				</div>
-			</div>
-			<div className="account-tickets">
-				{ /* Tickets would be rendered by eventive-account-tickets block */ }
-				<div className="eventive-account-tickets-placeholder" />
-			</div>
+			{ children }
 		</div>
 	);
 }
@@ -125,9 +166,22 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	);
 
 	containers.forEach( ( container ) => {
-		if ( ! container.querySelector( '.eventive-account-container' ) ) {
-			const root = createRoot( container );
-			root.render( <EventiveAccount /> );
+		// Idempotent guard - don't initialize twice
+		if ( container.__evtInited ) {
+			return;
 		}
+		container.__evtInited = true;
+
+		// Get the existing inner content (child blocks)
+		const innerContent = container.innerHTML;
+		const tempDiv = document.createElement( 'div' );
+		tempDiv.innerHTML = innerContent;
+
+		const root = createRoot( container );
+		root.render(
+			<EventiveAccount>
+				<div dangerouslySetInnerHTML={ { __html: innerContent } } />
+			</EventiveAccount>
+		);
 	} );
 } );

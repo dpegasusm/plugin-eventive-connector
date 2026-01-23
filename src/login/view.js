@@ -8,12 +8,67 @@
 import { createRoot } from '@wordpress/element';
 import { useState, useEffect } from '@wordpress/element';
 
+// Safari/ITP: request first-party storage access
+async function requestStorageAccessIfNeeded() {
+	try {
+		if ( ! document.requestStorageAccess ) {
+			return;
+		}
+		const has =
+			typeof document.hasStorageAccess === 'function'
+				? await document.hasStorageAccess()
+				: false;
+		if ( ! has ) {
+			try {
+				await document.requestStorageAccess();
+			} catch ( _ ) {}
+		}
+	} catch ( _ ) {}
+}
+
+// Attempt to read persisted Eventive person token from localStorage
+function getStoredEventiveToken() {
+	try {
+		const keys = [
+			'eventivePersonToken',
+			'eventiveAppPersonToken',
+			'eventive_token',
+			'eventive_person_token',
+		];
+		for ( let i = 0; i < keys.length; i++ ) {
+			const v = localStorage.getItem( keys[ i ] );
+			if ( v && typeof v === 'string' && v.trim() ) {
+				return v.trim();
+			}
+		}
+	} catch ( _ ) {}
+	return null;
+}
+
+// Version-safe wrapper to hydrate login state with a token
+function loginWithEventiveTokenCompat( token ) {
+	const EVT = window.Eventive;
+	try {
+		if ( EVT && typeof EVT.loginWithToken === 'function' ) {
+			const p = EVT.loginWithToken( { eventiveToken: token } );
+			if ( p && typeof p.then === 'function' ) {
+				return p.catch( () => EVT.loginWithToken( token ) );
+			}
+			return EVT.loginWithToken( token );
+		}
+	} catch ( _ ) {}
+	return Promise.reject(
+		new Error( 'Eventive.loginWithToken is unavailable.' )
+	);
+}
+
 /**
  * Login Component
  * @param root0
  * @param root0.loginLinkText
+ * @param root0.bucket
  */
-function LoginApp( { loginLinkText } ) {
+function LoginApp( { loginLinkText, bucket } ) {
 	const [ isLoggedIn, setIsLoggedIn ] = useState( false );
 	const [ isLoading, setIsLoading ] = useState( true );
 	const [ showModal, setShowModal ] = useState( false );
@@ -21,6 +76,7 @@ function LoginApp( { loginLinkText } ) {
 	const [ password, setPassword ] = useState( '' );
 	const [ error, setError ] = useState( '' );
 	const [ userName, setUserName ] = useState( '' );
+	const [ isSubmitting, setIsSubmitting ] = useState( false );
 
 	useEffect( () => {
 		const checkLogin = async () => {
@@ -34,7 +90,7 @@ function LoginApp( { loginLinkText } ) {
 				setIsLoggedIn( loggedIn );
 
 				if ( loggedIn ) {
-					// Fetch user name
+					// Fetch user name - prefer first_name
 					try {
 						const resp = await window.Eventive.request( {
 							method: 'GET',
@@ -42,9 +98,41 @@ function LoginApp( { loginLinkText } ) {
 							authenticatePerson: true,
 						} );
 						const person = resp && ( resp.person || resp );
-						setUserName( person?.name || person?.email || 'User' );
+						const name =
+							person?.first_name ||
+							person?.name ||
+							person?.full_name ||
+							person?.email ||
+							'Friend';
+						setUserName( name );
 					} catch ( e ) {
 						console.error( 'Error fetching user info:', e );
+						setUserName( 'Friend' );
+					}
+				} else {
+					// Check if we have a stored token and try to hydrate
+					const token = getStoredEventiveToken();
+					if ( token ) {
+						try {
+							await loginWithEventiveTokenCompat( token );
+							const stillLoggedIn = window.Eventive.isLoggedIn();
+							if ( stillLoggedIn ) {
+								setIsLoggedIn( true );
+								const resp = await window.Eventive.request( {
+									method: 'GET',
+									path: 'people/self',
+									authenticatePerson: true,
+								} );
+								const person = resp && ( resp.person || resp );
+								const name =
+									person?.first_name ||
+									person?.name ||
+									person?.full_name ||
+									person?.email ||
+									'Friend';
+								setUserName( name );
+							}
+						} catch ( _ ) {}
 					}
 				}
 			} catch ( error ) {
@@ -64,59 +152,210 @@ function LoginApp( { loginLinkText } ) {
 	const handleLogin = async ( e ) => {
 		e.preventDefault();
 		setError( '' );
+		setIsSubmitting( true );
+
+		const emailVal = email.trim();
+		const passwordVal = password.trim();
+
+		if ( ! emailVal || ! passwordVal ) {
+			setError( 'Please enter your email and password.' );
+			setIsSubmitting( false );
+			return;
+		}
 
 		try {
-			if ( ! window.Eventive || ! window.Eventive.login ) {
+			if ( ! window.Eventive ) {
 				setError( 'Eventive is not available' );
+				setIsSubmitting( false );
 				return;
 			}
 
-			await window.Eventive.login( {
-				email,
-				password,
-			} );
+			// Determine effective event bucket
+			let effectiveBucket = bucket;
+			if ( ! effectiveBucket || effectiveBucket === '' ) {
+				effectiveBucket =
+					window.Eventive.event_bucket ||
+					( window.Eventive.config &&
+						window.Eventive.config.event_bucket ) ||
+					'';
+			}
 
-			// Refresh login state
-			const loggedIn = window.Eventive.isLoggedIn();
-			setIsLoggedIn( loggedIn );
+			if ( ! effectiveBucket ) {
+				setError(
+					'Missing event bucket. Please set a default in settings.'
+				);
+				setIsSubmitting( false );
+				return;
+			}
 
-			if ( loggedIn ) {
-				setShowModal( false );
-				setEmail( '' );
-				setPassword( '' );
+			const body = {
+				email: emailVal,
+				password: passwordVal,
+				event_bucket: effectiveBucket,
+			};
 
-				// Fetch user name
-				try {
-					const resp = await window.Eventive.request( {
-						method: 'GET',
-						path: 'people/self',
-						authenticatePerson: true,
+			// Safari: explicitly request storage access before making auth requests
+			await requestStorageAccessIfNeeded();
+
+			// Try fetch-based login first
+			let json;
+			try {
+				const res = await fetch(
+					'https://api.eventive.org/people/login',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json;charset=UTF-8',
+						},
+						body: JSON.stringify( body ),
+					}
+				);
+
+				if ( ! res.ok ) {
+					const txt = await res.text();
+					throw new Error(
+						'Login failed. (' +
+							res.status +
+							') ' +
+							( txt || '' ).slice( 0, 200 )
+					);
+				}
+				json = await res.json();
+			} catch ( fetchErr ) {
+				// Fallback to Eventive.request
+				if ( window.Eventive.request ) {
+					json = await window.Eventive.request( {
+						method: 'POST',
+						path: 'people/login',
+						body,
+						authenticatePerson: false,
 					} );
-					const person = resp && ( resp.person || resp );
-					setUserName( person?.name || person?.email || 'User' );
-				} catch ( e ) {
-					console.error( 'Error fetching user info:', e );
+				} else {
+					throw fetchErr;
 				}
 			}
+
+			const token = json && ( json.token || json.person_token );
+			if ( ! token ) {
+				throw new Error( 'No token in response' );
+			}
+
+			// Hydrate the token into Eventive
+			await loginWithEventiveTokenCompat( token );
+
+			// Store bucket preference
+			try {
+				localStorage.setItem(
+					'evt_last_bucket',
+					String( effectiveBucket || '' )
+				);
+			} catch ( _ ) {}
+
+			// Fetch user info
+			try {
+				const resp = await window.Eventive.request( {
+					method: 'GET',
+					path: 'people/self',
+					authenticatePerson: true,
+				} );
+				const person = resp && ( resp.person || resp );
+				const name =
+					person?.first_name ||
+					person?.name ||
+					person?.full_name ||
+					person?.email ||
+					'Friend';
+				setUserName( name );
+				setIsLoggedIn( true );
+			} catch ( _ ) {
+				setUserName( 'Friend' );
+				setIsLoggedIn( true );
+			}
+
+			// Close modal and clear form
+			setShowModal( false );
+			setEmail( '' );
+			setPassword( '' );
+
+			// Force page reload to update other blocks
+			await requestStorageAccessIfNeeded();
+			setTimeout( () => {
+				try {
+					window.location.reload();
+				} catch ( _ ) {
+					window.location.href = window.location.href;
+				}
+			}, 120 );
 		} catch ( err ) {
-			setError( 'Invalid email or password' );
+			let msg = 'Login failed.';
+			if ( err && err.status ) {
+				msg += ' (' + err.status + ')';
+			}
+			if ( err && err.message ) {
+				msg += ' ' + err.message;
+			}
+			setError( msg );
 			console.error( 'Login error:', err );
+		} finally {
+			setIsSubmitting( false );
 		}
 	};
 
 	const handleLogout = async () => {
 		try {
-			if ( window.Eventive && window.Eventive.logout ) {
-				await window.Eventive.logout();
-				setIsLoggedIn( false );
-				setUserName( '' );
+			const EVT = window.Eventive;
+
+			// Clear tokens from localStorage
+			const keys = [
+				'eventivePersonToken',
+				'eventiveAppPersonToken',
+				'eventive_token',
+				'eventive_person_token',
+			];
+			keys.forEach( ( k ) => {
+				try {
+					localStorage.removeItem( k );
+				} catch ( _ ) {}
+			} );
+
+			// Call logout via request
+			if ( EVT && EVT.request ) {
+				try {
+					await EVT.request( {
+						method: 'POST',
+						path: 'people/logout',
+						authenticatePerson: true,
+					} );
+				} catch ( _ ) {}
+			}
+
+			// Call Eventive.logout if available
+			if ( EVT && typeof EVT.logout === 'function' ) {
+				try {
+					const p = EVT.logout();
+					if ( p && typeof p.then === 'function' ) {
+						await p;
+					}
+				} catch ( _ ) {}
+			}
+
+			setIsLoggedIn( false );
+			setUserName( '' );
+
+			// Reload page to update other blocks
+			try {
+				window.location.reload();
+			} catch ( _ ) {
+				window.location.href = window.location.href;
 			}
 		} catch ( error ) {
 			console.error( 'Logout error:', error );
 		}
 	};
 
-	const openModal = () => {
+	const openModal = async ( e ) => {
+		e.preventDefault();
+		await requestStorageAccessIfNeeded();
 		setShowModal( true );
 		setError( '' );
 	};
@@ -127,6 +366,25 @@ function LoginApp( { loginLinkText } ) {
 		setPassword( '' );
 		setError( '' );
 	};
+
+	// Close modal on ESC key
+	useEffect( () => {
+		const handleEsc = ( ev ) => {
+			if ( ev.key === 'Escape' && showModal ) {
+				closeModal();
+			}
+		};
+
+		if ( showModal ) {
+			document.addEventListener( 'keydown', handleEsc );
+			document.body.style.overflow = 'hidden';
+		}
+
+		return () => {
+			document.removeEventListener( 'keydown', handleEsc );
+			document.body.style.overflow = '';
+		};
+	}, [ showModal ] );
 
 	if ( isLoading ) {
 		return <div className="eventive-login-message">Loading...</div>;
@@ -167,6 +425,7 @@ function LoginApp( { loginLinkText } ) {
 						<button
 							className="eventive-modal-close"
 							onClick={ closeModal }
+							aria-label="Close"
 						>
 							×
 						</button>
@@ -181,6 +440,7 @@ function LoginApp( { loginLinkText } ) {
 								value={ email }
 								onChange={ ( e ) => setEmail( e.target.value ) }
 								required
+								disabled={ isSubmitting }
 							/>
 							<label htmlFor="password">Password</label>
 							<input
@@ -191,13 +451,20 @@ function LoginApp( { loginLinkText } ) {
 									setPassword( e.target.value )
 								}
 								required
+								disabled={ isSubmitting }
 							/>
 							{ error && (
 								<div className="error-message">{ error }</div>
 							) }
 							<div className="button-row">
-								<button type="submit">LOGIN</button>
-								<button type="button" onClick={ closeModal }>
+								<button type="submit" disabled={ isSubmitting }>
+									{ isSubmitting ? 'Logging in…' : 'LOGIN' }
+								</button>
+								<button
+									type="button"
+									onClick={ closeModal }
+									disabled={ isSubmitting }
+								>
 									CANCEL
 								</button>
 							</div>
@@ -258,7 +525,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	blocks.forEach( ( block ) => {
 		const loginLinkText =
 			block.dataset.loginLinkText || 'Log in to your account';
+		const bucket = block.dataset.eventBucket || '';
 		const root = createRoot( block );
-		root.render( <LoginApp loginLinkText={ loginLinkText } /> );
+		root.render(
+			<LoginApp loginLinkText={ loginLinkText } bucket={ bucket } />
+		);
 	} );
 } );

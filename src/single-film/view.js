@@ -96,9 +96,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 								}
 
 								// Remove loading message
-								const loadingMsg = eventsContainer.querySelector(
-									'.loading-message'
-								);
+								const loadingMsg =
+									eventsContainer.querySelector(
+										'.loading-message'
+									);
 								if ( loadingMsg ) {
 									loadingMsg.remove();
 								}
@@ -133,9 +134,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 								);
 								if ( eventsContainer ) {
 									// Remove loading message
-									const loadingMsg = eventsContainer.querySelector(
-										'.loading-message'
-									);
+									const loadingMsg =
+										eventsContainer.querySelector(
+											'.loading-message'
+										);
 									if ( loadingMsg ) {
 										loadingMsg.remove();
 									}
@@ -208,9 +210,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 								)
 								.join( '' );
 
-							const filmsContainer = document.getElementById(
-								'films-container'
-							);
+							const filmsContainer =
+								document.getElementById( 'films-container' );
 							if ( filmsContainer ) {
 								if ( filmsHTML ) {
 									filmsContainer.innerHTML = filmsHTML;

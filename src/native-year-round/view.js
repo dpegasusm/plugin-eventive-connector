@@ -148,7 +148,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		let renderScheduled = false;
 
 		// Remove loading text
-		const loadingText = block.querySelector( '.eventive-film-loading-text' );
+		const loadingText = block.querySelector(
+			'.eventive-film-loading-text'
+		);
 		if ( loadingText ) {
 			loadingText.remove();
 		}
@@ -412,7 +414,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				params.append( 'include_past_events', 'true' );
 				params.append( 'include', 'film,films,program_item' );
 
-				let path = `event_buckets/${ eventBucket }/events?${ params.toString() }`;
+				const path = `event_buckets/${ eventBucket }/events?${ params.toString() }`;
 
 				const response = await window.Eventive.request( {
 					method: 'GET',

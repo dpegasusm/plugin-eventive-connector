@@ -3,7 +3,7 @@
  *
  * Handles loading and displaying Eventive analytics data on the WordPress dashboard.
  *
- * @package Eventive
+ * @package
  * @since 1.0.0
  */
 
@@ -24,7 +24,7 @@
 	 * Helper to query selector.
 	 *
 	 * @param {HTMLElement|Document} root The root element.
-	 * @param {string} sel The selector.
+	 * @param {string}               sel  The selector.
 	 * @return {HTMLElement|null} The element or null.
 	 */
 	function bySel( root, sel ) {

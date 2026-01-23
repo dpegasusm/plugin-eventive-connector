@@ -27,7 +27,9 @@ function ensureAbsolute( url ) {
 		return url;
 	}
 	return (
-		'https://api.eventive.org' + ( url.charAt( 0 ) === '/' ? '' : '/' ) + url
+		'https://api.eventive.org' +
+		( url.charAt( 0 ) === '/' ? '' : '/' ) +
+		url
 	);
 }
 
@@ -44,6 +46,8 @@ function formatCurrency( cents ) {
 
 /**
  * Account Passes Component
+ * @param root0
+ * @param root0.bucket
  */
 function AccountPassesApp( { bucket } ) {
 	const [ isLoggedIn, setIsLoggedIn ] = useState( false );
@@ -207,15 +211,7 @@ function AccountPassesApp( { bucket } ) {
 
 	if ( isLoading ) {
 		return (
-			<div
-				className="eventive-login-container"
-				style={ {
-					display: 'flex',
-					justifyContent: 'center',
-					alignItems: 'center',
-					height: '100px',
-				} }
-			>
+			<div className="eventive-login-container">
 				<div className="loader"></div>
 			</div>
 		);
@@ -223,7 +219,7 @@ function AccountPassesApp( { bucket } ) {
 
 	if ( ! isLoggedIn ) {
 		return (
-			<div className="eventive-notice" style={ { textAlign: 'center' } }>
+			<div className="eventive-notice">
 				Please log in to view your passes.
 			</div>
 		);
@@ -311,66 +307,24 @@ function AccountPassesApp( { bucket } ) {
 			{ showBarcodeModal && barcodePass && (
 				<div
 					className="eventive-show-pass-barcode-modal is-open"
-					style={ {
-						display: 'flex',
-						position: 'fixed',
-						inset: 0,
-						alignItems: 'center',
-						justifyContent: 'center',
-						background: 'rgba(0,0,0,0.85)',
-						zIndex: 9999,
-					} }
 					onClick={ ( e ) =>
 						e.target.classList.contains(
 							'eventive-show-pass-barcode-modal'
 						) && closeModals()
 					}
 				>
-					<div
-						className="show-pass-barcode-modal-content"
-						style={ {
-							background: '#fff',
-							maxWidth: '520px',
-							width: '95%',
-							padding: '20px',
-							borderRadius: '8px',
-							position: 'relative',
-							textAlign: 'center',
-						} }
-					>
+					<div className="show-pass-barcode-modal-content">
 						<button
 							className="modal-close-btn"
 							onClick={ closeModals }
-							style={ {
-								position: 'absolute',
-								right: '12px',
-								top: '10px',
-								fontSize: '22px',
-								lineHeight: 1,
-								background: 'none',
-								border: 'none',
-								cursor: 'pointer',
-							} }
 							aria-label="Close"
 						>
 							×
 						</button>
-						<h3
-							style={ {
-								marginTop: 0,
-								fontSize: '1.1em',
-								textDecoration: 'underline',
-							} }
-						>
+						<h3 className="barcode-modal-title">
 							My Pass Credentials
 						</h3>
-						<div
-							style={ {
-								marginBottom: '10px',
-								fontSize: '14px',
-								opacity: 0.8,
-							} }
-						>
+						<div className="barcode-meta">
 							{ pickFirst(
 								barcodePass.name,
 								barcodePass.pass_name,
@@ -381,36 +335,22 @@ function AccountPassesApp( { bucket } ) {
 							const codePath = pickFirst(
 								barcodePass.qr_code_path,
 								barcodePass.barcode_path,
-								barcodePass.barcode &&
-									barcodePass.barcode.path
+								barcodePass.barcode && barcodePass.barcode.path
 							);
 							const imgUrl = ensureAbsolute( codePath );
 							return imgUrl ? (
 								<img
+									className="barcode-img"
 									src={ imgUrl }
 									alt={ `${
 										barcodePass.name || 'Pass'
 									} QR Code` }
-									style={ {
-										maxWidth: '320px',
-										width: '100%',
-										height: 'auto',
-										border: '1px solid #eee',
-										borderRadius: '8px',
-										padding: '12px',
-									} }
 								/>
 							) : (
 								<p>No barcode available</p>
 							);
 						} )() }
-						<div
-							style={ {
-								marginTop: '10px',
-								fontSize: '12px',
-								opacity: 0.8,
-							} }
-						>
+						<div className="barcode-tip">
 							Present this code at entry. Tip: increase screen
 							brightness for easier scanning.
 						</div>
@@ -422,50 +362,21 @@ function AccountPassesApp( { bucket } ) {
 			{ showEditModal && editingPass && (
 				<div
 					className="eventive-edit-pass-modal is-open"
-					style={ {
-						display: 'flex',
-						position: 'fixed',
-						inset: 0,
-						alignItems: 'center',
-						justifyContent: 'center',
-						background: 'rgba(0,0,0,0.4)',
-						zIndex: 9999,
-					} }
 					onClick={ ( e ) =>
 						e.target.classList.contains(
 							'eventive-edit-pass-modal'
 						) && closeModals()
 					}
 				>
-					<div
-						className="edit-pass-modal-content"
-						style={ {
-							background: '#fff',
-							maxWidth: '640px',
-							width: '95%',
-							padding: '20px',
-							borderRadius: '8px',
-							position: 'relative',
-						} }
-					>
+					<div className="edit-pass-modal-content">
 						<button
 							className="modal-close-btn"
 							onClick={ closeModals }
-							style={ {
-								position: 'absolute',
-								right: '12px',
-								top: '10px',
-								fontSize: '22px',
-								lineHeight: 1,
-								background: 'none',
-								border: 'none',
-								cursor: 'pointer',
-							} }
 							aria-label="Close"
 						>
 							×
 						</button>
-						<h3 style={ { marginTop: 0 } }>Edit Pass Details</h3>
+						<h3>Edit Pass Details</h3>
 						<form onSubmit={ handleSaveEdit }>
 							<div className="form-group">
 								<label>Pass Name</label>
@@ -485,12 +396,10 @@ function AccountPassesApp( { bucket } ) {
 							{ /* Render supplementary fields */ }
 							{ editingPass.supplementary_data &&
 								( () => {
-									const supp =
-										editingPass.supplementary_data;
+									const supp = editingPass.supplementary_data;
 									if ( Array.isArray( supp ) ) {
 										return supp.map( ( f, idx ) => {
-											const key =
-												f.key || f.name || f.id;
+											const key = f.key || f.name || f.id;
 											const label =
 												f.label || f.name || key;
 											const val =
@@ -583,7 +492,7 @@ function AccountPassesApp( { bucket } ) {
 									return null;
 								} )() }
 
-							<div style={ { marginTop: '14px' } }>
+							<div className="form-submit-row">
 								<button
 									type="submit"
 									className="pass-submit-row-button"
