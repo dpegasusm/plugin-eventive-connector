@@ -4,7 +4,7 @@
   "name": "eventive/film-showtimes",
   "version": "1.0.0",
   "title": "Film Showtimes",
-  "category": "eventive",
+  "category": "eventive-films",
   "icon": "tickets-alt",
   "description": "Display upcoming showtimes for the current film from Eventive.",
   "textdomain": "eventive",

@@ -41,6 +41,41 @@ class Eventive_Blocks {
 	}
 
 	/**
+	 * Get the current post type reliably in admin context.
+	 *
+	 * @return string|false The post type or false if not found.
+	 */
+	private function get_current_post_type() {
+		// Try get_post_type() first (works on frontend and later hooks).
+		$post_type = get_post_type();
+		if ( $post_type ) {
+			return $post_type;
+		}
+
+		// In admin, check for post parameter in query string.
+		if ( is_admin() ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if ( isset( $_GET['post'] ) ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$post_id = intval( $_GET['post'] );
+				$post_type = get_post_type( $post_id );
+				if ( $post_type ) {
+					return $post_type;
+				}
+			}
+
+			// Check for post_type parameter (for new posts).
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if ( isset( $_GET['post_type'] ) ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				return sanitize_key( $_GET['post_type'] );
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Registers the block using the metadata loaded from the `block.json` file.
 	 * Behind the scenes, it registers also all assets so they can be enqueued
 	 * through the block editor in the corresponding context.
@@ -72,7 +107,8 @@ class Eventive_Blocks {
 		$eventive_film_post_types = Eventive::get_eventive_film_post_types();
 
 		// register the folowing blocks to be used on eventive film post types.
-		if ( in_array( get_post_type(), $eventive_film_post_types, true ) ) {
+		$current_post_type = $this->get_current_post_type();
+		if ( $current_post_type && in_array( $current_post_type, $eventive_film_post_types, true ) ) {
 			register_block_type( EVENTIVE_PLUGIN_PATH . '/build/film-showtimes/' );
 			register_block_type( EVENTIVE_PLUGIN_PATH . '/build/film-meta/' );
 			register_block_type( EVENTIVE_PLUGIN_PATH . '/build/film-venue/' );
@@ -102,6 +138,30 @@ class Eventive_Blocks {
 				'icon'  => 'tickets-alt',
 			);
 		}
+
+		// load us a new category for film blocks if on an eventive film post type.
+		// Get the Eventive film post types.
+		$eventive_film_post_types = Eventive::get_eventive_film_post_types();
+
+		// register the folowing blocks to be used on eventive film post types.
+		$current_post_type = $this->get_current_post_type();
+		if ( $current_post_type && in_array( $current_post_type, $eventive_film_post_types, true ) ) {
+			$film_category = array_filter(
+				$categories,
+				function ( $cat ) {
+					return ( 'eventive-films' === $cat['slug'] );
+				}
+			);
+
+			if ( empty( $film_category ) ) {
+				$categories[] = array(
+					'slug'  => 'eventive-films',
+					'title' => __( 'Eventive Film Data', 'eventive' ),
+					'icon'  => 'video-alt3',
+				);
+			}
+		}
+
 		return $categories;
 	}
 
@@ -182,6 +242,7 @@ class Eventive_Blocks {
 			'eventive-events-week-view-script',
 			'eventive-film-details-view-script',
 			'eventive-film-guide-view-script',
+			'eventive-film-meta-view-script',
 			'eventive-film-showtimes-view-script',
 			'eventive-fundraiser-view-script',
 			'eventive-marquee-view-script',
