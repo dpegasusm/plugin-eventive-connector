@@ -341,13 +341,18 @@ class Eventive_Sync {
 			update_post_meta( $post_id, '_eventive_sync_enabled', true );
 		}
 
-		// Handle poster image - sideload to media library if URL has changed.
+		// Handle poster image - sideload to media library if URL has changed or if no featured image exists.
 		if ( ! empty( $film['poster_image'] ) ) {
 			$new_poster_url = esc_url_raw( $film['poster_image'] );
 			$old_poster_url = get_post_meta( $post_id, '_eventive_poster_image', true );
+			$has_thumbnail  = has_post_thumbnail( $post_id );
 
-			// Only sideload if the URL has changed and is valid.
-			if ( $new_poster_url !== $old_poster_url && filter_var( $new_poster_url, FILTER_VALIDATE_URL ) ) {
+			// Sideload if:
+			// 1. The URL has changed, OR
+			// 2. No featured image exists yet
+			$should_sideload = ( $new_poster_url !== $old_poster_url && filter_var( $new_poster_url, FILTER_VALIDATE_URL ) ) || ! $has_thumbnail;
+
+			if ( $should_sideload && filter_var( $new_poster_url, FILTER_VALIDATE_URL ) ) {
 				$this->sideload_featured_image( $post_id, $new_poster_url, $film_name );
 			}
 
