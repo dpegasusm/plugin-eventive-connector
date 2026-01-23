@@ -2,7 +2,7 @@
  * Film Properties Plugin
  * Adds Eventive film metadata to the block editor sidebar
  *
- * @package Eventive
+ * @package
  * @since 1.0.0
  */
 

@@ -66,6 +66,13 @@ export default function Edit( { attributes, setAttributes } ) {
 						) }
 					/>
 					<ToggleControl
+						label={ __( 'Show Only Upcoming', 'eventive' ) }
+						checked={ attributes.yearRound }
+						onChange={ ( value ) =>
+							setAttributes( { yearRound: value } )
+						}
+					/>
+					<ToggleControl
 						label={ __( 'Show Events', 'eventive' ) }
 						checked={ attributes.showEvents }
 						onChange={ ( value ) =>
@@ -77,6 +84,20 @@ export default function Edit( { attributes, setAttributes } ) {
 						checked={ attributes.showFilter }
 						onChange={ ( value ) =>
 							setAttributes( { showFilter: value } )
+						}
+					/>
+					<ToggleControl
+						label={ __( 'Show Search', 'eventive' ) }
+						checked={ attributes.search }
+						onChange={ ( value ) =>
+							setAttributes( { search: value } )
+						}
+					/>
+					<ToggleControl
+						label={ __( 'Show View Switcher', 'eventive' ) }
+						checked={ attributes.showViewSwitcher }
+						onChange={ ( value ) =>
+							setAttributes( { showViewSwitcher: value } )
 						}
 					/>
 					<SelectControl
@@ -103,13 +124,6 @@ export default function Edit( { attributes, setAttributes } ) {
 						}
 					/>
 					<ToggleControl
-						label={ __( 'Show Tags', 'eventive' ) }
-						checked={ attributes.showTags }
-						onChange={ ( value ) =>
-							setAttributes( { showTags: value } )
-						}
-					/>
-					<ToggleControl
 						label={ __( 'Show Description', 'eventive' ) }
 						checked={ attributes.showDescription }
 						onChange={ ( value ) =>
@@ -124,24 +138,10 @@ export default function Edit( { attributes, setAttributes } ) {
 						}
 					/>
 					<ToggleControl
-						label={ __( 'Year Round Mode', 'eventive' ) }
-						checked={ attributes.yearRound }
+						label={ __( 'Show Tags', 'eventive' ) }
+						checked={ attributes.showTags }
 						onChange={ ( value ) =>
-							setAttributes( { yearRound: value } )
-						}
-					/>
-					<ToggleControl
-						label={ __( 'Show Search', 'eventive' ) }
-						checked={ attributes.search }
-						onChange={ ( value ) =>
-							setAttributes( { search: value } )
-						}
-					/>
-					<ToggleControl
-						label={ __( 'Show View Switcher', 'eventive' ) }
-						checked={ attributes.showViewSwitcher }
-						onChange={ ( value ) =>
-							setAttributes( { showViewSwitcher: value } )
+							setAttributes( { showTags: value } )
 						}
 					/>
 				</PanelBody>

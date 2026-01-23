@@ -84,9 +84,8 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 10px;
-		justify-content: center;
-		padding: 20px;
-		border-radius: 8px;
+		justify-content: flex-start;
+		padding: 20px 0;
 
 		&.grid {
 			display: grid;
@@ -109,13 +108,14 @@
 		width: 275px;
 		border-radius: 8px;
 		overflow: hidden;
-		background-color: rgba(255, 255, 255, 0.1);
-		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+		background-color: var(--background-color, #fff);
+		border: 1px solid var(--border-color, #ddd);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 		transition: transform 0.2s, box-shadow 0.2s;
 
 		&:hover {
-			transform: scale(1.03);
-			box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7);
+			transform: translateY(-2px);
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 		}
 	}
 
@@ -132,7 +132,7 @@
 
 	.catalog-film-details {
 		padding: 15px;
-		color: #fff;
+		color: var(--text-color, #333);
 		text-align: left;
 		line-height: 1.5;
 	}
@@ -141,13 +141,13 @@
 		font-size: 1.5em;
 		margin-bottom: 10px;
 		font-weight: bold;
-		color: #f9c74f;
+		color: var(--heading-color, #333);
 	}
 
 	.catalog-film-description {
 		font-size: 0.9em;
 		margin-bottom: 10px;
-		color: #ddd;
+		color: var(--text-color, #666);
 		line-height: 1.6;
 	}
 
@@ -165,16 +165,15 @@
 	.catalog-film-tag-pill {
 		display: inline-block;
 		padding: 5px 10px;
-		background-color: var(--tag-color, #444);
-		color: white;
-		border-radius: 10px;
+		background-color: var(--tag-color, #e0e0e0);
+		color: var(--text-color, #333);
+		border-radius: 4px;
 		font-size: 0.8em;
 		text-align: center;
-		transition: background-color 0.2s;
+		transition: all 0.2s ease;
 
 		&:hover {
-			background-color: #f9c74f;
-			color: #222;
+			filter: brightness(0.85);
 		}
 	}
 
@@ -186,13 +185,14 @@
 		a {
 			display: inline-block;
 			margin-top: 10px;
-			color: #f9c74f;
+			color: var(--link-color, #0073aa);
 			text-decoration: none;
 			font-weight: bold;
 			transition: color 0.2s;
 
 			&:hover {
-				color: #ffba08;
+				color: var(--link-hover-color, #005177);
+				text-decoration: underline;
 			}
 		}
 	}
@@ -203,16 +203,22 @@
 
 	.catalog-no-films,
 	.catalog-error {
-		color: #ff6b6b;
+		color: var(--text-color, #666);
 		font-size: 1.2em;
 		text-align: center;
 		margin: 20px;
 		padding: 20px;
 		border-radius: 8px;
+		background-color: var(--background-color-muted, #f9f9f9);
+		border: 1px solid var(--border-color, #ddd);
 	}
 
 	.catalog-no-films {
 		font-style: italic;
+	}
+
+	.catalog-error {
+		color: #d32f2f;
 	}
 
 	/* ==========================================================================

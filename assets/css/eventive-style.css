@@ -133,3 +133,54 @@
     }
 }
 
+/* ==========================================================================
+   TAG BUTTONS & FILTER STYLES
+   Used in: film-guide, events-list, tags, and other filterable blocks
+   ========================================================================== */
+
+.eventive-tags-list,
+.tag-pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.eventive-tag-btn,
+.tag-pill {
+	padding: 8px 16px;
+	border: 2px solid transparent;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;
+	transition: all 0.2s ease;
+}
+
+.eventive-tag-btn:hover,
+.tag-pill:hover {
+    filter: brightness(0.85);
+}
+
+.eventive-tag-btn.active,
+.tag-pill.active {
+    border: 2px solid var(--border-color, #ddd);;
+}
+
+/* Filter Container */
+.event-filter-container,
+.eventive-events-tags-filter,
+.eventive-film-guide-tags-filter {
+	margin-bottom: 20px;
+	padding: 15px;
+	background: var(--background-color-muted, #f9f9f9);
+	border-radius: 8px;
+	border: 1px solid var(--border-color, #ddd);
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.event-filter-container .filter-title,
+.eventive-events-tags-filter .filter-title,
+.eventive-film-guide-tags-filter .filter-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+}

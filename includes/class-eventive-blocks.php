@@ -35,6 +35,9 @@ class Eventive_Blocks {
 
 		// Localize view scripts for frontend blocks.
 		add_action( 'wp_enqueue_scripts', array( $this, 'localize_block_view_scripts' ) );
+
+		// Localize editor scripts for admin blocks.
+		add_action( 'enqueue_block_editor_assets', array( $this, 'localize_block_editor_scripts' ) );
 	}
 
 	/**
@@ -64,7 +67,6 @@ class Eventive_Blocks {
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/fundraiser/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/marquee/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/single-film/' );
-		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/tags/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/venues/' );
 	}
 
@@ -175,7 +177,6 @@ class Eventive_Blocks {
 			'eventive-fundraiser-view-script',
 			'eventive-marquee-view-script',
 			'eventive-single-film-view-script',
-			'eventive-tags-view-script',
 			'eventive-venues-view-script',
 		);
 
@@ -196,5 +197,25 @@ class Eventive_Blocks {
 				break;
 			}
 		}
+	}
+
+	/**
+	 * Localize editor scripts for blocks in the admin.
+	 *
+	 * @return void
+	 */
+	public function localize_block_editor_scripts() {
+		// Global the API class.
+		global $eventive_api;
+
+		// Prepare data to pass to editor scripts.
+		$localization = $eventive_api->get_api_localization_data();
+
+		// Localize to the global window object for editor scripts.
+		wp_localize_script(
+			'wp-blocks',
+			'EventiveBlockData',
+			$localization
+		);
 	}
 }

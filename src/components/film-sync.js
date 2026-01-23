@@ -2,7 +2,7 @@
  * Film Sync Plugin
  * Adds Eventive sync controls to the block editor sidebar
  *
- * @package Eventive
+ * @package
  * @since 1.0.0
  */
 

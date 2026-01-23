@@ -72,6 +72,7 @@
 
 		img {
 			width: 150px;
+			max-width: 100%;
 			height: auto;
 			border-radius: 6px;
 			object-fit: cover;
@@ -98,46 +99,6 @@
 				img {
 					width: 100%;
 					max-width: none;
-				}
-			}
-		}
-	}
-
-	/* Filter UI */
-	.event-filter-container {
-		margin-bottom: 20px;
-		padding: 15px;
-		background: var(--background-color-muted, #f9f9f9);
-		border-radius: 8px;
-		border: 1px solid var(--border-color, #ddd);
-
-		.filter-title {
-			font-weight: 600;
-			margin-bottom: 10px;
-		}
-
-		.tag-pills {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 8px;
-
-			.tag-pill {
-				padding: 6px 12px;
-				border-radius: 16px;
-				border: 2px solid #ddd;
-				background: #fff;
-				cursor: pointer;
-				transition: all 0.3s ease;
-				font-size: 0.9em;
-
-				&:hover {
-					border-color: var(--primary-color, #0073aa);
-				}
-
-				&.active {
-					background: var(--primary-color, #0073aa);
-					color: #fff;
-					border-color: var(--primary-color, #0073aa);
 				}
 			}
 		}
@@ -226,9 +187,18 @@
 
 	.events-film-poster {
 		width: 120px;
+		max-width: 100%;
 		height: auto;
 		border-radius: 8px;
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	}
+
+	.poster-container {
+		
+		.poster {
+			width: 100%;
+			height: auto;
+		}
 	}
 
 	.events-film-content {

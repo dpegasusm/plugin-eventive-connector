@@ -47,17 +47,37 @@
 			font-size: 1.5rem;
 			color: var(--primary-color);
 		}
+
+		h3.eventive-ticket-section {
+			margin: 20px 0 12px 0;
+			font-size: 1.2rem;
+			font-weight: 600;
+			color: #333;
+		}
 	}
 
-	.eventive-tickets-list {
+	.eventive-ticket-filters {
 		display: flex;
-		flex-direction: column;
-		gap: 12px;
+		align-items: center;
+		gap: 8px;
+		margin: 6px 0 12px;
+
+		label {
+			font-weight: 600;
+		}
+
+		select {
+			padding: 6px 12px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			font-size: 14px;
+			cursor: pointer;
+		}
 	}
 
 	.eventive-ticket-card {
-		background: var(--card-bg);
-		border: 1px solid var(--border-color);
+		background: var(--card-bg, #fff);
+		border: 1px solid var(--border-color, #ddd);
 		border-radius: 8px;
 		padding: 16px;
 		display: flex;
@@ -65,6 +85,7 @@
 		align-items: center;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 		transition: box-shadow 0.2s;
+		margin-bottom: 12px;
 
 		&:hover {
 			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
@@ -77,32 +98,82 @@
 		&__title {
 			font-size: 1.1rem;
 			font-weight: 600;
-			color: var(--text-color);
+			color: var(--text-color, #333);
 			margin-bottom: 4px;
 		}
 
-		&__time {
+		&__meta {
 			font-size: 0.9rem;
 			color: #666;
+			margin-bottom: 4px;
+		}
+
+		&__seat {
+			font-size: 0.85rem;
+			color: #888;
 		}
 
 		&__actions {
 			margin-left: 16px;
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			align-items: flex-end;
 		}
 	}
 
-	.eventive-ticket-btn {
+	.evt-badge {
+		display: inline-block;
+		margin-right: 6px;
+		padding: 2px 8px;
+		border-radius: 999px;
+		font-weight: 700;
+		font-size: 0.75em;
+
+		&.evt-badge-scanned {
+			background: #dcfce7;
+			color: #14532d;
+		}
+
+		&.evt-badge-past {
+			background: #e5e7eb;
+			color: #111827;
+		}
+
+		&.evt-badge-expired {
+			background: #fee2e2;
+			color: #991b1b;
+			padding: 6px 10px;
+			border-radius: 6px;
+		}
+	}
+
+	.evt-btn {
 		padding: 8px 16px;
-		background: var(--primary-color);
-		color: #fff;
 		border: none;
 		border-radius: 5px;
 		cursor: pointer;
 		font-size: 14px;
-		transition: background 0.2s;
+		font-weight: 500;
+		transition: all 0.2s;
 
-		&:hover {
-			background: #0366d6;
+		&.evt-btn-primary {
+			background: var(--primary-color, #0969da);
+			color: #fff;
+
+			&:hover {
+				background: #0366d6;
+			}
+		}
+
+		&.evt-btn-secondary {
+			background: #f3f4f6;
+			color: #374151;
+			border: 1px solid #d1d5db;
+
+			&:hover {
+				background: #e5e7eb;
+			}
 		}
 	}
 
@@ -114,6 +185,10 @@
 		justify-content: center;
 		background: rgba(0, 0, 0, 0.45);
 		z-index: 9999;
+
+		&.is-open {
+			display: flex;
+		}
 	}
 
 	.barcode-modal-inner {
@@ -136,25 +211,71 @@
 		}
 
 		.barcode-modal-body {
-			text-align: center;
-
 			h3 {
-				margin-top: 0;
-				margin-bottom: 16px;
+				margin: 0 0 10px 0;
+				text-align: center;
 			}
 
-			.barcode-img {
-				max-width: 100%;
-				height: auto;
-				border: 1px solid #eee;
-				border-radius: 8px;
-				padding: 12px;
+			.barcode-meta {
+				text-align: center;
+				opacity: 0.8;
+				margin-bottom: 6px;
 			}
 
-			.ticket-time {
-				margin-top: 12px;
-				font-size: 14px;
-				color: #666;
+			.barcode-scanned-badge {
+				text-align: center;
+				margin: 6px 0 4px 0;
+
+				span {
+					display: inline-block;
+					padding: 4px 10px;
+					border-radius: 999px;
+					background: #dcfce7;
+					color: #14532d;
+					font-weight: 700;
+				}
+			}
+
+			.barcode-qr-container {
+				position: relative;
+				display: flex;
+				justify-content: center;
+				margin-top: 6px;
+
+				img {
+					max-width: 320px;
+					width: 100%;
+					height: auto;
+					border: 1px solid #eee;
+					border-radius: 8px;
+					padding: 12px;
+				}
+
+				.past-event-overlay {
+					position: absolute;
+					inset: 0;
+					background: rgba(0, 0, 0, 0.55);
+					color: #fff;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					text-align: center;
+					border-radius: 8px;
+
+					.overlay-content {
+						font-weight: 800;
+						letter-spacing: 0.3px;
+
+						.overlay-title {
+							font-size: 18px;
+						}
+
+						.overlay-subtitle {
+							font-size: 12px;
+							opacity: 0.9;
+						}
+					}
+				}
 			}
 		}
 	}

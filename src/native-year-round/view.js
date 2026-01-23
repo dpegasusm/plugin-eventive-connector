@@ -4,6 +4,22 @@
 import { createRoot } from '@wordpress/element';
 
 /**
+ * Polyfill for requestIdleCallback
+ */
+const requestIdleCallback =
+	window.requestIdleCallback ||
+	function ( cb ) {
+		return setTimeout( function () {
+			cb( {
+				didTimeout: true,
+				timeRemaining: function () {
+					return 0;
+				},
+			} );
+		}, 50 );
+	};
+
+/**
  * Helper functions
  * @param n
  */
@@ -96,6 +112,15 @@ function imageForEvent( ev ) {
 		ev.still_image ||
 		ev.film_poster_image ||
 		ev.film_cover_image ||
+		ev.film_still_image ||
+		( ev.program_item &&
+			( ev.program_item.image ||
+				ev.program_item.poster_image ||
+				ev.program_item.cover_image ||
+				ev.program_item.still_image ) ) ||
+		ev.tile_image ||
+		ev.hero_image ||
+		ev.card_image ||
 		''
 	);
 }
@@ -144,11 +169,55 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		let activeDay = new Date( Math.max( +weekStart, +todayStart ) );
 
 		const weekCache = {};
+		const filmCache = {};
 		let eventsByDay = {};
 		let renderScheduled = false;
+		let imgFetchRefresh = {};
 
-		// Remove loading text
-		const loadingText = block.querySelector( '.eventive-film-loading-text' );
+		// Loading indicator helper
+		const setLoading = ( on ) => {
+			if ( on ) {
+				if ( ! eventsContainer.__spinner ) {
+					const sp = document.createElement( 'div' );
+					sp.className = 'yr-loading';
+					sp.setAttribute( 'role', 'status' );
+					sp.setAttribute( 'aria-live', 'polite' );
+					sp.style.display = 'flex';
+					sp.style.alignItems = 'center';
+					sp.style.justifyContent = 'center';
+					sp.style.padding = '24px';
+					sp.style.gap = '10px';
+					sp.innerHTML =
+						'<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+						'<g fill="none" stroke="currentColor" stroke-width="2">' +
+						'<circle cx="12" cy="12" r="9" opacity="0.2"/>' +
+						'<path d="M21 12a9 9 0 0 0-9-9">' +
+						'<animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.9s" repeatCount="indefinite"/>' +
+						'</path>' +
+						'</g>' +
+						'</svg>' +
+						'<span style="font:500 0.95rem/1.2 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: var(--text-muted, #6b7280);">Loading…</span>';
+					eventsContainer.__spinner = sp;
+				}
+				if ( ! eventsContainer.contains( eventsContainer.__spinner ) ) {
+					eventsContainer.appendChild( eventsContainer.__spinner );
+				}
+				eventsContainer.setAttribute( 'aria-busy', 'true' );
+			} else {
+				if (
+					eventsContainer.__spinner &&
+					eventsContainer.contains( eventsContainer.__spinner )
+				) {
+					eventsContainer.removeChild( eventsContainer.__spinner );
+				}
+				eventsContainer.removeAttribute( 'aria-busy' );
+			}
+		};
+
+		// Remove loading text placeholder
+		const loadingText = block.querySelector(
+			'.eventive-film-loading-text'
+		);
 		if ( loadingText ) {
 			loadingText.remove();
 		}
@@ -160,9 +229,11 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const navRow = document.createElement( 'div' );
 		navRow.className = 'eventive-nyr-nav';
 		navRow.innerHTML = `
-			<button class="eventive-nyr-btn eventive-nyr-prev" type="button">‹ Prev</button>
+			<div class="eventive-nyr-nav-controls">
+				<button class="eventive-nyr-btn eventive-nyr-prev" type="button">‹ Prev</button>
+				<button class="eventive-nyr-btn eventive-nyr-next" type="button">Next ›</button>
+			</div>
 			<div class="eventive-nyr-buttons"></div>
-			<button class="eventive-nyr-btn eventive-nyr-next" type="button">Next ›</button>
 		`;
 		calWrap.appendChild( navRow );
 
@@ -255,10 +326,104 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			);
 		};
 
+		// Fetch film by ID with caching
+		const fetchFilmById = async ( filmId ) => {
+			if ( ! filmId ) {
+				return null;
+			}
+			if ( filmCache[ filmId ] === null ) {
+				return null;
+			}
+			if ( filmCache[ filmId ] && filmCache[ filmId ].__loaded ) {
+				return filmCache[ filmId ];
+			}
+			if ( filmCache[ filmId ] && filmCache[ filmId ].__pending ) {
+				return null;
+			}
+
+			filmCache[ filmId ] = { __pending: true };
+
+			const mark = ( result ) => {
+				if ( result ) {
+					result.__loaded = true;
+					filmCache[ filmId ] = result;
+				} else {
+					filmCache[ filmId ] = null;
+				}
+				return filmCache[ filmId ];
+			};
+
+			try {
+				// Try global films/{id} first
+				const f = await window.Eventive.request( {
+					method: 'GET',
+					path: 'films/' + encodeURIComponent( filmId ),
+					authenticatePerson: true,
+				} );
+				if (
+					f &&
+					( f.poster_image || f.cover_image || f.still_image )
+				) {
+					return mark( f );
+				}
+			} catch ( error ) {
+				// Ignore and try bucket-scoped path
+			}
+
+			try {
+				// Fallback: bucket-scoped film path
+				const bpath =
+					'event_buckets/' +
+					encodeURIComponent( eventBucket ) +
+					'/films/' +
+					encodeURIComponent( filmId );
+				const f = await window.Eventive.request( {
+					method: 'GET',
+					path: bpath,
+					authenticatePerson: true,
+				} );
+				return mark( f || null );
+			} catch ( error ) {
+				return mark( null );
+			}
+		};
+
+		// Override ticket button labels with showtime
+		const overrideTicketLabels = ( root ) => {
+			const scope = root || eventsContainer;
+			const wrappers = scope.querySelectorAll(
+				'.eventive-button[data-event][data-label]'
+			);
+			wrappers.forEach( ( wrap ) => {
+				const label = wrap.getAttribute( 'data-label' ) || '';
+				if ( ! label ) {
+					return;
+				}
+				const span = wrap.querySelector(
+					'.eventive__ticket-button__button button span'
+				);
+				if ( ! span ) {
+					return;
+				}
+				if (
+					span.__evtLabelApplied &&
+					span.textContent === label
+				) {
+					return;
+				}
+				span.textContent = label;
+				span.classList.add( 'evt-ticket-btn' );
+				span.__evtLabelApplied = true;
+			} );
+		};
+
 		// Render day events
 		const renderDayEvents = () => {
 			const dayKey = toISODate( activeDay );
 			const events = ( eventsByDay && eventsByDay[ dayKey ] ) || [];
+
+			// Remove loading indicator
+			setLoading( false );
 
 			if ( ! events.length ) {
 				eventsContainer.innerHTML =
@@ -268,6 +433,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 			// Group events by venue and primary film
 			const groups = {};
+			const pendingFetches = [];
+
 			events.forEach( ( ev ) => {
 				const venueId =
 					( ev.venue && ev.venue.id ) ||
@@ -280,6 +447,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 					ev.title ||
 					( primaryFilm &&
 						( primaryFilm.name || primaryFilm.title ) ) ||
+					ev.display_title ||
 					'Untitled';
 				const key = venueId + '::' + ( filmId || baseTitle );
 				if ( ! groups[ key ] ) {
@@ -311,85 +479,224 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 			eventsContainer.innerHTML = '';
 
-			groupList.forEach( ( group ) => {
-				const firstEv = group.evRef;
-				const film =
-					firstEv.film ||
-					( firstEv.films && firstEv.films[ 0 ] ) ||
-					{};
-				const title = group.title;
+			// Progressive rendering in chunks
+			let index = 0;
+			const batch = 8;
+			let needRebuild = false;
 
-				let img = '';
-				if ( imageType !== 'none' ) {
-					img =
-						imageForFilm( film, imageType ) ||
-						imageForEvent( firstEv ) ||
-						'';
-				}
+			const renderChunk = () => {
+				const frag = document.createDocumentFragment();
+				const end = Math.min( index + batch, groupList.length );
 
-				const desc = showDescription
-					? firstEv.short_description ||
-					  firstEv.description ||
-					  film.short_description ||
-					  film.description ||
-					  ''
-					: '';
-				const filmHref = showDetails ? filmLink( firstEv ) : '#';
+				for ( ; index < end; index++ ) {
+					const group = groupList[ index ];
+					const firstEv = group.evRef;
+					const film =
+						imageType === 'still' &&
+						firstEv.films &&
+						firstEv.films[ 0 ]
+							? firstEv.films[ 0 ]
+							: firstEv.film ||
+							  ( firstEv.films && firstEv.films[ 0 ] ) ||
+							  {};
+					const title = group.title;
 
-				const card = document.createElement( 'article' );
-				card.className =
-					'yr-card yr-card--stack' + ( img ? ' has-media' : '' );
-
-				if ( img ) {
-					const media = document.createElement( 'div' );
-					media.className = 'yr-card__media';
-					media.innerHTML = `<img loading="lazy" decoding="async" alt="${ title }" src="${ img }" />`;
-					card.appendChild( media );
-				}
-
-				const body = document.createElement( 'div' );
-				body.className = 'yr-card__body';
-				body.innerHTML = `
-					<h3 class="yr-card__title">${ title }</h3>
-					${ showVenue ? `<div class="yr-card__meta">${ group.venueName }</div>` : '' }
-					${ desc ? `<div class="yr-card__desc">${ desc }</div>` : '' }
-					${
-						showDetails
-							? `<div class="yr-card__links"><a class="yr-more" href="${ filmHref }">Details</a></div>`
-							: ''
+					let img = '';
+					if ( imageType !== 'none' ) {
+						img =
+							imageForFilm( film, imageType ) ||
+							imageForEvent( firstEv ) ||
+							'';
 					}
-				`;
-				card.appendChild( body );
 
-				const cta = document.createElement( 'div' );
-				cta.className = 'yr-card__cta';
-				const grid = document.createElement( 'div' );
-				grid.className = 'yr-card__showtimes yr-showtimes-flex';
-				grid.style.display = 'flex';
-				grid.style.flexWrap = 'wrap';
-				grid.style.gap = '8px 12px';
-				grid.style.alignItems = 'stretch';
+					// Queue film fetch if no image
+					if ( ! img ) {
+						const fid =
+							firstEv.film_id ||
+							( film && film.id ) ||
+							( firstEv.program_item &&
+								firstEv.program_item.film_id ) ||
+							null;
+						if ( fid ) {
+							pendingFetches.push( fid );
+						}
+					}
 
-				group.items.forEach( ( it ) => {
-					const btnWrap = document.createElement( 'div' );
-					btnWrap.className = 'yr-showtime__btn';
-					btnWrap.style.flex = '0 1 240px';
-					btnWrap.innerHTML = `<div class="eventive-button" data-event="${
-						it.id
-					}" data-label="${ fmtTime( it.dt ) }"></div>`;
-					grid.appendChild( btnWrap );
-				} );
+					const desc = showDescription
+						? firstEv.short_description ||
+						  firstEv.description ||
+						  film.short_description ||
+						  film.description ||
+						  ''
+						: '';
+					const filmHref = showDetails ? filmLink( firstEv ) : '#';
 
-				cta.appendChild( grid );
-				card.appendChild( cta );
-				eventsContainer.appendChild( card );
+					const card = document.createElement( 'article' );
+					card.className =
+						'yr-card yr-card--stack' +
+						( img ? ' has-media' : '' );
+
+					if ( img ) {
+						const media = document.createElement( 'div' );
+						media.className = 'yr-card__media';
+						const imgel = document.createElement( 'img' );
+						imgel.setAttribute( 'loading', 'lazy' );
+						imgel.setAttribute( 'decoding', 'async' );
+						imgel.alt = title;
+						imgel.src = img;
+						media.appendChild( imgel );
+						card.appendChild( media );
+					}
+
+					const body = document.createElement( 'div' );
+					body.className = 'yr-card__body';
+					const h = document.createElement( 'h3' );
+					h.className = 'yr-card__title';
+					h.textContent = title;
+					body.appendChild( h );
+
+					if ( showVenue ) {
+						const meta = document.createElement( 'div' );
+						meta.className = 'yr-card__meta';
+						meta.textContent = group.venueName;
+						body.appendChild( meta );
+					}
+
+					if ( desc ) {
+						const descEl = document.createElement( 'div' );
+						descEl.className = 'yr-card__desc';
+						// Render HTML descriptions (Eventive content often includes markup)
+						descEl.innerHTML = String( desc );
+						body.appendChild( descEl );
+					}
+
+					if ( showDetails ) {
+						const links = document.createElement( 'div' );
+						links.className = 'yr-card__links';
+						const a = document.createElement( 'a' );
+						a.className = 'yr-more';
+						a.href = filmHref;
+						a.textContent = 'Details';
+						links.appendChild( a );
+						body.appendChild( links );
+					}
+
+					card.appendChild( body );
+
+					const cta = document.createElement( 'div' );
+					cta.className = 'yr-card__cta';
+					const grid = document.createElement( 'div' );
+					grid.className = 'yr-card__showtimes yr-showtimes-flex';
+					grid.style.display = 'flex';
+					grid.style.flexWrap = 'wrap';
+					grid.style.gap = '8px 12px';
+					grid.style.alignItems = 'stretch';
+
+					group.items.forEach( ( it ) => {
+						const btnWrap = document.createElement( 'div' );
+						btnWrap.className = 'yr-showtime__btn';
+						btnWrap.style.flex = '0 1 240px';
+						const btn = document.createElement( 'div' );
+						btn.className = 'eventive-button';
+						btn.setAttribute( 'data-event', it.id || '' );
+						btn.setAttribute( 'data-label', fmtTime( it.dt ) );
+						btn.setAttribute( 'data-universal', 'true' );
+						btnWrap.appendChild( btn );
+						grid.appendChild( btnWrap );
+					} );
+
+					cta.appendChild( grid );
+					card.appendChild( cta );
+					frag.appendChild( card );
+				}
+
+				eventsContainer.appendChild( frag );
+				needRebuild = true;
+
+				if ( index < groupList.length ) {
+					requestAnimationFrame( renderChunk );
+				} else {
+					// Always rebuild once after finishing
+					if (
+						window.Eventive &&
+						typeof window.Eventive.rebuild === 'function'
+					) {
+						setTimeout( () => {
+							window.Eventive.rebuild();
+							requestIdleCallback( () => {
+								try {
+									overrideTicketLabels(
+										eventsContainer
+									);
+								} catch ( e ) {
+									// Ignore
+								}
+							} );
+						}, 60 );
+					}
+
+					// Progressive initialization with IntersectionObserver
+					if (
+						window.IntersectionObserver &&
+						window.Eventive &&
+						typeof window.Eventive.rebuild === 'function'
+					) {
+						const obs = new IntersectionObserver(
+							( entries ) => {
+								entries.forEach( ( entry ) => {
+									if ( entry.isIntersecting ) {
+										try {
+											window.Eventive.rebuild();
+											requestIdleCallback( () => {
+												try {
+													overrideTicketLabels(
+														entry.target
+													);
+												} catch ( e ) {
+													// Ignore
+												}
+											} );
+										} catch ( e ) {
+											// Ignore
+										}
+										obs.unobserve( entry.target );
+									}
+								} );
+							},
+							{ rootMargin: '100px' }
+						);
+						eventsContainer
+							.querySelectorAll( '.yr-card' )
+							.forEach( ( card ) => obs.observe( card ) );
+					}
+
+					// Fetch missing film images
+					if (
+						pendingFetches.length &&
+						( ! imgFetchRefresh ||
+							! imgFetchRefresh[ dayKey ] )
+					) {
+						imgFetchRefresh[ dayKey ] = true;
+						Promise.all(
+							pendingFetches.map( ( id ) =>
+								fetchFilmById( id )
+							)
+						).then( () => {
+							scheduleRender();
+						} );
+					}
+				}
+			};
+
+			requestAnimationFrame( renderChunk );
+			// Initial label override
+			requestIdleCallback( () => {
+				try {
+					overrideTicketLabels( eventsContainer );
+				} catch ( e ) {
+					// Ignore
+				}
 			} );
-
-			if ( window.Eventive?.rebuild ) {
-				setTimeout( () => {
-					window.Eventive.rebuild();
-				}, 60 );
-			}
 		};
 
 		// Fetch week
@@ -403,6 +710,86 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				return;
 			}
 
+			setLoading( true );
+
+			const applyFilter = ( list ) => {
+				if ( ! Array.isArray( list ) ) {
+					return [];
+				}
+
+				const out = [];
+				for ( let i = 0; i < list.length; i++ ) {
+					const ev = list[ i ];
+					if ( ! ev || ! ev.start_time ) {
+						continue;
+					}
+					const t = new Date( ev.start_time );
+					if ( isNaN( t ) ) {
+						continue;
+					}
+					if ( t >= s && t <= e ) {
+						out.push( ev );
+					}
+				}
+
+				// Sort by start time
+				out.sort(
+					( a, b ) =>
+						new Date( a.start_time ) - new Date( b.start_time )
+				);
+
+				// Filter out past events if in current week
+				const cutoff = todayStart;
+				const sameWeekAsToday =
+					toISODate( weekStart ) === toISODate( minWeekStart );
+				const filtered = sameWeekAsToday
+					? out.filter( ( ev ) => {
+							const t = new Date( ev.start_time );
+							return +atStartOfDay( t ) >= +cutoff;
+					  } )
+					: out;
+
+				// Normalize and group by day
+				const byDay = {};
+				filtered.forEach( ( ev ) => {
+					// Normalize film_id
+					if ( ! ev.film_id && ev.film && ev.film.id ) {
+						ev.film_id = ev.film.id;
+					}
+					if (
+						! ev.film_id &&
+						ev.films &&
+						ev.films[ 0 ] &&
+						ev.films[ 0 ].id
+					) {
+						ev.film_id = ev.films[ 0 ].id;
+					}
+					if (
+						! ev.film_id &&
+						ev.program_item &&
+						ev.program_item.film_id
+					) {
+						ev.film_id = ev.program_item.film_id;
+					}
+
+					// Ensure ev.film points at primary film
+					if ( ! ev.film && ev.films && ev.films[ 0 ] ) {
+						ev.film = ev.films[ 0 ];
+					}
+
+					// Title assist for edge payloads
+					if ( ev.film && ! ev.film.name && ev.title ) {
+						ev.film.name = ev.title;
+					}
+
+					const key = toISODate( new Date( ev.start_time ) );
+					( byDay[ key ] || ( byDay[ key ] = [] ) ).push( ev );
+				} );
+
+				eventsByDay = byDay;
+				weekCache[ wkKey ] = byDay;
+			};
+
 			try {
 				const params = new URLSearchParams();
 				params.append( 'start_time_gte', new Date( s ).toISOString() );
@@ -410,61 +797,60 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				params.append( 'include_past_events', 'true' );
 				params.append( 'include', 'film,films,program_item' );
 
-				let path = `event_buckets/${ eventBucket }/events?${ params.toString() }`;
+				const path = `event_buckets/${ eventBucket }/events`;
 
 				const response = await window.Eventive.request( {
 					method: 'GET',
 					path,
-					authenticatePerson: false,
+					qs: Object.fromEntries( params ),
+					authenticatePerson: true,
 				} );
 
-				let events =
+				const list =
 					( response && ( response.events || response ) ) || [];
-
-				// Filter by week range
-				events = events.filter( ( ev ) => {
-					if ( ! ev || ! ev.start_time ) {
-						return false;
-					}
-					const t = new Date( ev.start_time );
-					if ( isNaN( t ) ) {
-						return false;
-					}
-					return t >= s && t <= e;
-				} );
-
-				// Group by day
-				const byDay = {};
-				const sameWeekAsToday =
-					toISODate( weekStart ) === toISODate( minWeekStart );
-				if ( sameWeekAsToday ) {
-					events = events.filter( ( ev ) => {
-						const t = new Date( ev.start_time );
-						return +atStartOfDay( t ) >= +todayStart;
-					} );
-				}
-
-				events.sort(
-					( a, b ) =>
-						new Date( a.start_time ) - new Date( b.start_time )
-				);
-
-				events.forEach( ( ev ) => {
-					if ( ! ev.film && ev.films && ev.films[ 0 ] ) {
-						ev.film = ev.films[ 0 ];
-					}
-					const key = toISODate( new Date( ev.start_time ) );
-					( byDay[ key ] || ( byDay[ key ] = [] ) ).push( ev );
-				} );
-
-				eventsByDay = byDay;
-				weekCache[ wkKey ] = byDay;
+				applyFilter( list );
+				setLoading( false );
 			} catch ( error ) {
 				console.error(
 					'[eventive-native-year-round] Error fetching week events:',
 					error
 				);
-				eventsByDay = {};
+
+				// Fallback: fetch broader range and filter
+				try {
+					const now = new Date();
+					const later = addDays( now, 60 );
+					const fallbackParams = new URLSearchParams();
+					fallbackParams.append(
+						'start_time_gte',
+						now.toISOString()
+					);
+					fallbackParams.append(
+						'start_time_lte',
+						later.toISOString()
+					);
+
+					const path = `event_buckets/${ eventBucket }/events`;
+
+					const response = await window.Eventive.request( {
+						method: 'GET',
+						path,
+						qs: Object.fromEntries( fallbackParams ),
+						authenticatePerson: true,
+					} );
+
+					const list =
+						( response && ( response.events || response ) ) || [];
+					applyFilter( list );
+					setLoading( false );
+				} catch ( fallbackError ) {
+					console.error(
+						'[eventive-native-year-round] Fallback fetch failed:',
+						fallbackError
+					);
+					eventsByDay = {};
+					setLoading( false );
+				}
 			}
 		};
 
@@ -492,6 +878,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			const wkKey = toISODate( weekStart );
 			if ( weekCache[ wkKey ] ) {
 				eventsByDay = weekCache[ wkKey ];
+				setLoading( false );
 				scheduleRender();
 			} else {
 				await fetchWeek();
@@ -507,6 +894,49 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const init = async () => {
 			renderWeekButtons();
 			updatePrevDisabled();
+
+			// Ensure Eventive is ready before fetching
+			const ensureEventiveReady = () => {
+				return new Promise( ( resolve ) => {
+					if (
+						window.Eventive &&
+						typeof window.Eventive.on === 'function'
+					) {
+						if ( window.Eventive._ready ) {
+							resolve();
+						} else {
+							window.Eventive.on( 'ready', resolve );
+						}
+					} else {
+						// Retry with timeout
+						let tries = 0;
+						const wait = () => {
+							if ( ++tries > 40 ) {
+								console.error(
+									'[eventive-native-year-round] Eventive loader timeout'
+								);
+								resolve();
+								return;
+							}
+							if (
+								window.Eventive &&
+								window.Eventive.on
+							) {
+								if ( window.Eventive._ready ) {
+									resolve();
+								} else {
+									window.Eventive.on( 'ready', resolve );
+								}
+							} else {
+								setTimeout( wait, 125 );
+							}
+						};
+						wait();
+					}
+				} );
+			};
+
+			await ensureEventiveReady();
 			await fetchWeek();
 			scheduleRender();
 		};

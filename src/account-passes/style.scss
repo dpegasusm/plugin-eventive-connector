@@ -40,6 +40,12 @@
 		text-align: center;
 	}
 
+	.eventive-pass-card__benefits {
+		font-size: 0.85rem;
+		color: #777;
+		margin-top: 4px;
+	}
+
 	.eventive-passes-list {
 
 		h2 {
@@ -123,8 +129,19 @@
 		inset: 0;
 		align-items: center;
 		justify-content: center;
-		background: rgba(0, 0, 0, 0.4);
 		z-index: 9999;
+
+		&.is-open {
+			display: flex;
+		}
+	}
+
+	.eventive-edit-pass-modal {
+		background: rgba(0, 0, 0, 0.4);
+	}
+
+	.eventive-show-pass-barcode-modal {
+		background: rgba(0, 0, 0, 0.85);
 	}
 
 	.edit-pass-modal-content,
@@ -139,6 +156,11 @@
 		h3 {
 			margin-top: 0;
 			margin-bottom: 16px;
+
+			&.barcode-modal-title {
+				font-size: 1.1em;
+				text-decoration: underline;
+			}
 		}
 
 		.modal-close-btn {
@@ -167,6 +189,10 @@
 				border: 1px solid var(--border-color);
 				border-radius: 4px;
 			}
+		}
+
+		.form-submit-row {
+			margin-top: 14px;
 		}
 
 		.pass-submit-row-button {
@@ -200,6 +226,12 @@
 			border: 1px solid #eee;
 			border-radius: 8px;
 			padding: 12px;
+		}
+
+		.barcode-tip {
+			margin-top: 10px;
+			font-size: 12px;
+			opacity: 0.8;
 		}
 	}
 }

@@ -5,7 +5,7 @@
  */
 import { __ } from '@wordpress/i18n';
 import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
-import { PanelBody, TextControl } from '@wordpress/components';
+import { PanelBody, TextControl, DateTimePicker } from '@wordpress/components';
 
 import './editor.scss';
 
@@ -24,28 +24,66 @@ export default function Edit( { attributes, setAttributes } ) {
 		<>
 			<InspectorControls>
 				<PanelBody title={ __( 'Fundraiser Settings', 'eventive' ) }>
-					<TextControl
-						label={ __( 'Start Date (YYYY-MM-DD)', 'eventive' ) }
-						value={ attributes.startTime }
-						onChange={ ( value ) =>
-							setAttributes( { startTime: value } )
-						}
-						help={ __(
-							'Start date for donation tracking',
-							'eventive'
-						) }
-					/>
-					<TextControl
-						label={ __( 'End Date (YYYY-MM-DD)', 'eventive' ) }
-						value={ attributes.endTime }
-						onChange={ ( value ) =>
-							setAttributes( { endTime: value } )
-						}
-						help={ __(
-							'End date for donation tracking',
-							'eventive'
-						) }
-					/>
+					<div style={ { marginBottom: '16px' } }>
+						<label
+							style={ {
+								display: 'block',
+								marginBottom: '8px',
+								fontWeight: '500',
+							} }
+						>
+							{ __( 'Start Date & Time', 'eventive' ) }
+						</label>
+						<DateTimePicker
+							currentDate={ attributes.startTime }
+							onChange={ ( value ) =>
+								setAttributes( { startTime: value } )
+							}
+							is12Hour={ true }
+						/>
+						<p
+							style={ {
+								marginTop: '8px',
+								fontSize: '12px',
+								color: '#757575',
+							} }
+						>
+							{ __(
+								'Start date and time for donation tracking',
+								'eventive'
+							) }
+						</p>
+					</div>
+					<div style={ { marginBottom: '16px' } }>
+						<label
+							style={ {
+								display: 'block',
+								marginBottom: '8px',
+								fontWeight: '500',
+							} }
+						>
+							{ __( 'End Date & Time', 'eventive' ) }
+						</label>
+						<DateTimePicker
+							currentDate={ attributes.endTime }
+							onChange={ ( value ) =>
+								setAttributes( { endTime: value } )
+							}
+							is12Hour={ true }
+						/>
+						<p
+							style={ {
+								marginTop: '8px',
+								fontSize: '12px',
+								color: '#757575',
+							} }
+						>
+							{ __(
+								'End date and time for donation tracking',
+								'eventive'
+							) }
+						</p>
+					</div>
 					<TextControl
 						label={ __( 'Goal Amount ($)', 'eventive' ) }
 						value={ attributes.goalAmount }
@@ -75,9 +113,13 @@ export default function Edit( { attributes, setAttributes } ) {
 						{ attributes.startTime && attributes.endTime && (
 							<p>
 								<strong>{ __( 'Period:', 'eventive' ) }</strong>{ ' ' }
-								{ attributes.startTime }{ ' ' }
+								{ new Date(
+									attributes.startTime
+								).toLocaleString() }{ ' ' }
 								{ __( 'to', 'eventive' ) }{ ' ' }
-								{ attributes.endTime }
+								{ new Date(
+									attributes.endTime
+								).toLocaleString() }
 							</p>
 						) }
 						<p>

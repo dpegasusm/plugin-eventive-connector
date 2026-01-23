@@ -2,7 +2,7 @@
  * Venue Properties Plugin
  * Adds Eventive venue metadata to the block editor sidebar
  *
- * @package Eventive
+ * @package
  * @since 1.0.0
  */
 
@@ -50,6 +50,15 @@ const VenuePropertiesPanel = () => {
 			/>
 
 			<TextControl
+				label={ __( 'Short Name', 'eventive' ) }
+				value={ meta._eventive_venue_short_name || '' }
+				onChange={ ( value ) =>
+					updateMeta( '_eventive_venue_short_name', value )
+				}
+				help={ __( 'Abbreviated venue name', 'eventive' ) }
+			/>
+
+			<TextControl
 				label={ __( 'Bucket ID', 'eventive' ) }
 				value={ meta._eventive_bucket_id || '' }
 				onChange={ ( value ) =>
@@ -64,6 +73,16 @@ const VenuePropertiesPanel = () => {
 				onChange={ ( value ) =>
 					updateMeta( '_eventive_venue_address', value )
 				}
+			/>
+
+			<TextControl
+				label={ __( 'Default Capacity', 'eventive' ) }
+				value={ meta._eventive_venue_default_capacity || '' }
+				onChange={ ( value ) =>
+					updateMeta( '_eventive_venue_default_capacity', value )
+				}
+				type="number"
+				help={ __( 'Default venue capacity', 'eventive' ) }
 			/>
 
 			<TextControl
@@ -146,6 +165,15 @@ const VenuePropertiesPanel = () => {
 					'Whether this venue uses reserved seating',
 					'eventive'
 				) }
+			/>
+
+			<ToggleControl
+				label={ __( 'Comscore Include', 'eventive' ) }
+				checked={ meta._eventive_venue_comscore_include || false }
+				onChange={ ( value ) =>
+					updateMeta( '_eventive_venue_comscore_include', value )
+				}
+				help={ __( 'Include in Comscore reporting', 'eventive' ) }
 			/>
 		</PluginDocumentSettingPanel>
 	);

@@ -69,6 +69,7 @@ class Eventive_API {
 	private $api_endpoint_event_bucket_endpoints = array(
 		'tags',
 		'active',
+		'venues',
 	);
 
 	/**
@@ -350,10 +351,8 @@ class Eventive_API {
 				'args'                => array(
 					'event_id' => array(
 						'default'           => '',
-						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
-							return is_int( $param ) && $param >= 0;
-						},
+						'sanitize_callback' => array( $this, 'sanitize_eventive_id' ),
+						'validate_callback' => array( $this, 'validate_eventive_id' ),
 					),
 				),
 			)
@@ -425,6 +424,20 @@ class Eventive_API {
 				'methods'             => 'GET',
 				'callback'            => array( $this, 'get_api_ledger' ),
 				'permission_callback' => array( $this, 'check_api_nonce' ),
+				'args'                => array(
+					'start' => array(
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+					'end'   => array(
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+					'type'  => array(
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+				),
 			)
 		);
 
@@ -500,10 +513,8 @@ class Eventive_API {
 				'args'                => array(
 					'tag_id' => array(
 						'default'           => '',
-						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
-							return is_int( $param ) && $param >= 0;
-						},
+						'sanitize_callback' => array( $this, 'sanitize_eventive_id' ),
+						'validate_callback' => array( $this, 'validate_eventive_id' ),
 					),
 				),
 			)
@@ -787,6 +798,13 @@ class Eventive_API {
 			case 'active':
 				$api_url = $api_url . '/active';
 				break;
+			case 'venues':
+				// Use default bucket if none provided.
+				if ( empty( $bucket_id ) ) {
+					$bucket_id = $this->api_default_bucket_id;
+				}
+				$api_url .= '/' . sanitize_text_field( $bucket_id ) . '/venues';
+				break;
 			default:
 				// if the bucket is set use it.
 				if ( ! empty( $bucket_id ) && is_string( $bucket_id ) && strlen( $bucket_id ) > 0 ) {
@@ -800,9 +818,10 @@ class Eventive_API {
 		// Prepare other parameters.
 		$response_body = '';
 		$args          = array();
+		$use_secret    = ( 'venues' === $endpoint ) ? true : false; // Venues require secret key.
 
 		// Make the call.
-		$bucket_response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
+		$bucket_response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, $use_secret );
 
 		// If this was a bucket refresh, update the buckets list.
 		if ( $bucket_refresh && ! is_wp_error( $bucket_response ) ) {
@@ -864,7 +883,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
+		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, true );
 	}
 
 	/**
@@ -875,20 +894,16 @@ class Eventive_API {
 	 * @return WP_REST_Response|WP_Error The REST response or a WP_Error object on failure.
 	 */
 	public function get_api_films( $request ) {
+		// Fetch all films.
+		$api_url = $this->api_url_base . $this->api_endpoint_films;
+
 		// Get the parameters.
-		$film_id   = $request->get_param( 'film_id' );
-		$bucket_id = $request->get_param( 'bucket_id' );
+		$film_id = $request->get_param( 'film_id' );
 
 		// Build the endpoint URL based on parameters.
-		if ( ! empty( $bucket_id ) && is_string( $bucket_id ) && strlen( $bucket_id ) > 0 ) {
-			// Fetch all films for a specific bucket.
-			$api_url = $this->api_url_base . $this->api_endpoint_event_buckets . '/' . sanitize_text_field( $bucket_id ) . '/films';
-		} elseif ( ! empty( $film_id ) && is_string( $film_id ) && strlen( $film_id ) > 0 ) {
+		if ( ! empty( $film_id ) && is_string( $film_id ) && strlen( $film_id ) > 0 ) {
 			// Fetch a specific film by ID.
-			$api_url = $this->api_url_base . $this->api_endpoint_films . '/' . sanitize_text_field( $film_id );
-		} else {
-			// No valid parameters provided.
-			return new WP_Error( 'invalid_parameters', 'Either film_id or bucket_id must be provided.', array( 'status' => 400 ) );
+			$api_url .= '/' . sanitize_text_field( $film_id );
 		}
 
 		// Prepare other parameters.
@@ -896,7 +911,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
+		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, true );
 	}
 
 	/**
@@ -914,8 +929,8 @@ class Eventive_API {
 		$item_bucket_id = $request->get_param( 'item_bucket_id' );
 
 		// Modify the endpoint based on parameters.
-		if ( ! empty( $item_bucket_id ) && is_int( $item_bucket_id ) && absint( $item_bucket_id ) > 0 ) {
-			$api_url .= '/' . absint( $item_bucket_id );
+		if ( ! empty( $item_bucket_id ) && is_string( $item_bucket_id ) && strlen( $item_bucket_id ) > 0 ) {
+			$api_url .= '/' . sanitize_text_field( $item_bucket_id );
 		}
 
 		// Prepare other parameters.
@@ -962,14 +977,74 @@ class Eventive_API {
 	 */
 	public function get_api_ledger( $request ) {
 		// Build the endpoint URL.
-		$api_url = $this->api_url_base . $this->api_endpoint_ledger;
+		$api_url = $this->api_url_base . $this->api_endpoint_ledger . '/transactions';
+
+		// Get the parameters.
+		$start = $request->get_param( 'start' );
+		$end   = $request->get_param( 'end' );
+		$type  = $request->get_param( 'type' );
+
+		// Build query string.
+		$query_params = array();
+		if ( ! empty( $start ) ) {
+			$query_params[] = 'start=' . rawurlencode( $start );
+		}
+		if ( ! empty( $end ) ) {
+			$query_params[] = 'end=' . rawurlencode( $end );
+		}
+		if ( ! empty( $type ) ) {
+			$query_params[] = 'type=' . rawurlencode( $type );
+		}
+
+		// Append query string if we have parameters.
+		if ( ! empty( $query_params ) ) {
+			$api_url .= '?' . implode( '&', $query_params );
+		}
 
 		// Prepare other parameters.
 		$response_body = '';
 		$args          = array();
 
-		// Make the API call.
-		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
+		// Make the API call to get raw transaction data.
+		$api_response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, true );
+
+		// Check if the API call was successful.
+		if ( is_wp_error( $api_response ) ) {
+			return $api_response;
+		}
+
+		// Get the raw data from the response.
+		$raw_data = $api_response->get_data();
+
+		// Aggregate donation statistics (non-sensitive data only).
+		$aggregated_data = array(
+			'total_donations'       => 0,
+			'donation_count'        => 0,
+			'start_date'            => $start,
+			'end_date'              => $end,
+			'currency'              => 'USD',
+		);
+
+		// Process transactions to extract donation totals.
+		if ( isset( $raw_data['transactions'] ) && is_array( $raw_data['transactions'] ) ) {
+			foreach ( $raw_data['transactions'] as $transaction ) {
+				// Check if this is a donation transaction.
+				if ( isset( $transaction['category']['ref_label'] ) && 'Donation' === $transaction['category']['ref_label'] ) {
+					// Aggregate the donation amount (convert from cents to dollars).
+					if ( isset( $transaction['gross'] ) && is_numeric( $transaction['gross'] ) ) {
+						$amount_in_dollars = floatval( $transaction['gross'] ) / 100;
+						$aggregated_data['total_donations'] += $amount_in_dollars;
+						$aggregated_data['donation_count']++;
+					}
+				}
+			}
+		}
+
+		// Round total to 2 decimal places.
+		$aggregated_data['total_donations'] = round( $aggregated_data['total_donations'], 2 );
+
+		// Return only the aggregated, non-sensitive statistics.
+		return new WP_REST_Response( $aggregated_data, 200 );
 	}
 
 	/**
@@ -1068,8 +1143,8 @@ class Eventive_API {
 		$tag_id = $request->get_param( 'tag_id' );
 
 		// Modify the endpoint based on parameters.
-		if ( ! empty( $tag_id ) && is_int( $tag_id ) && absint( $tag_id ) > 0 ) {
-			$api_url .= '/' . absint( $tag_id );
+		if ( ! empty( $tag_id ) && is_string( $tag_id ) && strlen( $tag_id ) > 0 ) {
+			$api_url .= '/' . sanitize_text_field( $tag_id );
 		}
 
 		// Prepare other parameters.
@@ -1077,7 +1152,7 @@ class Eventive_API {
 		$args          = array();
 
 		// Make the API call.
-		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args );
+		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, true );
 	}
 
 	/**

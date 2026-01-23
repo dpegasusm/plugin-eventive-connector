@@ -3,6 +3,13 @@
  */
 import { createRoot } from '@wordpress/element';
 
+// Shared page-level event cache
+window.__Eventive_EventCache = window.__Eventive_EventCache || {};
+
+// Global film detail config (first block wins)
+let __EventiveFilmDetailBase = '';
+let __EventiveFilmDetailPretty = true;
+
 /**
  * Helper functions
  * @param v
@@ -36,6 +43,104 @@ function getTextColor( bg ) {
 	return br > 150 ? '#000' : '#fff';
 }
 
+// Fetch events with caching
+function fetchEventsOnce( bucket, opts ) {
+	opts = opts || {};
+	const includePast = !! opts.includePast;
+	const includeVirtual = !! opts.includeVirtual;
+	const forceAll = !! opts.forceAll;
+
+	const key =
+		bucket +
+		'::past=' +
+		( includePast ? 1 : 0 ) +
+		'::virt=' +
+		( includeVirtual ? 1 : 0 ) +
+		'::all=' +
+		( forceAll ? 1 : 0 );
+	const C = window.__Eventive_EventCache;
+	if ( C[ key ] ) {
+		return Promise.resolve( C[ key ] );
+	}
+	if ( ! window.Eventive ) {
+		return Promise.reject(
+			new Error( 'Eventive API is not initialized.' )
+		);
+	}
+
+	const qs = {};
+	if ( ! ( includePast || forceAll ) ) {
+		qs.upcoming_only = true;
+		qs.marquee = true;
+	}
+	if ( includeVirtual ) {
+		qs.include_virtual = true;
+	}
+
+	return window.Eventive.request( {
+		method: 'GET',
+		path: 'event_buckets/' + encodeURIComponent( bucket ) + '/events',
+		qs,
+		authenticatePerson: true,
+	} ).then( ( d ) => {
+		const events = ( d && d.events ) || [];
+		C[ key ] = events;
+		return C[ key ];
+	} );
+}
+
+// Resolve film URL from various fields
+function resolveFilmUrl( film ) {
+	if ( ! film || typeof film !== 'object' ) {
+		return '';
+	}
+	const candidates = [
+		'wp_detail_url',
+		'wp_permalink',
+		'permalink',
+		'detail_url',
+		'details_url',
+		'url',
+		'public_url',
+		'site_url',
+	];
+	for ( let i = 0; i < candidates.length; i++ ) {
+		const key = candidates[ i ];
+		const val = film[ key ];
+		if ( typeof val === 'string' && val ) {
+			return val;
+		}
+	}
+
+	// Fallback: build URL from film detail base
+	const idOrSlug = film.id || film.slug || film.slugified_title;
+	if ( idOrSlug && __EventiveFilmDetailBase ) {
+		const base = __EventiveFilmDetailBase.replace( /\/+$/, '' );
+		return base + '/?film-id=' + encodeURIComponent( idOrSlug );
+	}
+
+	return '';
+}
+
+// Update URL tag parameter
+function setURLTagParam( tagId, method ) {
+	try {
+		const u = new URL( window.location.href );
+		if ( ! tagId ) {
+			u.searchParams.delete( 'tag-id' );
+		} else {
+			u.searchParams.set( 'tag-id', tagId );
+		}
+		if ( method === 'replace' ) {
+			history.replaceState( {}, '', u.toString() );
+		} else {
+			history.pushState( {}, '', u.toString() );
+		}
+	} catch ( e ) {
+		// Ignore
+	}
+}
+
 /**
  * Initialize all events list blocks on the page
  */
@@ -45,6 +150,13 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	);
 
 	blocks.forEach( ( block ) => {
+		if ( block.__inited ) {
+			return;
+		}
+		block.__inited = true;
+
+		block.classList.add( 'eventive-events-list--inited' );
+
 		// Get API configuration
 		const endpoints = window.EventiveBlockData?.apiEndpoints || {};
 		const nonce = window.EventiveBlockData?.eventNonce || '';
@@ -55,8 +167,18 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 		// Extract attributes
 		const limit = parseInt( block.getAttribute( 'data-limit' ) ) || 0;
-		const tagId = block.getAttribute( 'data-tag-id' ) || '';
-		const excludeTags = block.getAttribute( 'data-exclude-tags' ) || '';
+		const tagIdAttr = block.getAttribute( 'data-tag-id' ) || '';
+		const tagsListRaw = tagIdAttr;
+		const shortcodeTags = tagsListRaw
+			? tagsListRaw.split( ',' ).map( ( t ) => t.trim() ).filter( Boolean )
+			: [];
+		const excludeTagsRaw = block.getAttribute( 'data-exclude-tags' ) || '';
+		const excludeTokens = excludeTagsRaw
+			? excludeTagsRaw
+					.split( ',' )
+					.map( ( t ) => t.trim() )
+					.filter( Boolean )
+			: [];
 		const venueId = block.getAttribute( 'data-venue-id' ) || '';
 		const showDescription = parseBool(
 			block.getAttribute( 'data-event-description' )
@@ -77,7 +199,30 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const startDate = block.getAttribute( 'data-start-date' ) || '';
 		const endDate = block.getAttribute( 'data-end-date' ) || '';
 
-		let activeTagFilter = '';
+		// Film detail configuration
+		const filmDetailBaseAttr = block.getAttribute(
+			'data-film-detail-base'
+		);
+		if ( filmDetailBaseAttr && ! __EventiveFilmDetailBase ) {
+			__EventiveFilmDetailBase = filmDetailBaseAttr;
+		}
+		const filmDetailPrettyAttr = block.getAttribute(
+			'data-film-detail-pretty'
+		);
+		if (
+			filmDetailPrettyAttr !== null &&
+			filmDetailPrettyAttr !== ''
+		) {
+			__EventiveFilmDetailPretty =
+				String( filmDetailPrettyAttr ).toLowerCase() === 'true';
+		}
+
+		// Active tag from URL or default
+		let activeTag = (
+			new URLSearchParams( window.location.search ).get( 'tag-id' ) ||
+			''
+		).trim();
+		const tagDefault = shortcodeTags[ 0 ] || '';
 
 		// Parse date ranges
 		let startDateTs = null;
@@ -105,29 +250,80 @@ document.addEventListener( 'DOMContentLoaded', () => {
 					Array.isArray( ev.films ) ? ev.films : []
 				).flatMap( ( f ) => ( Array.isArray( f.tags ) ? f.tags : [] ) );
 				evTags.concat( filmTags ).forEach( ( t ) => {
-					if ( ! t || ! t.id ) {
+					if ( ! t ) {
 						return;
 					}
-					const id = String( t.id );
-					if ( ! tagMap.has( id ) ) {
-						tagMap.set( id, {
+					const id = t.id != null ? String( t.id ) : '';
+					const name = t.name || t.title || t.label || ( id ? '#' + id : '' );
+					if ( ! id && ! name ) {
+						return;
+					}
+
+					// Skip excluded tags from filter UI
+					if ( excludeTokens && excludeTokens.length ) {
+						const isExcluded = excludeTokens.some( ( tok ) => {
+							return (
+								( id && tok === id ) ||
+								( name &&
+									tok.toLowerCase() === name.toLowerCase() )
+							);
+						} );
+						if ( isExcluded ) {
+							return;
+						}
+					}
+
+					const key = id || name.toLowerCase();
+					if ( ! tagMap.has( key ) ) {
+						tagMap.set( key, {
 							id,
-							name: t.name || '',
-							color: t.color || '#ccc',
+							name,
+							color: t.color || '#e0e0e0',
 							count: 0,
 						} );
 					}
-					const tag = tagMap.get( id );
+					const tag = tagMap.get( key );
 					tag.count++;
 				} );
 			} );
 			return Array.from( tagMap.values() ).sort( ( a, b ) =>
-				a.name.localeCompare( b.name )
+				a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
 			);
 		};
 
+		// Highlight active tag
+		const highlightActiveTag = () => {
+			if ( ! showFilter ) {
+				return;
+			}
+			const filterEl = block.querySelector(
+				'.eventive-events-tags-filter'
+			);
+			if ( ! filterEl ) {
+				return;
+			}
+			try {
+				const btns = filterEl.querySelectorAll( '.eventive-tag-btn' );
+				btns.forEach( ( btn ) => {
+					btn.classList.remove( 'active' );
+				} );
+				btns.forEach( ( btn ) => {
+					const id = btn.getAttribute( 'data-tag-id' ) || '';
+					if ( ! activeTag ) {
+						if ( ! id ) {
+							btn.classList.add( 'active' );
+						}
+					} else if ( id === activeTag ) {
+						btn.classList.add( 'active' );
+					}
+				} );
+			} catch ( e ) {
+				// Ignore
+			}
+		};
+
 		// Render tags filter
-		const renderTagsFilter = ( tags, container ) => {
+		const renderTagsFilter = ( tags ) => {
 			if ( ! showFilter || ! tags.length ) {
 				return;
 			}
@@ -142,17 +338,17 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			}
 
 			const allBtn = `<button class="eventive-tag-btn ${
-				! activeTagFilter ? 'active' : ''
+				! activeTag ? 'active' : ''
 			}" data-tag-id="">All</button>`;
 			const tagBtns = tags
 				.map( ( tag ) => {
-					const color = tag.color || '#ccc';
+					const color = tag.color || '#e0e0e0';
 					const textColor = getTextColor( color );
-					const isActive = activeTagFilter === tag.id;
+					const isActive = activeTag === tag.id || activeTag === tag.name;
 					return `<button class="eventive-tag-btn ${
 						isActive ? 'active' : ''
 					}" data-tag-id="${
-						tag.id
+						tag.id || tag.name
 					}" style="background-color:${ color };color:${ textColor };">${
 						tag.name
 					}</button>`;
@@ -161,346 +357,601 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 			filterEl.innerHTML = `<div class="eventive-tags-list">${ allBtn }${ tagBtns }</div>`;
 
-			// Add click handlers
-			filterEl
-				.querySelectorAll( '.eventive-tag-btn' )
-				.forEach( ( btn ) => {
-					btn.addEventListener( 'click', () => {
-						activeTagFilter =
-							btn.getAttribute( 'data-tag-id' ) || '';
-						renderEvents();
-					} );
-				} );
+			// Hide filter if disabled
+			if ( ! showFilter ) {
+				filterEl.classList.add( 'is-hidden' );
+				filterEl.setAttribute( 'hidden', '' );
+				filterEl.style.display = 'none';
+			}
+
+			// Add click handlers (once)
+			if ( ! filterEl.__evtClickBound ) {
+				filterEl.__evtClickBound = true;
+				filterEl.addEventListener(
+					'click',
+					( e ) => {
+						const btn = e.target.closest( '.eventive-tag-btn' );
+						if ( ! btn ) {
+							return;
+						}
+						if (
+							e.metaKey ||
+							e.ctrlKey ||
+							e.shiftKey ||
+							e.altKey
+						) {
+							return;
+						}
+						e.preventDefault();
+						e.stopPropagation();
+						activeTag = btn.getAttribute( 'data-tag-id' ) || '';
+						setURLTagParam( activeTag, 'replace' );
+						highlightActiveTag();
+						if ( window.allEventiveEvents ) {
+							renderEvents( window.allEventiveEvents, activeTag );
+						}
+					},
+					true
+				);
+			}
+		};
+
+		// Check if event is upcoming
+		const isUpcoming = ( ev ) => {
+			if ( includePast ) {
+				return true;
+			}
+			const t =
+				ev && ev.start_time
+					? new Date( ev.start_time ).getTime()
+					: NaN;
+			if ( ! isFinite( t ) ) {
+				return false;
+			}
+			return t >= Date.now();
 		};
 
 		// Filter events
-		const filterEvents = ( events ) => {
-			let filtered = [ ...events ];
+		const filterEvents = ( events, overrideTag ) => {
+			const tagId =
+				typeof overrideTag === 'string'
+					? overrideTag
+					: activeTag || tagDefault;
 
-			// Filter by tag
-			if ( tagId ) {
-				filtered = filtered.filter( ( ev ) => {
-					const evTags = Array.isArray( ev.tags ) ? ev.tags : [];
-					const filmTags = (
-						Array.isArray( ev.films ) ? ev.films : []
-					).flatMap( ( f ) =>
-						Array.isArray( f.tags ) ? f.tags : []
-					);
-					return evTags
-						.concat( filmTags )
-						.some( ( t ) => t && String( t.id ) === tagId );
+			// Partition into undated and dated
+			const undated = [];
+			const dated = [];
+
+			( events || [] ).forEach( ( event ) => {
+				// Venue check
+				if (
+					venueId &&
+					( ! event.venue || event.venue.id !== venueId )
+				) {
+					return;
+				}
+
+				// Virtual check
+				if ( ! includeVirtual && event.is_virtual ) {
+					return;
+				}
+
+				// Tag filtering
+				const filterTokens = [];
+				if ( tagId ) {
+					filterTokens.push( String( tagId ) );
+				} else if ( shortcodeTags && shortcodeTags.length ) {
+					filterTokens.push( ...shortcodeTags );
+				}
+
+				const evTagsArr = Array.isArray( event.tags )
+					? event.tags
+					: [];
+				const fmTagsArr =
+					event.films &&
+					event.films[ 0 ] &&
+					Array.isArray( event.films[ 0 ].tags )
+						? event.films[ 0 ].tags
+						: [];
+				const allTagObjs = evTagsArr.concat( fmTagsArr );
+				const eventTagIds = [];
+				const eventTagNames = [];
+
+				allTagObjs.forEach( ( t ) => {
+					if ( ! t ) {
+						return;
+					}
+					if ( t.id != null ) {
+						eventTagIds.push( String( t.id ) );
+					}
+					if ( t.name ) {
+						eventTagNames.push( t.name.toLowerCase() );
+					}
 				} );
-			}
 
-			// Filter by active tag filter
-			if ( activeTagFilter ) {
-				filtered = filtered.filter( ( ev ) => {
-					const evTags = Array.isArray( ev.tags ) ? ev.tags : [];
-					const filmTags = (
-						Array.isArray( ev.films ) ? ev.films : []
-					).flatMap( ( f ) =>
-						Array.isArray( f.tags ) ? f.tags : []
-					);
-					return evTags
-						.concat( filmTags )
-						.some(
-							( t ) => t && String( t.id ) === activeTagFilter
+				if ( filterTokens.length ) {
+					const matches = filterTokens.some( ( tok ) => {
+						return (
+							eventTagIds.includes( tok ) ||
+							eventTagNames.includes( tok.toLowerCase() )
 						);
-				} );
-			}
-
-			// Exclude tags
-			if ( excludeTags ) {
-				const excludeIds = excludeTags
-					.split( ',' )
-					.map( ( t ) => t.trim() );
-				filtered = filtered.filter( ( ev ) => {
-					const evTags = Array.isArray( ev.tags ) ? ev.tags : [];
-					const filmTags = (
-						Array.isArray( ev.films ) ? ev.films : []
-					).flatMap( ( f ) =>
-						Array.isArray( f.tags ) ? f.tags : []
-					);
-					return ! evTags
-						.concat( filmTags )
-						.some(
-							( t ) => t && excludeIds.includes( String( t.id ) )
-						);
-				} );
-			}
-
-			// Filter by venue
-			if ( venueId ) {
-				filtered = filtered.filter(
-					( ev ) => ev.venue && String( ev.venue.id ) === venueId
-				);
-			}
-
-			// Filter by virtual
-			if ( ! includeVirtual ) {
-				filtered = filtered.filter( ( ev ) => ! ev.is_virtual );
-			}
-
-			// Filter by date range
-			if ( startDateTs || endDateTs ) {
-				filtered = filtered.filter( ( ev ) => {
-					if ( ! ev.start_time ) {
-						return showUndated;
+					} );
+					if ( ! matches ) {
+						return;
 					}
-					const evTime = new Date( ev.start_time ).getTime();
-					if ( startDateTs && evTime < startDateTs ) {
-						return false;
-					}
-					if ( endDateTs && evTime > endDateTs ) {
-						return false;
-					}
-					return true;
-				} );
-			}
-
-			// Filter by past/upcoming
-			if ( ! includePast ) {
-				const now = Date.now();
-				filtered = filtered.filter( ( ev ) => {
-					if ( ! ev.start_time ) {
-						return showUndated;
-					}
-					return new Date( ev.start_time ).getTime() > now;
-				} );
-			}
-
-			// Filter undated
-			if ( ! showUndated ) {
-				filtered = filtered.filter( ( ev ) => ev.start_time );
-			}
-
-			// Sort by date
-			filtered.sort( ( a, b ) => {
-				if ( ! a.start_time && ! b.start_time ) {
-					return 0;
 				}
-				if ( ! a.start_time ) {
-					return 1;
+
+				// Date range check
+				if (
+					( startDateTs != null || endDateTs != null ) &&
+					event.start_time
+				) {
+					const evTime = new Date( event.start_time ).getTime();
+					if ( isFinite( evTime ) ) {
+						if ( startDateTs != null && evTime < startDateTs ) {
+							return;
+						}
+						if ( endDateTs != null && evTime > endDateTs ) {
+							return;
+						}
+					}
 				}
-				if ( ! b.start_time ) {
-					return -1;
+
+				// Single-tag exclusion check
+				if (
+					excludeTokens &&
+					excludeTokens.length &&
+					allTagObjs.length === 1
+				) {
+					const onlyTag = allTagObjs[ 0 ];
+					if ( onlyTag ) {
+						const tagId =
+							onlyTag.id != null ? String( onlyTag.id ) : '';
+						const tagName = onlyTag.name || '';
+						const isExcluded = excludeTokens.some( ( tok ) => {
+							return (
+								( tagId && tok === tagId ) ||
+								( tagName &&
+									tok.toLowerCase() ===
+										tagName.toLowerCase() )
+							);
+						} );
+						if ( isExcluded ) {
+							return;
+						}
+					}
 				}
-				return (
-					new Date( a.start_time ).getTime() -
-					new Date( b.start_time ).getTime()
-				);
+
+				// Undated vs dated
+				const isUndated =
+					event.is_date === false ||
+					event.is_dated === false ||
+					( ! event.start_time && event.date == null );
+
+				if ( isUndated ) {
+					if ( ! showUndated ) {
+						return;
+					}
+					undated.push( event );
+				} else {
+					if ( ! isUpcoming( event ) ) {
+						return;
+					}
+					dated.push( event );
+				}
 			} );
 
+			// Order: undated first, then dated
+			const ordered = undated.concat( dated );
+
 			// Apply limit
-			if ( limit > 0 ) {
-				filtered = filtered.slice( 0, limit );
+			if ( limit && limit > 0 ) {
+				return ordered.slice( 0, limit );
 			}
 
-			return filtered;
+			return ordered;
 		};
 
 		// Render events list
 		const renderEventsList = ( events ) => {
 			if ( ! events.length ) {
-				return '<div class="eventive-no-events">No events found.</div>';
+				return '<p class="no-events">No upcoming events found.</p>';
 			}
 
-			return events
-				.map( ( ev ) => {
-					const film = ev.films && ev.films[ 0 ];
-					const imageUrl =
-						imagePref === 'poster'
-							? film?.poster_image || ev.poster_image
-							: film?.cover_image ||
-							  ev.cover_image ||
-							  film?.poster_image;
+			const html = [];
+			events.forEach( ( event ) => {
+				// Date/time
+				let startHtml = '';
+				if ( event.start_time && event.is_date !== false ) {
+					const dt = new Date( event.start_time );
+					if ( ! isNaN( dt ) ) {
+						startHtml = dt.toLocaleDateString( undefined, {
+							weekday: 'short',
+							month: 'short',
+							day: 'numeric',
+							hour: 'numeric',
+							minute: '2-digit',
+						} );
+					}
+				}
 
-					const venueName =
-						ev.venue?.name || ( ev.is_virtual ? 'Virtual' : '' );
-					const dateStr = ev.start_time
-						? new Date( ev.start_time ).toLocaleDateString(
-								undefined,
-								{
-									weekday: 'short',
-									month: 'short',
-									day: 'numeric',
-									hour: 'numeric',
-									minute: '2-digit',
+				const name = event.name || 'Untitled Event';
+				const desc = event.description || '';
+				const shortDesc =
+					event.short_description ||
+					( event.films &&
+						event.films[ 0 ] &&
+						event.films[ 0 ].short_description ) ||
+					'';
+				const venueName =
+					( event.venue && event.venue.name ) ||
+					'No venue specified';
+
+				// Film metadata
+				let filmMetaHtml = '';
+				if ( event.films && event.films.length ) {
+					if ( event.films.length === 1 ) {
+						const f = event.films[ 0 ];
+						const filmUrl = resolveFilmUrl( f );
+						if ( filmUrl ) {
+							filmMetaHtml =
+								'<div class="film-meta"><a href="' +
+								filmUrl +
+								'">View Film Details</a></div>';
+						}
+					} else {
+						const filmTitlesHtml = event.films
+							.map( ( f ) => {
+								const title = f.name || f.title || 'Untitled';
+								const filmUrl = resolveFilmUrl( f );
+								if ( filmUrl ) {
+									return (
+										'<a href="' + filmUrl + '">' + title + '</a>'
+									);
 								}
-						  )
-						: 'On Demand';
+								return title;
+							} )
+							.join( '' );
+						filmMetaHtml =
+							'<div class="film-meta">Showing: ' +
+							filmTitlesHtml +
+							'</div>';
+					}
+				}
 
-					const description = showShortDescription
-						? ev.short_description || ''
-						: showDescription
-						? ev.description || ''
-						: '';
+				// Image
+				let imageUrl = '';
+				if ( imagePref === 'cover' ) {
+					imageUrl =
+						event.cover_image ||
+						( event.images && event.images.cover ) ||
+						( event.films &&
+							event.films[ 0 ] &&
+							( event.films[ 0 ].cover_image ||
+								( event.films[ 0 ].images &&
+									event.films[ 0 ].images.cover ) ) ) ||
+						'';
+				} else if ( imagePref === 'poster' ) {
+					imageUrl =
+						event.poster_image ||
+						( event.images && event.images.poster ) ||
+						( event.films &&
+							event.films[ 0 ] &&
+							( event.films[ 0 ].poster_image ||
+								( event.films[ 0 ].images &&
+									event.films[ 0 ].images.poster ) ) ) ||
+						'';
+				}
 
-					return `
-						<div class="eventive-event-item">
-							${
-								imageUrl
-									? `<div class="eventive-event-image"><img src="${ imageUrl }" alt="${
-											ev.name || ''
-									  }" /></div>`
-									: ''
+				// Poster HTML with optional film link
+				let posterHtml = '';
+				if ( imagePref !== 'none' && imageUrl ) {
+					let posterInner =
+						'<div class="poster-container"><img src="' +
+						imageUrl +
+						'" alt="' +
+						name +
+						' Image" class="poster" /></div>';
+					if ( event.films && event.films.length === 1 ) {
+						const filmUrl = resolveFilmUrl( event.films[ 0 ] );
+						if ( filmUrl ) {
+							posterInner =
+								'<a href="' +
+								filmUrl +
+								'">' +
+								posterInner +
+								'</a>';
+						}
+					}
+					posterHtml = posterInner;
+				}
+
+				const ticketBtn = event.hide_tickets_button
+					? ''
+					: '<div class="eventive-button" data-event="' +
+					  ( event.id || '' ) +
+					  '"></div>';
+
+				// Tag labels
+				const tagMap = new Map();
+				( event.tags || [] )
+					.concat(
+						( event.films || [] ).flatMap( ( f ) => f.tags || [] )
+					)
+					.forEach( ( tag ) => {
+						if ( ! tag ) {
+							return;
+						}
+						const id = tag.id != null ? String( tag.id ) : '';
+						const name =
+							tag.name ||
+							tag.title ||
+							tag.label ||
+							( id ? '#' + id : '' );
+						if ( ! id && ! name ) {
+							return;
+						}
+
+						// Skip excluded tags
+						if ( excludeTokens && excludeTokens.length ) {
+							const isExcluded = excludeTokens.some( ( tok ) => {
+								return (
+									( id && tok === id ) ||
+									( name &&
+										tok.toLowerCase() === name.toLowerCase() )
+								);
+							} );
+							if ( isExcluded ) {
+								return;
 							}
-							<div class="eventive-event-content">
-								<h3 class="eventive-event-title">${ ev.name || '' }</h3>
-								<div class="eventive-event-meta">
-									${ dateStr ? `<span class="eventive-event-date">${ dateStr }</span>` : '' }
-									${ venueName ? `<span class="eventive-event-venue">${ venueName }</span>` : '' }
-								</div>
-								${
-									description
-										? `<div class="eventive-event-description">${ description }</div>`
-										: ''
-								}
-								<div class="eventive-button" data-event="${ ev.id }"></div>
-							</div>
-						</div>`;
-				} )
-				.join( '' );
+						}
+
+						const key = id || name.toLowerCase();
+						if ( ! tagMap.has( key ) ) {
+							tagMap.set( key, {
+								id,
+								name,
+								color: tag.color || '#e0e0e0',
+							} );
+						}
+					} );
+
+				const tagLabels = Array.from( tagMap.values() )
+					.map( ( tag ) => {
+						const fg = getTextColor( tag.color || '#e0e0e0' );
+						return (
+							'<span class="tag-label" style="background-color:' +
+							tag.color +
+							';color:' +
+							fg +
+							';">' +
+							tag.name +
+							'</span>'
+						);
+					} )
+					.join( '' );
+
+				// Build HTML
+				let itemHtml = '<div class="event-item">';
+				if ( posterHtml ) {
+					itemHtml += posterHtml;
+				}
+				itemHtml += '<div class="event-details">';
+				itemHtml += '<h3 class="event-name">' + name + '</h3>';
+				if ( startHtml ) {
+					itemHtml += '<p class="event-start-time">' + startHtml + '</p>';
+				}
+				itemHtml +=
+					'<p class="event-venue"><strong>Venue:</strong> ' +
+					venueName +
+					'</p>';
+				if ( filmMetaHtml ) {
+					itemHtml += filmMetaHtml;
+				}
+				if ( showShortDescription && shortDesc ) {
+					itemHtml +=
+						'<div class="event-short-description">' +
+						shortDesc +
+						'</div>';
+				}
+				if ( showDescription && desc ) {
+					itemHtml += '<div class="event-description">' + desc + '</div>';
+				}
+				if ( tagLabels ) {
+					itemHtml +=
+						'<div class="event-tags tag-container eventive-tags">' +
+						tagLabels +
+						'</div>';
+				}
+				itemHtml += ticketBtn;
+				itemHtml += '</div></div>';
+				html.push( itemHtml );
+			} );
+
+			return html.length
+				? html.join( '' )
+				: '<p class="no-events">No upcoming events found.</p>';
 		};
 
 		// Render events grid
 		const renderEventsGrid = ( events ) => {
 			if ( ! events.length ) {
-				return '<div class="eventive-no-events">No events found.</div>';
+				return '<p class="no-events">No upcoming events found.</p>';
 			}
 
-			return `<div class="eventive-events-grid">${ events
-				.map( ( ev ) => {
-					const film = ev.films && ev.films[ 0 ];
-					const imageUrl =
-						imagePref === 'poster'
-							? film?.poster_image || ev.poster_image
-							: film?.cover_image ||
-							  ev.cover_image ||
-							  film?.poster_image;
+			const html = [];
+			events.forEach( ( event ) => {
+				const name = event.name || 'Untitled Event';
+				let startHtml = '';
+				if ( event.start_time && event.is_date !== false ) {
+					const dt = new Date( event.start_time );
+					if ( ! isNaN( dt ) ) {
+						startHtml = dt.toLocaleDateString( undefined, {
+							month: 'short',
+							day: 'numeric',
+						} );
+					}
+				}
 
-					const dateStr = ev.start_time
-						? new Date( ev.start_time ).toLocaleDateString(
-								undefined,
-								{
-									month: 'short',
-									day: 'numeric',
-								}
-						  )
-						: 'On Demand';
+				let imageUrl = '';
+				if ( imagePref === 'cover' ) {
+					imageUrl =
+						event.cover_image ||
+						( event.images && event.images.cover ) ||
+						( event.films &&
+							event.films[ 0 ] &&
+							( event.films[ 0 ].cover_image ||
+								( event.films[ 0 ].images &&
+									event.films[ 0 ].images.cover ) ) ) ||
+						'';
+				} else if ( imagePref === 'poster' ) {
+					imageUrl =
+						event.poster_image ||
+						( event.images && event.images.poster ) ||
+						( event.films &&
+							event.films[ 0 ] &&
+							( event.films[ 0 ].poster_image ||
+								( event.films[ 0 ].images &&
+									event.films[ 0 ].images.poster ) ) ) ||
+						'';
+				}
 
-					return `
-						<div class="eventive-event-card">
-							${
-								imageUrl
-									? `<div class="eventive-event-card-image"><img src="${ imageUrl }" alt="${
-											ev.name || ''
-									  }" /></div>`
-									: ''
-							}
-							<div class="eventive-event-card-content">
-								<h4 class="eventive-event-card-title">${ ev.name || '' }</h4>
-								<div class="eventive-event-card-date">${ dateStr }</div>
-								<div class="eventive-button" data-event="${ ev.id }"></div>
-							</div>
-						</div>`;
-				} )
-				.join( '' ) }</div>`;
+				const ticketBtn = event.hide_tickets_button
+					? ''
+					: '<div class="eventive-button" data-event="' +
+					  ( event.id || '' ) +
+					  '"></div>';
+
+				let cardHtml = '<div class="event-card">';
+				if ( imageUrl ) {
+					cardHtml +=
+						'<div class="event-card-image"><img src="' +
+						imageUrl +
+						'" alt="' +
+						name +
+						'" /></div>';
+				}
+				cardHtml += '<div class="event-card-body">';
+				cardHtml += '<h4 class="event-card-title">' + name + '</h4>';
+				if ( startHtml ) {
+					cardHtml += '<p class="event-card-date">' + startHtml + '</p>';
+				}
+				cardHtml += ticketBtn;
+				cardHtml += '</div></div>';
+				html.push( cardHtml );
+			} );
+
+			return '<div class="event-grid">' + html.join( '' ) + '</div>';
 		};
 
 		let allEvents = [];
 
 		// Render events
-		const renderEvents = () => {
-			const filtered = filterEvents( allEvents );
-			const tags = collectTags( filtered );
+		const renderEvents = ( events, overrideTag ) => {
+			const eventsToRender = events || allEvents;
+			const filtered = filterEvents( eventsToRender, overrideTag );
+			const tags = collectTags( eventsToRender );
 
-			renderTagsFilter( tags, block );
+			renderTagsFilter( tags );
 
 			// Remove loading text
-			const loadingText = block.querySelector( '.eventive-film-loading-text' );
+			const loadingText = block.querySelector(
+				'.eventive-film-loading-text'
+			);
 			if ( loadingText ) {
 				loadingText.remove();
 			}
 
-			let listEl = block.querySelector( '.eventive-events-container' );
-			if ( ! listEl ) {
-				listEl = document.createElement( 'div' );
-				listEl.className = 'eventive-events-container';
-				block.appendChild( listEl );
-			}
+			block.classList.remove( 'event-list', 'event-grid' );
+			block.classList.add(
+				viewMode === 'grid' ? 'event-grid' : 'event-list'
+			);
 
-			listEl.innerHTML =
+			block.innerHTML =
 				viewMode === 'grid'
 					? renderEventsGrid( filtered )
 					: renderEventsList( filtered );
 
-			if ( window.Eventive?.rebuild ) {
-				window.Eventive.rebuild();
-			}
+			setTimeout( () => {
+				if (
+					block.querySelector( '.eventive-button' ) &&
+					window.Eventive?.rebuild
+				) {
+					window.Eventive.rebuild();
+				}
+			}, 100 );
 		};
 
+		// Store for popstate
+		window.allEventiveEvents = window.allEventiveEvents || [];
+
 		// Fetch and render
-		const init = () => {
-			const fetchData = () => {
-				const params = new URLSearchParams();
-				if ( ! includePast ) {
-					params.append( 'upcoming_only', 'true' );
-					params.append( 'marquee', 'true' );
-				}
-				if ( includeVirtual ) {
-					params.append( 'include_virtual', 'true' );
-				}
+		const boot = () => {
+			if ( ! window.Eventive ) {
+				block.innerHTML =
+					'<p class="error-message">Eventive API is not initialized. Please check your integration.</p>';
+				return;
+			}
 
-				let path = `event_buckets/${ eventBucket }/events`;
-				if ( params.toString() ) {
-					path += `?${ params.toString() }`;
-				}
+			const run = () => {
+				const urlTag =
+					new URLSearchParams( window.location.search ).get(
+						'tag-id'
+					) || tagDefault;
 
-				window.Eventive.request( {
-					method: 'GET',
-					path,
-					authenticatePerson: false,
+				fetchEventsOnce( eventBucket, {
+					includePast,
+					includeVirtual,
+					forceAll: showUndated,
 				} )
-					.then( ( response ) => {
-						allEvents = ( response && response.events ) || [];
-						renderEvents();
+					.then( ( events ) => {
+						allEvents = events;
+						window.allEventiveEvents = events;
+						renderEvents( events, urlTag );
 					} )
-					.catch( ( error ) => {
-						console.error(
-							'[eventive-events-list] Error fetching events:',
-							error
-						);
+					.catch( () => {
 						block.innerHTML =
-							'<div class="eventive-error">Error loading events.</div>';
+							'<p class="error-message">Error loading events. Please try again later.</p>';
 					} );
 			};
 
-			if ( window.Eventive && window.Eventive._ready ) {
-				fetchData();
-			} else if (
-				window.Eventive &&
-				typeof window.Eventive.on === 'function'
-			) {
-				window.Eventive.on( 'ready', fetchData );
+			if ( window.Eventive._ready || window.Eventive.ready ) {
+				run();
 			} else {
-				setTimeout( () => {
-					if (
-						window.Eventive &&
-						typeof window.Eventive.request === 'function'
-					) {
-						fetchData();
-					} else {
-						console.error(
-							'[eventive-events-list] Eventive API not available'
-						);
-						block.innerHTML =
-							'<div class="eventive-error">Error loading events.</div>';
-					}
-				}, 1000 );
+				window.Eventive.on( 'ready', run );
 			}
 		};
 
-		init();
+		// Event listener for tag changes
+		document.addEventListener( 'eventive:setActiveTag', ( ev ) => {
+			const tagId =
+				ev && ev.detail && ev.detail.tagId !== undefined
+					? ev.detail.tagId
+					: ev.detail || '';
+			activeTag = String( tagId || '' );
+			setURLTagParam( activeTag, 'replace' );
+			highlightActiveTag();
+			if ( window.allEventiveEvents ) {
+				renderEvents( window.allEventiveEvents, activeTag );
+			}
+		} );
+
+		// Popstate for back/forward navigation
+		window.addEventListener( 'popstate', () => {
+			try {
+				activeTag =
+					new URL( window.location.href ).searchParams.get(
+						'tag-id'
+					) || '';
+				highlightActiveTag();
+				if ( window.allEventiveEvents ) {
+					renderEvents( window.allEventiveEvents, activeTag );
+				}
+			} catch ( e ) {
+				// Ignore
+			}
+		} );
+
+		boot();
 	} );
 } );
