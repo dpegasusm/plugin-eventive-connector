@@ -110,21 +110,36 @@ class Eventive_Sync {
 			return $error;
 		}
 
-		// Initialize counters.
-		$synced_count  = 0;
-		$updated_count = 0;
-		$created_count = 0;
-		$skipped_count = 0;
+		// Initialize overall counters.
+		$total_synced  = 0;
+		$total_updated = 0;
+		$total_created = 0;
+		$total_skipped = 0;
+		$sync_results  = array();
+		$has_errors    = false;
 
 		// Process each sync item.
 		foreach ( $sync_list as $sync_item ) {
+			$sync_name = isset( $sync_item['name'] ) ? sanitize_text_field( $sync_item['name'] ) : 'Unknown';
 			$post_type = isset( $sync_item['post_type'] ) ? sanitize_text_field( $sync_item['post_type'] ) : 'eventive_film';
 			$bucket_id = isset( $sync_item['bucket_id'] ) ? sanitize_text_field( $sync_item['bucket_id'] ) : '';
 
 			// Check that the bucket is not empty.
 			if ( empty( $bucket_id ) ) {
+				$sync_results[] = array(
+					'name'    => $sync_name,
+					'status'  => 'skipped',
+					'message' => 'No bucket ID provided.',
+				);
+				$has_errors     = true;
 				continue;
 			}
+
+			// Initialize counters for this sync item.
+			$synced_count  = 0;
+			$updated_count = 0;
+			$created_count = 0;
+			$skipped_count = 0;
 
 			// Create a request object for the API call.
 			$request = new WP_REST_Request( 'GET', '/eventive/v1/event_buckets' );
@@ -137,7 +152,13 @@ class Eventive_Sync {
 
 			// Check if response is a WP_Error.
 			if ( is_wp_error( $response ) ) {
-				return new WP_Error( 'api_error', 'Failed to fetch films from Eventive: ' . $response->get_error_message() );
+				$sync_results[] = array(
+					'name'    => $sync_name,
+					'status'  => 'error',
+					'message' => 'Failed to fetch films: ' . $response->get_error_message(),
+				);
+				$has_errors     = true;
+				continue;
 			}
 
 			// Get the data from the WP_REST_Response.
@@ -152,7 +173,12 @@ class Eventive_Sync {
 			}
 
 			if ( empty( $films ) ) {
-				return new WP_Error( 'no_films', 'No films found in the Eventive API response for ' . esc_html( $sync_item['name'] ) . '.' );
+				$sync_results[] = array(
+					'name'    => $sync_name,
+					'status'  => 'warning',
+					'message' => 'No films found in API response.',
+				);
+				continue;
 			}
 
 			// Process each film.
@@ -178,23 +204,61 @@ class Eventive_Sync {
 					++$created_count;
 				}
 			}
+
+			// Add to totals.
+			$total_synced  += $synced_count;
+			$total_updated += $updated_count;
+			$total_created += $created_count;
+			$total_skipped += $skipped_count;
+
+			// Record success for this sync item.
+			$sync_results[] = array(
+				'name'          => $sync_name,
+				'status'        => 'success',
+				'message'       => sprintf(
+					'%d films synced (%d created, %d updated, %d skipped)',
+					$synced_count,
+					$created_count,
+					$updated_count,
+					$skipped_count
+				),
+				'synced_count'  => $synced_count,
+				'created_count' => $created_count,
+				'updated_count' => $updated_count,
+				'skipped_count' => $skipped_count,
+			);
 		}
 
-		// Prepare result message.
-		$message = sprintf(
-			'Successfully synced %d films (%d created, %d updated, %d skipped).',
-			$synced_count,
-			$created_count,
-			$updated_count,
-			$skipped_count
+		// Prepare overall result message.
+		$message_parts = array();
+		$message_parts[] = sprintf(
+			'Processed %d sync configuration(s).',
+			count( $sync_list )
 		);
+		$message_parts[] = sprintf(
+			'Total: %d films synced (%d created, %d updated, %d skipped)',
+			$total_synced,
+			$total_created,
+			$total_updated,
+			$total_skipped
+		);
+
+		// Add detailed results.
+		foreach ( $sync_results as $result ) {
+			$status_prefix = '[' . strtoupper( $result['status'] ) . ']';
+			$message_parts[] = $status_prefix . ' ' . $result['name'] . ': ' . $result['message'];
+		}
+
+		$message = implode( ' | ', $message_parts );
 
 		$result_data = array(
 			'message'       => $message,
-			'synced_count'  => $synced_count,
-			'created_count' => $created_count,
-			'updated_count' => $updated_count,
-			'skipped_count' => $skipped_count,
+			'synced_count'  => $total_synced,
+			'created_count' => $total_created,
+			'updated_count' => $total_updated,
+			'skipped_count' => $total_skipped,
+			'has_errors'    => $has_errors,
+			'sync_results'  => $sync_results,
 		);
 
 		return $result_data;
