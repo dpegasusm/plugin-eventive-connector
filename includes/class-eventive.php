@@ -16,6 +16,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Eventive main plugin class.
  */
 class Eventive {
+	/**
+	 * Eventive Post Types that use film blocks.
+	 * 
+	 * @var array
+	 */
+	private $eventive_film_post_types = array( 'eventive_film' );
 
 	/**
 	 * Init callback for register.
@@ -30,6 +36,15 @@ class Eventive {
 		// Enqueue Eventive dynamic scripts on frontend.
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_eventive_loader_scripts' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_eventive_loader_scripts' ) );
+	}
+
+	/**
+	 * Get the Eventive film post types.
+	 *
+	 * @return array
+	 */
+	public function get_eventive_film_post_types() {
+		return apply_filters( 'eventive_film_block_post_types', $this->eventive_film_post_types );
 	}
 
 	/**

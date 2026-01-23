@@ -18,11 +18,6 @@ const FilmPropertiesPanel = () => {
 		[]
 	);
 
-	// Only show for eventive_film post type
-	if ( postType !== 'eventive_film' ) {
-		return null;
-	}
-
 	const { editPost } = useDispatch( 'core/editor' );
 
 	const meta = useSelect(

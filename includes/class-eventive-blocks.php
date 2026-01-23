@@ -67,6 +67,14 @@ class Eventive_Blocks {
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/marquee/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/single-film/' );
 		register_block_type( EVENTIVE_PLUGIN_PATH . '/build/venues/' );
+
+		// Get the Eventive film post types.
+		$eventive_film_post_types = Eventive::get_eventive_film_post_types();
+
+		// register the folowing blocks to be used on eventive film post types.
+		if ( in_array( get_post_type(), $eventive_film_post_types, true ) ) {
+			register_block_type( EVENTIVE_PLUGIN_PATH . '/build/film-blocks/' );
+		}
 	}
 
 	/**
