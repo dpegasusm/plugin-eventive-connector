@@ -73,7 +73,9 @@ class Eventive_Blocks {
 
 		// register the folowing blocks to be used on eventive film post types.
 		if ( in_array( get_post_type(), $eventive_film_post_types, true ) ) {
-			register_block_type( EVENTIVE_PLUGIN_PATH . '/build/film-blocks/' );
+			register_block_type( EVENTIVE_PLUGIN_PATH . '/build/film-showtimes/' );
+			register_block_type( EVENTIVE_PLUGIN_PATH . '/build/film-meta/' );
+			register_block_type( EVENTIVE_PLUGIN_PATH . '/build/film-venue/' );
 		}
 	}
 
@@ -180,6 +182,7 @@ class Eventive_Blocks {
 			'eventive-events-week-view-script',
 			'eventive-film-details-view-script',
 			'eventive-film-guide-view-script',
+			'eventive-film-showtimes-view-script',
 			'eventive-fundraiser-view-script',
 			'eventive-marquee-view-script',
 			'eventive-single-film-view-script',

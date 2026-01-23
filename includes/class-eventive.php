@@ -21,7 +21,7 @@ class Eventive {
 	 * 
 	 * @var array
 	 */
-	private $eventive_film_post_types = array( 'eventive_film' );
+	private static $eventive_film_post_types = array( 'eventive_film' );
 
 	/**
 	 * Init callback for register.
@@ -43,8 +43,8 @@ class Eventive {
 	 *
 	 * @return array
 	 */
-	public function get_eventive_film_post_types() {
-		return apply_filters( 'eventive_film_block_post_types', $this->eventive_film_post_types );
+	public static function get_eventive_film_post_types() {
+		return apply_filters( 'eventive_film_block_post_types', self::$eventive_film_post_types );
 	}
 
 	/**
