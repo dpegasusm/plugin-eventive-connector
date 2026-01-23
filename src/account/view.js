@@ -5,14 +5,15 @@
  * @since 1.0.0
  */
 
-import { createRoot, useState, useEffect } from '@wordpress/element';
+import { createRoot, useState, useEffect, useRef } from '@wordpress/element';
 
 /**
  * Account component
  */
-function EventiveAccount( { children } ) {
+function EventiveAccount( { childNodes } ) {
 	const [ isLoggedIn, setIsLoggedIn ] = useState( false );
 	const [ isLoading, setIsLoading ] = useState( true );
+	const childBlocksRef = useRef( null );
 
 	useEffect( () => {
 		// Wait for Eventive to be ready
@@ -57,6 +58,18 @@ function EventiveAccount( { children } ) {
 			} );
 		} catch ( _ ) {}
 	}, [] );
+
+	// Move child nodes into the ref container after render
+	useEffect( () => {
+		if ( childBlocksRef.current && childNodes && childNodes.length > 0 ) {
+			// Clear any existing content first
+			childBlocksRef.current.innerHTML = '';
+			// Append the actual DOM nodes (not HTML strings)
+			childNodes.forEach( ( node ) => {
+				childBlocksRef.current.appendChild( node );
+			} );
+		}
+	}, [ isLoggedIn, isLoading, childNodes ] );
 
 	const handleLogout = async ( e ) => {
 		e.preventDefault();
@@ -152,7 +165,7 @@ function EventiveAccount( { children } ) {
 					Log out
 				</a>
 			</div>
-			{ children }
+			<div ref={ childBlocksRef } className="eventive-account-child-blocks" />
 		</div>
 	);
 }
@@ -172,16 +185,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		}
 		container.__evtInited = true;
 
-		// Get the existing inner content (child blocks)
-		const innerContent = container.innerHTML;
-		const tempDiv = document.createElement( 'div' );
-		tempDiv.innerHTML = innerContent;
+		// Extract the actual DOM nodes (not HTML strings) before React takes over
+		const childNodes = Array.from( container.childNodes );
 
 		const root = createRoot( container );
-		root.render(
-			<EventiveAccount>
-				<div dangerouslySetInnerHTML={ { __html: innerContent } } />
-			</EventiveAccount>
-		);
+		root.render( <EventiveAccount childNodes={ childNodes } /> );
 	} );
 } );

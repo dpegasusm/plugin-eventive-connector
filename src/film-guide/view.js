@@ -295,6 +295,12 @@ function initInstance( block ) {
 		block.appendChild( containerEl );
 	}
 
+	// Clear any placeholder loading text from save.js
+	const loadingText = containerEl.querySelector( '.eventive-film-loading-text' );
+	if ( loadingText ) {
+		loadingText.remove();
+	}
+
 	// Create grid and list containers
 	let grid = containerEl.querySelector( '.catalog-film-container.grid' );
 	let list = containerEl.querySelector( '.catalog-film-container.list' );
@@ -391,30 +397,21 @@ function initInstance( block ) {
 		} catch ( _ ) {}
 	} );
 
-	// Tag pill clicks
+	// Tag button clicks
 	if ( tagsWrap ) {
 		tagsWrap.addEventListener(
 			'click',
 			function ( ev ) {
-				const a =
+				const btn =
 					ev.target && ev.target.closest
-						? ev.target.closest( 'a.external-tag-filter' )
+						? ev.target.closest( '.eventive-tag-btn' )
 						: null;
-				if ( ! a ) {
-					return;
-				}
-				if (
-					ev.metaKey ||
-					ev.ctrlKey ||
-					ev.shiftKey ||
-					ev.altKey ||
-					a.target === '_blank'
-				) {
+				if ( ! btn ) {
 					return;
 				}
 				ev.preventDefault();
 				ev.stopPropagation();
-				const tid = a.getAttribute( 'data-tag-id' ) || '';
+				const tid = btn.getAttribute( 'data-tag-id' ) || '';
 				activeTag = String( tid );
 				setURLTagParam( activeTag, 'replace' );
 				highlightActiveTag();
@@ -498,24 +495,13 @@ function initInstance( block ) {
 		html +=
 			'<div class="eventive-tags-list">';
 		html +=
-			'<button class="eventive-tag-btn" data-tag-id=""><a class="external-tag-filter" data-tag-id="" href="' +
-			resetUrl +
-			'">All</a></button>';
+			'<button class="eventive-tag-btn" data-tag-id="">All</button>';
 		tags.sort( function ( a, b ) {
 			return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
 		} );
 		html += tags
 			.map( function ( t ) {
 				const fg = textColor( t.color || '#e0e0e0' );
-				const href = ( function () {
-					try {
-						const u = new URL( resetUrl );
-						u.searchParams.set( 'tag-id', t.id || t.name );
-						return u.toString();
-					} catch ( _ ) {
-						return '#';
-					}
-				} )();
 				return (
 					'<button class="eventive-tag-btn" style="background-color:' +
 					esc( t.color || '#e0e0e0' ) +
@@ -524,13 +510,7 @@ function initInstance( block ) {
 					'" data-tag-id="' +
 					esc( t.id || t.name ) +
 					'">' +
-					'<a class="external-tag-filter" data-tag-id="' +
-					esc( t.id || t.name ) +
-					'" href="' +
-					href +
-					'">' +
 					esc( t.name ) +
-					'</a>' +
 					'</button>'
 				);
 			} )
