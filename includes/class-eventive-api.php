@@ -1005,8 +1005,46 @@ class Eventive_API {
 		$response_body = '';
 		$args          = array();
 
-		// Make the API call.
-		return $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, true );
+		// Make the API call to get raw transaction data.
+		$api_response = $this->eventive_make_api_call( esc_url_raw( $api_url ), $response_body, $args, true );
+
+		// Check if the API call was successful.
+		if ( is_wp_error( $api_response ) ) {
+			return $api_response;
+		}
+
+		// Get the raw data from the response.
+		$raw_data = $api_response->get_data();
+
+		// Aggregate donation statistics (non-sensitive data only).
+		$aggregated_data = array(
+			'total_donations'       => 0,
+			'donation_count'        => 0,
+			'start_date'            => $start,
+			'end_date'              => $end,
+			'currency'              => 'USD',
+		);
+
+		// Process transactions to extract donation totals.
+		if ( isset( $raw_data['transactions'] ) && is_array( $raw_data['transactions'] ) ) {
+			foreach ( $raw_data['transactions'] as $transaction ) {
+				// Check if this is a donation transaction.
+				if ( isset( $transaction['category']['ref_label'] ) && 'Donation' === $transaction['category']['ref_label'] ) {
+					// Aggregate the donation amount (convert from cents to dollars).
+					if ( isset( $transaction['gross'] ) && is_numeric( $transaction['gross'] ) ) {
+						$amount_in_dollars = floatval( $transaction['gross'] ) / 100;
+						$aggregated_data['total_donations'] += $amount_in_dollars;
+						$aggregated_data['donation_count']++;
+					}
+				}
+			}
+		}
+
+		// Round total to 2 decimal places.
+		$aggregated_data['total_donations'] = round( $aggregated_data['total_donations'], 2 );
+
+		// Return only the aggregated, non-sensitive statistics.
+		return new WP_REST_Response( $aggregated_data, 200 );
 	}
 
 	/**

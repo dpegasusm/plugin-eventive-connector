@@ -54,17 +54,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 					path: `eventive/v1/ledger?${ params.toString() }`,
 					method: 'GET',
 				} );
-				let totalDonations = 0;
 
-				// Process donations
-				if ( data && Array.isArray( data.transactions ) ) {
-					data.transactions.forEach( ( transaction ) => {
-						if ( transaction.category?.ref_label === 'Donation' ) {
-							totalDonations +=
-								parseFloat( transaction.gross ) / 100;
-						}
-					} );
-				}
+				// The API now returns aggregated data instead of raw transactions
+				const totalDonations = data.total_donations || 0;
+				const donationCount = data.donation_count || 0;
 
 				const progressPercent = Math.min(
 					( totalDonations / goalAmount ) * 100,
@@ -81,6 +74,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 							<p>$${ totalDonations.toFixed( 2 ) } of $${ goalAmount.toFixed(
 								2
 							) } raised (${ progressPercent }%)</p>
+							${ donationCount > 0 ? `<p class="donation-count">${ donationCount } donation${ donationCount !== 1 ? 's' : '' }</p>` : '' }
 						</div>
 					`;
 				}
