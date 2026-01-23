@@ -76,6 +76,9 @@ class Eventive_Sync {
 		// Use the global API instance.
 		global $eventive_api;
 
+		// Set up our default bucket ID and API key.
+		$sync_list = array();
+
 		// Get API credentials from options.
 		$bucket_id = get_option( 'eventive_default_bucket_id', '' );
 		$api_key   = get_option( 'eventive_secret_key', '' );
@@ -88,33 +91,22 @@ class Eventive_Sync {
 			return $error;
 		}
 
-		// Create a request object for the API call.
-		$request = new WP_REST_Request( 'GET', '/eventive/v1/event_buckets' );
-		$request->set_param( 'bucket_id', $bucket_id );
-		$request->set_param( 'endpoint', 'films' );
-		$request->set_param( 'eventive_nonce', wp_create_nonce( 'eventive_api_nonce' ) );
+		// This is our default values.
+		$sync_list[] = array(
+			'name'      => 'Default Bucket',
+			'post_type' => 'eventive_film',
+			'bucket_id' => $bucket_id,
+		);
 
-		// Fetch films from Eventive API.
-		$response = $eventive_api->get_api_films( $request );
+		// Allow filtering the sync list for multiple buckets/post types.
+		$sync_list = apply_filters( 'eventive_film_sync_list', $sync_list );
 
-		// Check if response is a WP_Error.
-		if ( is_wp_error( $response ) ) {
-			return new WP_Error( 'api_error', 'Failed to fetch films from Eventive: ' . $response->get_error_message() );
-		}
-
-		// Get the data from the WP_REST_Response.
-		$films_data = $response->get_data();
-
-		// Handle different response formats.
-		$films = array();
-		if ( isset( $films_data['films'] ) && is_array( $films_data['films'] ) ) {
-			$films = $films_data['films'];
-		} elseif ( is_array( $films_data ) ) {
-			$films = $films_data;
-		}
-
-		if ( empty( $films ) ) {
-			$error = new WP_Error( 'no_films', 'No films found in the Eventive API response.' );
+		// check that the sync_list is an array and not empty.
+		if ( empty( $sync_list ) || ! is_array( $sync_list ) ) {
+			$error = new WP_Error( 'invalid_sync_list', 'The Eventive film sync list is invalid or empty.' );
+			if ( ! $return_result ) {
+				return $error;
+			}
 			return $error;
 		}
 
@@ -124,27 +116,67 @@ class Eventive_Sync {
 		$created_count = 0;
 		$skipped_count = 0;
 
-		// Process each film.
-		foreach ( $films as $film ) {
-			// Validate required fields.
-			if ( empty( $film['id'] ) ) {
-				++$skipped_count;
+		// Process each sync item.
+		foreach ( $sync_list as $sync_item ) {
+			$post_type = isset( $sync_item['post_type'] ) ? sanitize_text_field( $sync_item['post_type'] ) : 'eventive_film';
+			$bucket_id = isset( $sync_item['bucket_id'] ) ? sanitize_text_field( $sync_item['bucket_id'] ) : '';
+
+			// Check that the bucket is not empty.
+			if ( empty( $bucket_id ) ) {
 				continue;
 			}
 
-			$film_id = sanitize_text_field( $film['id'] );
-			$result  = $this->create_or_update_film_post( $film, $bucket_id );
+			// Create a request object for the API call.
+			$request = new WP_REST_Request( 'GET', '/eventive/v1/event_buckets' );
+			$request->set_param( 'bucket_id', $bucket_id );
+			$request->set_param( 'endpoint', 'films' );
+			$request->set_param( 'eventive_nonce', wp_create_nonce( 'eventive_api_nonce' ) );
 
-			if ( is_wp_error( $result ) ) {
-				++$skipped_count;
-				continue;
+			// Fetch films from Eventive API.
+			$response = $eventive_api->get_api_films( $request );
+
+			// Check if response is a WP_Error.
+			if ( is_wp_error( $response ) ) {
+				return new WP_Error( 'api_error', 'Failed to fetch films from Eventive: ' . $response->get_error_message() );
 			}
 
-			++$synced_count;
-			if ( 'updated' === $result ) {
-				++$updated_count;
-			} elseif ( 'created' === $result ) {
-				++$created_count;
+			// Get the data from the WP_REST_Response.
+			$films_data = $response->get_data();
+
+			// Handle different response formats.
+			$films = array();
+			if ( isset( $films_data['films'] ) && is_array( $films_data['films'] ) ) {
+				$films = $films_data['films'];
+			} elseif ( is_array( $films_data ) ) {
+				$films = $films_data;
+			}
+
+			if ( empty( $films ) ) {
+				return new WP_Error( 'no_films', 'No films found in the Eventive API response for ' . esc_html( $sync_item['name'] ) . '.' );
+			}
+
+			// Process each film.
+			foreach ( $films as $film ) {
+				// Validate required fields.
+				if ( empty( $film['id'] ) ) {
+					++$skipped_count;
+					continue;
+				}
+
+				$film_id = sanitize_text_field( $film['id'] );
+				$result  = $this->create_or_update_film_post( $film, $bucket_id, $post_type );
+
+				if ( is_wp_error( $result ) ) {
+					++$skipped_count;
+					continue;
+				}
+
+				++$synced_count;
+				if ( 'updated' === $result ) {
+					++$updated_count;
+				} elseif ( 'created' === $result ) {
+					++$created_count;
+				}
 			}
 		}
 
@@ -175,7 +207,7 @@ class Eventive_Sync {
 	 * @param string $bucket_id The bucket ID for this film.
 	 * @return string|WP_Error 'created', 'updated', or WP_Error on failure.
 	 */
-	private function create_or_update_film_post( $film, $bucket_id ) {
+	private function create_or_update_film_post( $film, $bucket_id, $post_type = 'eventive_film' ) {
 		// Extract film data.
 		$film_id          = sanitize_text_field( $film['id'] );
 		$film_name        = ! empty( $film['name'] ) ? sanitize_text_field( $film['name'] ) : 'Untitled Film';
@@ -186,7 +218,7 @@ class Eventive_Sync {
 		// Check if film post already exists.
 		$existing_posts = get_posts(
 			array(
-				'post_type'      => 'eventive_film',
+				'post_type'      => $post_type,
 				'post_status'    => 'any',
 				'posts_per_page' => 1,
 				'meta_key'       => '_eventive_film_id',
@@ -211,7 +243,7 @@ class Eventive_Sync {
 			'post_title'   => $film_name,
 			'post_content' => $film_description,
 			'post_status'  => $post_status,
-			'post_type'    => 'eventive_film',
+			'post_type'    => $post_type,
 			'post_excerpt' => ! empty( $film['short_description'] ) ? sanitize_text_field( $film['short_description'] ) : '',
 		);
 
