@@ -280,6 +280,7 @@ class Eventive_Blocks {
 					$localization
 				);
 				$localized = true;
+				break;
 			}
 		}
 	}
