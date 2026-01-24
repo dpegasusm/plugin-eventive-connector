@@ -72,7 +72,6 @@ export default function Edit( { attributes, setAttributes, context } ) {
 
 	const blockProps = useBlockProps( {
 		className: 'eventive-film-meta-block',
-		style: { display: 'inline' },
 	} );
 
 	// Get the current post ID from context
