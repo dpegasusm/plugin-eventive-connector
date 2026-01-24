@@ -1,7 +1,6 @@
 /**
  * Film Showtimes Block - Frontend View Script
  */
-import apiFetch from '@wordpress/api-fetch';
 
 /**
  * Group events by date
@@ -45,12 +44,19 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	);
 
 	showtimeBlocks.forEach( ( block ) => {
-		// Get post ID from EventiveBlockData (localized from PHP)
-		const postId = window.EventiveBlockData?.postId;
+		// Get film ID and bucket ID from EventiveBlockData (localized from PHP)
+		const filmId = window.EventiveBlockData?.filmId;
+		const bucketId = window.EventiveBlockData?.eventBucket || '';
 
-		if ( ! postId ) {
+		if ( ! filmId ) {
 			block.innerHTML =
 				'<div class="eventive-error">This block requires it be placed on a Eventive Film post type.</div>';
+			return;
+		}
+
+		if ( ! bucketId ) {
+			block.innerHTML =
+				'<div class="eventive-error">Missing bucket configuration.</div>';
 			return;
 		}
 
@@ -59,44 +65,27 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			'<div class="eventive-loading">Loading showtimes...</div>';
 
 		const fetchAndRenderShowtimes = () => {
-			// Fetch the film meta from WordPress REST API
-			apiFetch( {
-				path: `/wp/v2/eventive_film/${ postId }`,
+			// Fetch showtimes from Eventive API
+			window.Eventive.request( {
+				method: 'GET',
+				path: `event_buckets/${ bucketId }/films/${ filmId }/events`,
+				authenticatePerson: false,
 			} )
-				.then( ( post ) => {
-					const filmId = post.meta?._eventive_film_id;
-					const bucketId =
-						post.meta?._eventive_bucket_id ||
-						window.EventiveBlockData?.eventBucket ||
-						'';
-
-					if ( ! filmId || ! bucketId ) {
+				.then( ( response ) => {
+					const events = response.events || [];
+					if ( events.length === 0 ) {
 						block.innerHTML =
-							'<div class="eventive-error">Missing film or bucket configuration.</div>';
+							'<div class="eventive-error">No upcoming showtimes available</div>';
 						return;
 					}
 
-					// Fetch showtimes from Eventive API
-					window.Eventive.request( {
-						method: 'GET',
-						path: `event_buckets/${ bucketId }/films/${ filmId }/events`,
-						authenticatePerson: false,
-					} )
-						.then( ( response ) => {
-							const events = response.events || [];
-							if ( events.length === 0 ) {
-								block.innerHTML =
-									'<div class="eventive-error">No upcoming showtimes available</div>';
-								return;
-							}
+					// Group events by date
+					const grouped = groupEventsByDate( events );
 
-							// Group events by date
-							const grouped = groupEventsByDate( events );
-
-							// Build HTML for showtimes
-							const showtimesHTML = Object.entries( grouped )
-								.map(
-									( [ dateKey, dateEvents ] ) => `
+					// Build HTML for showtimes
+					const showtimesHTML = Object.entries( grouped )
+						.map(
+							( [ dateKey, dateEvents ] ) => `
 								<div class="eventive-showtime-date-group">
 									<h3 class="eventive-showtime-date">${ dateKey }</h3>
 									<div class="eventive-showtime-list">
@@ -125,32 +114,23 @@ document.addEventListener( 'DOMContentLoaded', () => {
 									</div>
 								</div>
 							`
-								)
-								.join( '' );
+						)
+						.join( '' );
 
-							block.innerHTML = `<div class="eventive-film-showtimes-container">${ showtimesHTML }</div>`;
+					block.innerHTML = `<div class="eventive-film-showtimes-container">${ showtimesHTML }</div>`;
 
-							// Rebuild Eventive buttons
-							if ( window.Eventive?.rebuild ) {
-								window.Eventive.rebuild();
-							}
-						} )
-						.catch( ( error ) => {
-							console.error(
-								'[eventive-film-showtimes] Error fetching showtimes:',
-								error
-							);
-							block.innerHTML =
-								'<div class="eventive-error">Unable to load showtimes</div>';
-						} );
+					// Rebuild Eventive buttons
+					if ( window.Eventive?.rebuild ) {
+						window.Eventive.rebuild();
+					}
 				} )
 				.catch( ( error ) => {
 					console.error(
-						'[eventive-film-showtimes] Error fetching post data:',
+						'[eventive-film-showtimes] Error fetching showtimes:',
 						error
 					);
 					block.innerHTML =
-						'<div class="eventive-error">Unable to load film data. Please try again later.</div>';
+						'<div class="eventive-error">Unable to load showtimes</div>';
 				} );
 		};
 

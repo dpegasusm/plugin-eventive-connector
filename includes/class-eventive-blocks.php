@@ -227,6 +227,18 @@ class Eventive_Blocks {
 		if ( in_array( get_post_type( get_the_ID() ), $eventive_film_post_types, true ) && is_singular( $eventive_film_post_types ) ) {
 			// Add current post ID to localization data.
 			$localization['postId'] = get_the_ID();
+
+			// Also load into the Film metadata we might use like fim ID.
+			$film_id = get_post_meta( get_the_ID(), '_eventive_film_id', true );
+			if ( $film_id ) {
+				$localization['filmId'] = $film_id;
+			}
+
+			// And Venue ID if available.
+			$venue_id = get_post_meta( get_the_ID(), '_eventive_venue_id', true );
+			if ( $venue_id ) {
+				$localization['venueId'] = $venue_id;
+			}
 		} else {
 			$localization['postId'] = '';
 		}
