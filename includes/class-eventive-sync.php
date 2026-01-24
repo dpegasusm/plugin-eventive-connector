@@ -76,6 +76,9 @@ class Eventive_Sync {
 		// Use the global API instance.
 		global $eventive_api;
 
+		// Set up our default bucket ID and API key.
+		$sync_list = array();
+
 		// Get API credentials from options.
 		$bucket_id = get_option( 'eventive_default_bucket_id', '' );
 		$api_key   = get_option( 'eventive_secret_key', '' );
@@ -88,81 +91,174 @@ class Eventive_Sync {
 			return $error;
 		}
 
-		// Create a request object for the API call.
-		$request = new WP_REST_Request( 'GET', '/eventive/v1/event_buckets' );
-		$request->set_param( 'bucket_id', $bucket_id );
-		$request->set_param( 'endpoint', 'films' );
-		$request->set_param( 'eventive_nonce', wp_create_nonce( 'eventive_api_nonce' ) );
+		// This is our default values.
+		$sync_list[] = array(
+			'name'      => 'Default Bucket',
+			'post_type' => 'eventive_film',
+			'bucket_id' => $bucket_id,
+		);
 
-		// Fetch films from Eventive API.
-		$response = $eventive_api->get_api_films( $request );
+		// Allow filtering the sync list for multiple buckets/post types.
+		$sync_list = apply_filters( 'eventive_film_sync_list', $sync_list );
 
-		// Check if response is a WP_Error.
-		if ( is_wp_error( $response ) ) {
-			return new WP_Error( 'api_error', 'Failed to fetch films from Eventive: ' . $response->get_error_message() );
-		}
-
-		// Get the data from the WP_REST_Response.
-		$films_data = $response->get_data();
-
-		// Handle different response formats.
-		$films = array();
-		if ( isset( $films_data['films'] ) && is_array( $films_data['films'] ) ) {
-			$films = $films_data['films'];
-		} elseif ( is_array( $films_data ) ) {
-			$films = $films_data;
-		}
-
-		if ( empty( $films ) ) {
-			$error = new WP_Error( 'no_films', 'No films found in the Eventive API response.' );
+		// check that the sync_list is an array and not empty.
+		if ( empty( $sync_list ) || ! is_array( $sync_list ) ) {
+			$error = new WP_Error( 'invalid_sync_list', 'The Eventive film sync list is invalid or empty.' );
+			if ( ! $return_result ) {
+				return $error;
+			}
 			return $error;
 		}
 
-		// Initialize counters.
-		$synced_count  = 0;
-		$updated_count = 0;
-		$created_count = 0;
-		$skipped_count = 0;
+		// Initialize overall counters.
+		$total_synced  = 0;
+		$total_updated = 0;
+		$total_created = 0;
+		$total_skipped = 0;
+		$sync_results  = array();
+		$has_errors    = false;
 
-		// Process each film.
-		foreach ( $films as $film ) {
-			// Validate required fields.
-			if ( empty( $film['id'] ) ) {
-				++$skipped_count;
+		// Process each sync item.
+		foreach ( $sync_list as $sync_item ) {
+			$sync_name = isset( $sync_item['name'] ) ? sanitize_text_field( $sync_item['name'] ) : 'Unknown';
+			$post_type = isset( $sync_item['post_type'] ) ? sanitize_text_field( $sync_item['post_type'] ) : 'eventive_film';
+			$bucket_id = isset( $sync_item['bucket_id'] ) ? sanitize_text_field( $sync_item['bucket_id'] ) : '';
+
+			// Check that the bucket is not empty.
+			if ( empty( $bucket_id ) ) {
+				$sync_results[] = array(
+					'name'    => $sync_name,
+					'status'  => 'skipped',
+					'message' => 'No bucket ID provided.',
+				);
+				$has_errors     = true;
 				continue;
 			}
 
-			$film_id = sanitize_text_field( $film['id'] );
-			$result  = $this->create_or_update_film_post( $film, $bucket_id );
+			// Initialize counters for this sync item.
+			$synced_count  = 0;
+			$updated_count = 0;
+			$created_count = 0;
+			$skipped_count = 0;
 
-			if ( is_wp_error( $result ) ) {
-				++$skipped_count;
+			// Create a request object for the API call.
+			$request = new WP_REST_Request( 'GET', '/eventive/v1/event_buckets' );
+			$request->set_param( 'bucket_id', $bucket_id );
+			$request->set_param( 'endpoint', 'films' );
+			$request->set_param( 'eventive_nonce', wp_create_nonce( 'eventive_api_nonce' ) );
+
+			// Fetch films from Eventive API.
+			$response = $eventive_api->get_api_films( $request );
+
+			// Check if response is a WP_Error.
+			if ( is_wp_error( $response ) ) {
+				$sync_results[] = array(
+					'name'    => $sync_name,
+					'status'  => 'error',
+					'message' => 'Failed to fetch films: ' . $response->get_error_message(),
+				);
+				$has_errors     = true;
 				continue;
 			}
 
-			++$synced_count;
-			if ( 'updated' === $result ) {
-				++$updated_count;
-			} elseif ( 'created' === $result ) {
-				++$created_count;
+			// Get the data from the WP_REST_Response.
+			$films_data = $response->get_data();
+
+			// Handle different response formats.
+			$films = array();
+			if ( isset( $films_data['films'] ) && is_array( $films_data['films'] ) ) {
+				$films = $films_data['films'];
+			} elseif ( is_array( $films_data ) ) {
+				$films = $films_data;
 			}
+
+			if ( empty( $films ) ) {
+				$sync_results[] = array(
+					'name'    => $sync_name,
+					'status'  => 'warning',
+					'message' => 'No films found in API response.',
+				);
+				continue;
+			}
+
+			// Process each film.
+			foreach ( $films as $film ) {
+				// Validate required fields.
+				if ( empty( $film['id'] ) ) {
+					++$skipped_count;
+					continue;
+				}
+
+				$film_id = sanitize_text_field( $film['id'] );
+				$result  = $this->create_or_update_film_post( $film, $bucket_id, $post_type );
+
+				if ( is_wp_error( $result ) ) {
+					++$skipped_count;
+					continue;
+				}
+
+				++$synced_count;
+				if ( 'updated' === $result ) {
+					++$updated_count;
+				} elseif ( 'created' === $result ) {
+					++$created_count;
+				}
+			}
+
+			// Add to totals.
+			$total_synced  += $synced_count;
+			$total_updated += $updated_count;
+			$total_created += $created_count;
+			$total_skipped += $skipped_count;
+
+			// Record success for this sync item.
+			$sync_results[] = array(
+				'name'          => $sync_name,
+				'status'        => 'success',
+				'message'       => sprintf(
+					'%d films synced (%d created, %d updated, %d skipped)',
+					$synced_count,
+					$created_count,
+					$updated_count,
+					$skipped_count
+				),
+				'synced_count'  => $synced_count,
+				'created_count' => $created_count,
+				'updated_count' => $updated_count,
+				'skipped_count' => $skipped_count,
+			);
 		}
 
-		// Prepare result message.
-		$message = sprintf(
-			'Successfully synced %d films (%d created, %d updated, %d skipped).',
-			$synced_count,
-			$created_count,
-			$updated_count,
-			$skipped_count
+		// Prepare overall result message.
+		$message_parts   = array();
+		$message_parts[] = sprintf(
+			'Processed %d sync configuration(s).',
+			count( $sync_list )
 		);
+		$message_parts[] = sprintf(
+			'Total: %d films synced (%d created, %d updated, %d skipped)',
+			$total_synced,
+			$total_created,
+			$total_updated,
+			$total_skipped
+		);
+
+		// Add detailed results.
+		foreach ( $sync_results as $result ) {
+			$status_prefix   = '[' . strtoupper( $result['status'] ) . ']';
+			$message_parts[] = $status_prefix . ' ' . $result['name'] . ': ' . $result['message'];
+		}
+
+		$message = implode( ' | ', $message_parts );
 
 		$result_data = array(
 			'message'       => $message,
-			'synced_count'  => $synced_count,
-			'created_count' => $created_count,
-			'updated_count' => $updated_count,
-			'skipped_count' => $skipped_count,
+			'synced_count'  => $total_synced,
+			'created_count' => $total_created,
+			'updated_count' => $total_updated,
+			'skipped_count' => $total_skipped,
+			'has_errors'    => $has_errors,
+			'sync_results'  => $sync_results,
 		);
 
 		return $result_data;
@@ -175,7 +271,7 @@ class Eventive_Sync {
 	 * @param string $bucket_id The bucket ID for this film.
 	 * @return string|WP_Error 'created', 'updated', or WP_Error on failure.
 	 */
-	private function create_or_update_film_post( $film, $bucket_id ) {
+	private function create_or_update_film_post( $film, $bucket_id, $post_type = 'eventive_film' ) {
 		// Extract film data.
 		$film_id          = sanitize_text_field( $film['id'] );
 		$film_name        = ! empty( $film['name'] ) ? sanitize_text_field( $film['name'] ) : 'Untitled Film';
@@ -186,7 +282,7 @@ class Eventive_Sync {
 		// Check if film post already exists.
 		$existing_posts = get_posts(
 			array(
-				'post_type'      => 'eventive_film',
+				'post_type'      => $post_type,
 				'post_status'    => 'any',
 				'posts_per_page' => 1,
 				'meta_key'       => '_eventive_film_id',
@@ -211,7 +307,7 @@ class Eventive_Sync {
 			'post_title'   => $film_name,
 			'post_content' => $film_description,
 			'post_status'  => $post_status,
-			'post_type'    => 'eventive_film',
+			'post_type'    => $post_type,
 			'post_excerpt' => ! empty( $film['short_description'] ) ? sanitize_text_field( $film['short_description'] ) : '',
 		);
 
@@ -245,13 +341,18 @@ class Eventive_Sync {
 			update_post_meta( $post_id, '_eventive_sync_enabled', true );
 		}
 
-		// Handle poster image - sideload to media library if URL has changed.
+		// Handle poster image - sideload to media library if URL has changed or if no featured image exists.
 		if ( ! empty( $film['poster_image'] ) ) {
 			$new_poster_url = esc_url_raw( $film['poster_image'] );
 			$old_poster_url = get_post_meta( $post_id, '_eventive_poster_image', true );
+			$has_thumbnail  = has_post_thumbnail( $post_id );
 
-			// Only sideload if the URL has changed and is valid.
-			if ( $new_poster_url !== $old_poster_url && filter_var( $new_poster_url, FILTER_VALIDATE_URL ) ) {
+			// Sideload if:
+			// 1. The URL has changed, OR
+			// 2. No featured image exists yet
+			$should_sideload = ( $new_poster_url !== $old_poster_url && filter_var( $new_poster_url, FILTER_VALIDATE_URL ) ) || ! $has_thumbnail;
+
+			if ( $should_sideload && filter_var( $new_poster_url, FILTER_VALIDATE_URL ) ) {
 				$this->sideload_featured_image( $post_id, $new_poster_url, $film_name );
 			}
 

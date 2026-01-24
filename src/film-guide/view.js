@@ -296,7 +296,9 @@ function initInstance( block ) {
 	}
 
 	// Clear any placeholder loading text from save.js
-	const loadingText = containerEl.querySelector( '.eventive-film-loading-text' );
+	const loadingText = containerEl.querySelector(
+		'.eventive-film-loading-text'
+	);
 	if ( loadingText ) {
 		loadingText.remove();
 	}
@@ -492,10 +494,8 @@ function initInstance( block ) {
 		} )();
 
 		let html = '';
-		html +=
-			'<div class="eventive-tags-list">';
-		html +=
-			'<button class="eventive-tag-btn" data-tag-id="">All</button>';
+		html += '<div class="eventive-tags-list">';
+		html += '<button class="eventive-tag-btn" data-tag-id="">All</button>';
 		tags.sort( function ( a, b ) {
 			return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
 		} );

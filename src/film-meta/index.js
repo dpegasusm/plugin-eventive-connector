@@ -30,6 +30,9 @@ registerBlockType( metadata.name, {
 	 * @see ./edit.js
 	 */
 	edit: Edit,
+
+	/**
+	 * @see ./save.js
+	 */
 	save: Save,
-	icon: 'cart',
 } );

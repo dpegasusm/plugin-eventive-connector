@@ -1,0 +1,54 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "eventive/film-meta",
+	"version": "1.0.0",
+	"title": "Film Meta",
+	"category": "eventive-films",
+	"icon": "admin-settings",
+	"description": "Display film metadata from Eventive. This block requires it be placed on a Eventive Film post type.",
+	"textdomain": "eventive",
+	"attributes": {
+		"metaField": {
+			"type": "string",
+			"default": "_eventive_runtime"
+		},
+		"label": {
+			"type": "string",
+			"default": ""
+		},
+		"showLabel": {
+			"type": "boolean",
+			"default": true
+		}
+	},
+	"example": {},
+	"supports": {
+		"html": false,
+		"align": true,
+        "color": {
+            "background": true,
+            "text": true,
+            "gradients": true,
+            "link": true
+        },
+            "typography": {
+            "fontSize": true,
+            "lineHeight": true,
+            "fontStyle": true,
+            "fontWeight": true,
+            "textTransform": true,
+            "letterSpacing": true,
+            "textDecoration": true
+        },
+            "spacing": {
+            "margin": true,
+            "padding": true
+        }
+	},
+	"usesContext": ["postId"],
+	"viewScript": "file:./view.js",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css"
+}

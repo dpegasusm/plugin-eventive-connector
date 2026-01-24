@@ -170,11 +170,71 @@ jQuery( document ).ready( function ( $ ) {
 					console.log( 'Sync response:', response );
 
 					if ( response.success ) {
-						$progressDiv.html(
-							'<span style="color: green;">✓ ' +
-								response.data.message +
-								'</span>'
-						);
+						const data = response.data;
+						let html = '<div style="margin-top: 10px;">';
+
+						// Overall summary
+						html +=
+							'<p style="margin: 5px 0;"><strong>Sync Complete:</strong> ' +
+							data.synced_count +
+							' total films synced (' +
+							data.created_count +
+							' created, ' +
+							data.updated_count +
+							' updated, ' +
+							data.skipped_count +
+							' skipped)</p>';
+
+						// Show detailed results if available
+						if (
+							data.sync_results &&
+							data.sync_results.length > 0
+						) {
+							html += '<div style="margin-top: 10px;">';
+							html += '<strong>Details:</strong>';
+							html +=
+								'<ul style="margin: 5px 0; padding-left: 20px;">';
+
+							data.sync_results.forEach( function ( result ) {
+								let statusColor = 'green';
+								let statusIcon = '✓';
+
+								if ( result.status === 'error' ) {
+									statusColor = 'red';
+									statusIcon = '✗';
+								} else if ( result.status === 'warning' ) {
+									statusColor = 'orange';
+									statusIcon = '⚠';
+								} else if ( result.status === 'skipped' ) {
+									statusColor = 'gray';
+									statusIcon = '○';
+								}
+
+								html +=
+									'<li style="color: ' +
+									statusColor +
+									'; margin: 3px 0;">' +
+									statusIcon +
+									' <strong>' +
+									result.name +
+									':</strong> ' +
+									result.message +
+									'</li>';
+							} );
+
+							html += '</ul>';
+							html += '</div>';
+						}
+
+						// Show error indicator if any errors occurred
+						if ( data.has_errors ) {
+							html +=
+								'<p style="color: orange; margin-top: 10px;"><strong>Note:</strong> Some sync configurations encountered errors. See details above.</p>';
+						}
+
+						html += '</div>';
+
+						$progressDiv.html( html );
 
 						// Re-enable button
 						$button.prop( 'disabled', false );
