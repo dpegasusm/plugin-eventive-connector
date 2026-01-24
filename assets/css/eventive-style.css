@@ -8,10 +8,10 @@
    ========================================================================== */
 
 #eventive-login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
 }
 
 /* ==========================================================================
@@ -19,7 +19,7 @@
    ========================================================================== */
 
 .Eventive--LoginWidget--LoginDescription {
-    color: #fff;
+	color: #fff;
 }
 
 /* ==========================================================================
@@ -27,65 +27,65 @@
    ========================================================================== */
 
 .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--modal-overlay-bg, rgba(0, 0, 0, 0.8));
-    overflow-y: auto;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    transition: background-color 0.3s ease;
+	display: none;
+	position: fixed;
+	z-index: 1000;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background-color: var(--modal-overlay-bg, rgba(0, 0, 0, 0.8));
+	overflow-y: auto;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	transition: background-color 0.3s ease;
 }
 
 .modal-content {
-    position: relative;
-    margin: 5% auto;
-    padding: 20px;
-    max-width: 800px;
-    width: 90%;
-    background: var(--modal-bg, #fff);
-    color: var(--text-color, #333);
-    border: 2px solid var(--border-color, #ddd);
-    border-radius: var(--border-radius, 12px);
-    box-shadow: var(--box-shadow-medium, 0 4px 10px rgba(0, 0, 0, 0.3));
-    font-family: var(--font-family-base);
+	position: relative;
+	margin: 5% auto;
+	padding: 20px;
+	max-width: 800px;
+	width: 90%;
+	background: var(--modal-bg, #fff);
+	color: var(--text-color, #333);
+	border: 2px solid var(--border-color, #ddd);
+	border-radius: var(--border-radius, 12px);
+	box-shadow: var(--box-shadow-medium, 0 4px 10px rgba(0, 0, 0, 0.3));
+	font-family: var(--font-family-base);
 }
 
 .modal-small {
-    max-width: 500px;
-    width: 90%;
-    text-align: center;
+	max-width: 500px;
+	width: 90%;
+	text-align: center;
 }
 
 .modal-centered {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: none;
-    padding: 20px;
-    justify-content: center;
-    align-items: center;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	display: none;
+	padding: 20px;
+	justify-content: center;
+	align-items: center;
 }
 
 .modal-close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: var(--font-size-h4, 1.5em);
-    cursor: pointer;
-    background: none;
-    border: none;
-    color: var(--text-color, #333);
-    transition: color 0.3s ease;
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	font-size: var(--font-size-h4, 1.5em);
+	cursor: pointer;
+	background: none;
+	border: none;
+	color: var(--text-color, #333);
+	transition: color 0.3s ease;
 }
 
 .modal-close:hover {
-    color: var(--hover-color);
+	color: var(--hover-color);
 }
 
 /* ==========================================================================
@@ -93,33 +93,33 @@
    ========================================================================== */
 
 .Eventive--OrderQuantitySelect table {
-    background-color: #fff !important;
-    width: 100% !important;
-    border-collapse: collapse !important;
-    border-spacing: 0 !important;
-    table-layout: fixed !important;
-    font-family: 'Lato', sans-serif !important;
-    font-size: 1em;
-    color: rgb(33, 33, 33) !important;
+	background-color: #fff !important;
+	width: 100% !important;
+	border-collapse: collapse !important;
+	border-spacing: 0 !important;
+	table-layout: fixed !important;
+	font-family: Lato, sans-serif !important;
+	font-size: 1em;
+	color: rgb(33, 33, 33) !important;
 }
 
 .Eventive--OrderQuantitySelect thead {
-    border-bottom: none !important;
+	border-bottom: none !important;
 }
 
 .Eventive--OrderQuantitySelect thead tr {
-    border-bottom: none !important;
+	border-bottom: none !important;
 }
 
 .Eventive--OrderQuantitySelect tbody tr {
-    border-bottom: 1px solid rgb(224, 224, 224) !important;
+	border-bottom: 1px solid rgb(224, 224, 224) !important;
 }
 
 .Eventive--OrderQuantitySelect th,
 .Eventive--OrderQuantitySelect td {
-    padding: 8px;
-    text-align: left;
-    word-wrap: break-word;
+	padding: 8px;
+	text-align: left;
+	word-wrap: break-word;
 }
 
 /* ==========================================================================
@@ -127,10 +127,11 @@
    ========================================================================== */
 
 @media (max-width: 768px) {
-    .modal-content {
-        width: 95%;
-        margin: 10% auto;
-    }
+
+	.modal-content {
+		width: 95%;
+		margin: 10% auto;
+	}
 }
 
 /* ==========================================================================
@@ -157,30 +158,29 @@
 
 .eventive-tag-btn:hover,
 .tag-pill:hover {
-    filter: brightness(0.85);
+	filter: brightness(0.85);
 }
 
 .eventive-tag-btn.active,
 .tag-pill.active {
-    border: 2px solid var(--border-color, #ddd);;
+	border: 2px solid var(--border-color, #ddd);
 }
 
 /* Filter Container */
 .event-filter-container,
 .eventive-events-tags-filter,
 .eventive-film-guide-tags-filter {
-	margin-bottom: 20px;
 	padding: 15px;
 	background: var(--background-color-muted, #f9f9f9);
 	border-radius: 8px;
 	border: 1px solid var(--border-color, #ddd);
-    margin-bottom: 1.5rem;
-    width: 100%;
+	margin-bottom: 1.5rem;
+	width: 100%;
 }
 
 .event-filter-container .filter-title,
 .eventive-events-tags-filter .filter-title,
 .eventive-film-guide-tags-filter .filter-title {
-    font-weight: 600;
-    margin-bottom: 10px;
+	font-weight: 600;
+	margin-bottom: 10px;
 }

@@ -83,10 +83,11 @@
 
 	.week-nav-button {
 		font-size: 24px;
-		font-weight: bold;
+		font-weight: 700;
 		padding: 10px;
 
 		&.is-disabled {
+
 			&:hover {
 				background-color: #0073aa;
 			}
@@ -143,8 +144,9 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		text-align: center;
-		transition: background-color 0.3s ease,
-		            box-shadow 0.2s;
+		transition:
+			background-color 0.3s ease,
+			box-shadow 0.2s;
 
 		&:hover {
 			background-color: #005a87;
@@ -357,6 +359,7 @@
 	}
 
 	.yr-card__showtimes {
+
 		&.yr-showtimes-flex {
 			display: flex;
 			flex-wrap: wrap;
@@ -459,18 +462,21 @@
 	   ========================================================================== */
 
 	@media (min-width: 600px) {
+
 		.yr-card {
 			grid-column: span 6;
 		}
 	}
 
 	@media (min-width: 900px) {
+
 		.yr-card {
 			grid-column: span 4;
 		}
 	}
 
 	@media (max-width: 768px) {
+
 		.weekly-calendar-container,
 		.eventive-calendar-buttons {
 			flex-direction: column;
@@ -501,6 +507,7 @@
 	}
 
 	@media (max-width: 480px) {
+
 		.weekly-calendar-buttons {
 			gap: 6px;
 		}

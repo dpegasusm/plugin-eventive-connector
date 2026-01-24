@@ -169,7 +169,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const tagIdAttr = block.getAttribute( 'data-tag-id' ) || '';
 		const tagsListRaw = tagIdAttr;
 		const shortcodeTags = tagsListRaw
-			? tagsListRaw.split( ',' ).map( ( t ) => t.trim() ).filter( Boolean )
+			? tagsListRaw
+					.split( ',' )
+					.map( ( t ) => t.trim() )
+					.filter( Boolean )
 			: [];
 		const excludeTagsRaw = block.getAttribute( 'data-exclude-tags' ) || '';
 		const excludeTokens = excludeTagsRaw
@@ -208,18 +211,14 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const filmDetailPrettyAttr = block.getAttribute(
 			'data-film-detail-pretty'
 		);
-		if (
-			filmDetailPrettyAttr !== null &&
-			filmDetailPrettyAttr !== ''
-		) {
+		if ( filmDetailPrettyAttr !== null && filmDetailPrettyAttr !== '' ) {
 			__EventiveFilmDetailPretty =
 				String( filmDetailPrettyAttr ).toLowerCase() === 'true';
 		}
 
 		// Active tag from URL or default
 		let activeTag = (
-			new URLSearchParams( window.location.search ).get( 'tag-id' ) ||
-			''
+			new URLSearchParams( window.location.search ).get( 'tag-id' ) || ''
 		).trim();
 		const tagDefault = shortcodeTags[ 0 ] || '';
 
@@ -253,7 +252,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 						return;
 					}
 					const id = t.id != null ? String( t.id ) : '';
-					const name = t.name || t.title || t.label || ( id ? '#' + id : '' );
+					const name =
+						t.name || t.title || t.label || ( id ? '#' + id : '' );
 					if ( ! id && ! name ) {
 						return;
 					}
@@ -343,7 +343,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				.map( ( tag ) => {
 					const color = tag.color || '#e0e0e0';
 					const textColor = getTextColor( color );
-					const isActive = activeTag === tag.id || activeTag === tag.name;
+					const isActive =
+						activeTag === tag.id || activeTag === tag.name;
 					return `<button class="eventive-tag-btn ${
 						isActive ? 'active' : ''
 					}" data-tag-id="${
@@ -401,9 +402,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				return true;
 			}
 			const t =
-				ev && ev.start_time
-					? new Date( ev.start_time ).getTime()
-					: NaN;
+				ev && ev.start_time ? new Date( ev.start_time ).getTime() : NaN;
 			if ( ! isFinite( t ) ) {
 				return false;
 			}
@@ -443,9 +442,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 					filterTokens.push( ...shortcodeTags );
 				}
 
-				const evTagsArr = Array.isArray( event.tags )
-					? event.tags
-					: [];
+				const evTagsArr = Array.isArray( event.tags ) ? event.tags : [];
 				const fmTagsArr =
 					event.films &&
 					event.films[ 0 ] &&
@@ -583,8 +580,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 						event.films[ 0 ].short_description ) ||
 					'';
 				const venueName =
-					( event.venue && event.venue.name ) ||
-					'No venue specified';
+					( event.venue && event.venue.name ) || 'No venue specified';
 
 				// Film metadata
 				let filmMetaHtml = '';
@@ -605,7 +601,11 @@ document.addEventListener( 'DOMContentLoaded', () => {
 								const filmUrl = resolveFilmUrl( f );
 								if ( filmUrl ) {
 									return (
-										'<a href="' + filmUrl + '">' + title + '</a>'
+										'<a href="' +
+										filmUrl +
+										'">' +
+										title +
+										'</a>'
 									);
 								}
 								return title;
@@ -697,7 +697,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 								return (
 									( id && tok === id ) ||
 									( name &&
-										tok.toLowerCase() === name.toLowerCase() )
+										tok.toLowerCase() ===
+											name.toLowerCase() )
 								);
 							} );
 							if ( isExcluded ) {
@@ -738,7 +739,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				itemHtml += '<div class="event-details">';
 				itemHtml += '<h3 class="event-name">' + name + '</h3>';
 				if ( startHtml ) {
-					itemHtml += '<p class="event-start-time">' + startHtml + '</p>';
+					itemHtml +=
+						'<p class="event-start-time">' + startHtml + '</p>';
 				}
 				itemHtml +=
 					'<p class="event-venue"><strong>Venue:</strong> ' +
@@ -754,7 +756,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 						'</div>';
 				}
 				if ( showDescription && desc ) {
-					itemHtml += '<div class="event-description">' + desc + '</div>';
+					itemHtml +=
+						'<div class="event-description">' + desc + '</div>';
 				}
 				if ( tagLabels ) {
 					itemHtml +=
@@ -833,7 +836,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				cardHtml += '<div class="event-card-body">';
 				cardHtml += '<h4 class="event-card-title">' + name + '</h4>';
 				if ( startHtml ) {
-					cardHtml += '<p class="event-card-date">' + startHtml + '</p>';
+					cardHtml +=
+						'<p class="event-card-date">' + startHtml + '</p>';
 				}
 				cardHtml += ticketBtn;
 				cardHtml += '</div></div>';

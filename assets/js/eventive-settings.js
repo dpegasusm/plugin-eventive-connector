@@ -186,10 +186,14 @@ jQuery( document ).ready( function ( $ ) {
 							' skipped)</p>';
 
 						// Show detailed results if available
-						if ( data.sync_results && data.sync_results.length > 0 ) {
+						if (
+							data.sync_results &&
+							data.sync_results.length > 0
+						) {
 							html += '<div style="margin-top: 10px;">';
 							html += '<strong>Details:</strong>';
-							html += '<ul style="margin: 5px 0; padding-left: 20px;">';
+							html +=
+								'<ul style="margin: 5px 0; padding-left: 20px;">';
 
 							data.sync_results.forEach( function ( result ) {
 								let statusColor = 'green';

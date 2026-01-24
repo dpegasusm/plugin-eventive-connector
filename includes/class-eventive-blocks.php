@@ -57,7 +57,7 @@ class Eventive_Blocks {
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			if ( isset( $_GET['post'] ) ) {
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				$post_id = intval( $_GET['post'] );
+				$post_id   = intval( $_GET['post'] );
 				$post_type = get_post_type( $post_id );
 				if ( $post_type ) {
 					return $post_type;
@@ -219,7 +219,7 @@ class Eventive_Blocks {
 
 		// Prepare data to pass to view scripts.
 		$localization = $eventive_api->get_api_localization_data();
-		
+
 		// Get the Eventive film post types.
 		$eventive_film_post_types = Eventive::get_eventive_film_post_types();
 

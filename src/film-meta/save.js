@@ -8,7 +8,8 @@ import { useBlockProps } from '@wordpress/block-editor';
  * Saves block attributes as data attributes for the React component
  * Note: postId is provided via EventiveBlockData (localized in PHP)
  *
- * @param {Object} props Block properties
+ * @param {Object} props            Block properties
+ * @param          props.attributes
  * @return {JSX.Element} Save component
  */
 export default function save( { attributes } ) {
@@ -21,8 +22,8 @@ export default function save( { attributes } ) {
 	} );
 
 	return (
-		<span { ...blockProps }>
-			<span className="eventive-loading">Loading...</span>
-		</span>
+		<div { ...blockProps }>
+			<div className="eventive-loading">Loading...</div>
+		</div>
 	);
 }

@@ -3,7 +3,12 @@
  */
 import { __ } from '@wordpress/i18n';
 import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
-import { PanelBody, SelectControl, TextControl, ToggleControl } from '@wordpress/components';
+import {
+	PanelBody,
+	SelectControl,
+	TextControl,
+	ToggleControl,
+} from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useEffect, useState } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
@@ -20,7 +25,9 @@ const META_FIELDS = {
 	_eventive_runtime: {
 		label: __( 'Runtime', 'eventive' ),
 		format: ( value ) => {
-			if ( ! value ) return __( 'Runtime not available', 'eventive' );
+			if ( ! value ) {
+				return __( 'Runtime not available', 'eventive' );
+			}
 			const hours = Math.floor( value / 60 );
 			const minutes = value % 60;
 			if ( hours > 0 ) {
@@ -35,7 +42,8 @@ const META_FIELDS = {
 	},
 	_eventive_language: {
 		label: __( 'Language', 'eventive' ),
-		format: ( value ) => value || __( 'Language not available', 'eventive' ),
+		format: ( value ) =>
+			value || __( 'Language not available', 'eventive' ),
 	},
 	_eventive_country: {
 		label: __( 'Country', 'eventive' ),
@@ -43,14 +51,18 @@ const META_FIELDS = {
 	},
 	_eventive_director: {
 		label: __( 'Director', 'eventive' ),
-		format: ( value ) => value || __( 'Director not available', 'eventive' ),
+		format: ( value ) =>
+			value || __( 'Director not available', 'eventive' ),
 	},
 };
 
 /**
  * Edit component for Film Meta block
  *
- * @param {Object} props Block properties
+ * @param {Object} props               Block properties
+ * @param          props.attributes
+ * @param          props.setAttributes
+ * @param          props.context
  * @return {JSX.Element} Edit component
  */
 export default function Edit( { attributes, setAttributes, context } ) {
@@ -84,7 +96,10 @@ export default function Edit( { attributes, setAttributes, context } ) {
 				setLoading( false );
 			} )
 			.catch( ( error ) => {
-				console.error( '[eventive-film-meta] Error fetching meta:', error );
+				console.error(
+					'[eventive-film-meta] Error fetching meta:',
+					error
+				);
 				setMetaValue( null );
 				setLoading( false );
 			} );
@@ -111,42 +126,56 @@ export default function Edit( { attributes, setAttributes, context } ) {
 						label={ __( 'Meta Field', 'eventive' ) }
 						value={ metaField }
 						options={ metaFieldOptions }
-						onChange={ ( value ) => setAttributes( { metaField: value } ) }
-						help={ __( 'Choose which film metadata to display', 'eventive' ) }
+						onChange={ ( value ) =>
+							setAttributes( { metaField: value } )
+						}
+						help={ __(
+							'Choose which film metadata to display',
+							'eventive'
+						) }
 					/>
 					<ToggleControl
 						label={ __( 'Show Label', 'eventive' ) }
 						checked={ showLabel }
-						onChange={ ( value ) => setAttributes( { showLabel: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { showLabel: value } )
+						}
 					/>
 					{ showLabel && (
 						<TextControl
 							label={ __( 'Custom Label', 'eventive' ) }
 							value={ label }
-							onChange={ ( value ) => setAttributes( { label: value } ) }
+							onChange={ ( value ) =>
+								setAttributes( { label: value } )
+							}
 							placeholder={ fieldConfig.label }
-							help={ __( 'Leave empty to use the default label', 'eventive' ) }
+							help={ __(
+								'Leave empty to use the default label',
+								'eventive'
+							) }
 						/>
 					) }
 				</PanelBody>
 			</InspectorControls>
 
-			<span { ...blockProps }>
+			<div { ...blockProps }>
 				{ loading ? (
-					<span className="eventive-loading">{ __( 'Loading...', 'eventive' ) }</span>
+					<div className="eventive-loading">
+						{ __( 'Loading…', 'eventive' ) }
+					</div>
 				) : (
 					<>
 						{ showLabel && (
-							<strong className="eventive-film-meta-label">
+							<span className="eventive-film-meta-label">
 								{ displayLabel }:{ ' ' }
-							</strong>
+							</span>
 						) }
 						<span className="eventive-film-meta-value">
 							{ formattedValue }
 						</span>
 					</>
 				) }
-			</span>
+			</div>
 		</>
 	);
 }

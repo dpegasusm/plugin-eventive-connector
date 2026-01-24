@@ -3,18 +3,12 @@
  */
 
 .wp-block-eventive-film-meta {
-	display: inline;
 
 	.eventive-film-meta-label {
 		font-weight: 600;
 	}
 
-	.eventive-film-meta-value {
-		// Inherits text styles from parent
-	}
-
 	.eventive-loading {
 		font-style: italic;
-		opacity: 0.6;
 	}
 }

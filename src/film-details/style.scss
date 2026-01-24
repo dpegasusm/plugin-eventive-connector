@@ -7,6 +7,7 @@
    ========================================================================== */
 
 @keyframes heroFade {
+
 	from {
 		opacity: 0;
 		transform: translateY(-10px);
@@ -44,7 +45,7 @@
 		background-color: #fff;
 
 		&::before {
-			content: '';
+			content: "";
 			position: absolute;
 			top: 20px;
 			left: 0;
@@ -246,7 +247,7 @@
 		.event-date-time {
 			flex: 1;
 			font-size: 1.5em;
-			font-weight: bold;
+			font-weight: 700;
 			text-align: center;
 			border-right: 2px dotted #ddd;
 			padding-right: 10px;
@@ -376,6 +377,7 @@
 	   ========================================================================== */
 
 	@media (min-width: 1024px) {
+
 		.hero-section {
 			height: 420px;
 		}
@@ -386,6 +388,7 @@
 	}
 
 	@media (max-width: 768px) {
+
 		.hero-section {
 			height: 200px;
 			min-height: 200px;
@@ -411,6 +414,7 @@
 		}
 
 		.film-events {
+
 			.event-item,
 			.event-box {
 				flex-direction: column;

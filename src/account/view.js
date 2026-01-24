@@ -9,6 +9,8 @@ import { createRoot, useState, useEffect, useRef } from '@wordpress/element';
 
 /**
  * Account component
+ * @param root0
+ * @param root0.childNodes
  */
 function EventiveAccount( { childNodes } ) {
 	const [ isLoggedIn, setIsLoggedIn ] = useState( false );
@@ -165,7 +167,10 @@ function EventiveAccount( { childNodes } ) {
 					Log out
 				</a>
 			</div>
-			<div ref={ childBlocksRef } className="eventive-account-child-blocks" />
+			<div
+				ref={ childBlocksRef }
+				className="eventive-account-child-blocks"
+			/>
 		</div>
 	);
 }

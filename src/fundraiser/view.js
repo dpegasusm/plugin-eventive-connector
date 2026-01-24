@@ -74,7 +74,13 @@ document.addEventListener( 'DOMContentLoaded', () => {
 							<p>$${ totalDonations.toFixed( 2 ) } of $${ goalAmount.toFixed(
 								2
 							) } raised (${ progressPercent }%)</p>
-							${ donationCount > 0 ? `<p class="donation-count">${ donationCount } donation${ donationCount !== 1 ? 's' : '' }</p>` : '' }
+							${
+								donationCount > 0
+									? `<p class="donation-count">${ donationCount } donation${
+											donationCount !== 1 ? 's' : ''
+									  }</p>`
+									: ''
+							}
 						</div>
 					`;
 				}

@@ -12,7 +12,9 @@ const META_FIELDS = {
 	_eventive_runtime: {
 		label: 'Runtime',
 		format: ( value ) => {
-			if ( ! value ) return 'Runtime not available';
+			if ( ! value ) {
+				return 'Runtime not available';
+			}
 			const hours = Math.floor( value / 60 );
 			const minutes = value % 60;
 			if ( hours > 0 ) {
@@ -41,6 +43,11 @@ const META_FIELDS = {
 
 /**
  * FilmMeta React Component
+ * @param root0
+ * @param root0.postId
+ * @param root0.metaField
+ * @param root0.label
+ * @param root0.showLabel
  */
 function FilmMeta( { postId, metaField, label, showLabel } ) {
 	const [ metaValue, setMetaValue ] = useState( null );
@@ -64,18 +71,21 @@ function FilmMeta( { postId, metaField, label, showLabel } ) {
 				setLoading( false );
 			} )
 			.catch( ( err ) => {
-				console.error( '[eventive-film-meta] Error fetching meta:', err );
+				console.error(
+					'[eventive-film-meta] Error fetching meta:',
+					err
+				);
 				setError( 'Unable to load metadata' );
 				setLoading( false );
 			} );
 	}, [ postId, metaField ] );
 
 	if ( loading ) {
-		return <span className="eventive-loading">Loading...</span>;
+		return <div className="eventive-loading">Loading...</div>;
 	}
 
 	if ( error ) {
-		return <span className="eventive-error">{ error }</span>;
+		return <div className="eventive-error">{ error }</div>;
 	}
 
 	// Get field config
@@ -88,7 +98,9 @@ function FilmMeta( { postId, metaField, label, showLabel } ) {
 	return (
 		<>
 			{ showLabel && (
-				<span className="eventive-film-meta-label">{ displayLabel }: </span>
+				<span className="eventive-film-meta-label">
+					{ displayLabel }:{ ' ' }
+				</span>
 			) }
 			<span className="eventive-film-meta-value">{ formattedValue }</span>
 		</>
@@ -106,14 +118,15 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	metaBlocks.forEach( ( block ) => {
 		// Get post ID from EventiveBlockData (localized from PHP)
 		const postId = window.EventiveBlockData?.postId || '';
-		
+
 		// Get block attributes from data attributes
 		const metaField = block.dataset.metaField || '_eventive_runtime';
 		const label = block.dataset.label || '';
 		const showLabel = block.dataset.showLabel !== 'false';
 
 		if ( ! postId ) {
-			block.innerHTML = '<div class="eventive-error">This block requires it be placed on a Eventive Film post type.</div>';
+			block.innerHTML =
+				'<div class="eventive-error">This block requires it be placed on a Eventive Film post type.</div>';
 			return;
 		}
 

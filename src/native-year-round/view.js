@@ -5,6 +5,7 @@ import { createRoot } from '@wordpress/element';
 
 /**
  * Polyfill for requestIdleCallback
+ * @param cb
  */
 const requestIdleCallback =
 	window.requestIdleCallback ||
@@ -12,7 +13,7 @@ const requestIdleCallback =
 		return setTimeout( function () {
 			cb( {
 				didTimeout: true,
-				timeRemaining: function () {
+				timeRemaining() {
 					return 0;
 				},
 			} );
@@ -171,7 +172,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const filmCache = {};
 		let eventsByDay = {};
 		let renderScheduled = false;
-		let imgFetchRefresh = {};
+		const imgFetchRefresh = {};
 
 		// Loading indicator helper
 		const setLoading = ( on ) => {
@@ -404,10 +405,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				if ( ! span ) {
 					return;
 				}
-				if (
-					span.__evtLabelApplied &&
-					span.textContent === label
-				) {
+				if ( span.__evtLabelApplied && span.textContent === label ) {
 					return;
 				}
 				span.textContent = label;
@@ -532,8 +530,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 					const card = document.createElement( 'article' );
 					card.className =
-						'yr-card yr-card--stack' +
-						( img ? ' has-media' : '' );
+						'yr-card yr-card--stack' + ( img ? ' has-media' : '' );
 
 					if ( img ) {
 						const media = document.createElement( 'div' );
@@ -624,9 +621,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 							window.Eventive.rebuild();
 							requestIdleCallback( () => {
 								try {
-									overrideTicketLabels(
-										eventsContainer
-									);
+									overrideTicketLabels( eventsContainer );
 								} catch ( e ) {
 									// Ignore
 								}
@@ -672,14 +667,11 @@ document.addEventListener( 'DOMContentLoaded', () => {
 					// Fetch missing film images
 					if (
 						pendingFetches.length &&
-						( ! imgFetchRefresh ||
-							! imgFetchRefresh[ dayKey ] )
+						( ! imgFetchRefresh || ! imgFetchRefresh[ dayKey ] )
 					) {
 						imgFetchRefresh[ dayKey ] = true;
 						Promise.all(
-							pendingFetches.map( ( id ) =>
-								fetchFilmById( id )
-							)
+							pendingFetches.map( ( id ) => fetchFilmById( id ) )
 						).then( () => {
 							scheduleRender();
 						} );
@@ -917,10 +909,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 								resolve();
 								return;
 							}
-							if (
-								window.Eventive &&
-								window.Eventive.on
-							) {
+							if ( window.Eventive && window.Eventive.on ) {
 								if ( window.Eventive._ready ) {
 									resolve();
 								} else {

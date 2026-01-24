@@ -3,12 +3,10 @@
  */
 
 .wp-block-eventive-film-meta {
-	display: inline;
 
 	.eventive-loading,
 	.eventive-error {
 		font-style: italic;
-		opacity: 0.6;
 	}
 
 	.eventive-error {
@@ -17,9 +15,5 @@
 
 	.eventive-film-meta-label {
 		font-weight: 600;
-	}
-
-	.eventive-film-meta-value {
-		// Inherits text styles from parent
 	}
 }

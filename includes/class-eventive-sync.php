@@ -230,7 +230,7 @@ class Eventive_Sync {
 		}
 
 		// Prepare overall result message.
-		$message_parts = array();
+		$message_parts   = array();
 		$message_parts[] = sprintf(
 			'Processed %d sync configuration(s).',
 			count( $sync_list )
@@ -245,7 +245,7 @@ class Eventive_Sync {
 
 		// Add detailed results.
 		foreach ( $sync_results as $result ) {
-			$status_prefix = '[' . strtoupper( $result['status'] ) . ']';
+			$status_prefix   = '[' . strtoupper( $result['status'] ) . ']';
 			$message_parts[] = $status_prefix . ' ' . $result['name'] . ': ' . $result['message'];
 		}
 

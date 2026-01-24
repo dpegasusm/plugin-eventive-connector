@@ -6,10 +6,11 @@ window.__Eventive_EventCache = window.__Eventive_EventCache || {};
 
 // Global film detail config
 let __EventiveFilmDetailBase = '';
-let __EventiveFilmDetailPretty = true;
+const __EventiveFilmDetailPretty = true;
 
 /**
  * Helper functions
+ * @param v
  */
 function parseBool( v ) {
 	if ( v == null ) {
@@ -268,7 +269,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 						return;
 					}
 					const id = t.id != null ? String( t.id ) : '';
-					const name = t.name || t.title || t.label || ( id ? '#' + id : '' );
+					const name =
+						t.name || t.title || t.label || ( id ? '#' + id : '' );
 					if ( ! id && ! name ) {
 						return;
 					}
@@ -337,14 +339,16 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				block.insertBefore( filterEl, block.firstChild );
 			}
 
-			const allBtn = '<button class="eventive-tag-btn ' +
+			const allBtn =
+				'<button class="eventive-tag-btn ' +
 				( ! activeTag ? 'active' : '' ) +
 				'" data-tag-id="">All</button>';
 			const tagBtns = tags
 				.map( ( tag ) => {
 					const color = tag.color || '#e0e0e0';
 					const textColor = getTextColor( color );
-					const isActive = activeTag === tag.id || activeTag === tag.name;
+					const isActive =
+						activeTag === tag.id || activeTag === tag.name;
 					return (
 						'<button class="eventive-tag-btn ' +
 						( isActive ? 'active' : '' ) +
@@ -362,7 +366,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				.join( '' );
 
 			filterEl.innerHTML =
-				'<div class="eventive-tags-list">' + allBtn + tagBtns + '</div>';
+				'<div class="eventive-tags-list">' +
+				allBtn +
+				tagBtns +
+				'</div>';
 
 			// Add click handlers (once)
 			if ( ! filterEl.__evtClickBound ) {
@@ -508,22 +515,19 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 				html += '<div class="event-group">';
 				html += '<h3 class="event-group-header">' + dateKey + '</h3>';
-				html +=
-					'<div class="event-group-items ' + countClass + '">';
+				html += '<div class="event-group-items ' + countClass + '">';
 
 				dayEvents.forEach( ( event ) => {
-					const time = new Date( event.start_time ).toLocaleTimeString(
-						undefined,
-						{
-							hour: 'numeric',
-							minute: '2-digit',
-						}
-					);
+					const time = new Date(
+						event.start_time
+					).toLocaleTimeString( undefined, {
+						hour: 'numeric',
+						minute: '2-digit',
+					} );
 
 					const name = event.name || 'Untitled Event';
 					const desc = event.description || '';
-					const venueName =
-						( event.venue && event.venue.name ) || '';
+					const venueName = ( event.venue && event.venue.name ) || '';
 
 					// Enhanced image fetching
 					let imageUrl = '';
@@ -562,7 +566,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 					if ( film && filmDetailBaseURL ) {
 						const filmUrl = resolveFilmUrl( film );
 						if ( filmUrl ) {
-							const filmName = film.name || film.title || 'Film Details';
+							const filmName =
+								film.name || film.title || 'Film Details';
 							filmLinkHTML =
 								'<p class="event-film-link"><a href="' +
 								filmUrl +

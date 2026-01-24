@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Eventive {
 	/**
 	 * Eventive Post Types that use film blocks.
-	 * 
+	 *
 	 * @var array
 	 */
 	private static $eventive_film_post_types = array( 'eventive_film' );
