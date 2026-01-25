@@ -33,8 +33,8 @@ class Eventive_Blocks {
 		// Add the eventive category to the block editor.
 		add_filter( 'block_categories_all', array( $this, 'eventive_block_categories' ), 10, 2 );
 
-		// Localize view scripts for frontend blocks.
-		add_action( 'wp_enqueue_scripts', array( $this, 'localize_block_view_scripts' ), 999, 0 );
+		// Output localization data inline in wp_head.
+		add_action( 'wp_head', array( $this, 'output_inline_localization_data' ), 5 );
 
 		// Localize editor scripts for admin blocks.
 		add_action( 'enqueue_block_editor_assets', array( $this, 'localize_block_editor_scripts' ) );
@@ -209,11 +209,11 @@ class Eventive_Blocks {
 	}
 
 	/**
-	 * Localize view scripts for blocks with frontend JavaScript.
+	 * Output EventiveBlockData as inline script in wp_head.
 	 *
 	 * @return void
 	 */
-	public function localize_block_view_scripts() {
+	public function output_inline_localization_data() {
 		// Global the API class.
 		global $eventive_api;
 
@@ -239,50 +239,14 @@ class Eventive_Blocks {
 			if ( $venue_id ) {
 				$localization['venueId'] = $venue_id;
 			}
-		} else {
-			$localization['postId'] = '';
 		}
 
-		// List of blocks with view scripts.
-		$blocks_with_views = array(
-			'eventive-account-view-script',
-			'eventive-account-details-view-script',
-			'eventive-calendar-view-script',
-			'eventive-carousel-view-script',
-			'eventive-account-passes-view-script',
-			'eventive-account-tickets-view-script',
-			'eventive-login-view-script',
-			'eventive-native-year-round-view-script',
-			'eventive-events-view-script',
-			'eventive-events-list-view-script',
-			'eventive-events-week-view-script',
-			'eventive-film-details-view-script',
-			'eventive-film-guide-view-script',
-			'eventive-film-meta-view-script',
-			'eventive-film-showtimes-view-script',
-			'eventive-fundraiser-view-script',
-			'eventive-marquee-view-script',
-			'eventive-single-film-view-script',
-			'eventive-venues-view-script',
-		);
-
-		// Allow for the blocks to be filtered with apply filters.
-		$blocks_with_views = apply_filters( 'eventive_blocks_view_scripts_list', $blocks_with_views );
-
-		// Find the first registered script and localize it only once.
-		$localized = false;
-		foreach ( $blocks_with_views as $script_handle ) {
-			if ( ! $localized && wp_script_is( $script_handle, 'enqueued' ) ) {
-				// Add the WP REST API script as a dependency.
-				wp_localize_script(
-					$script_handle,
-					'EventiveBlockData',
-					$localization
-				);
-				$localized = true;
-				break;
-			}
-		}
+		// Output inline script with the data.
+		?>
+		<script type="text/javascript">
+			window.EventiveBlockData = <?php echo wp_json_encode( $localization ); ?>;
+		</script>
+		<?php
 	}
 
 	/**
