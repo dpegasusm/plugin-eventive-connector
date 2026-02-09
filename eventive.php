@@ -16,7 +16,6 @@
  * Requires PHP:      7.4
  * Tested up to:      6.7
  * Stable tag:        1.0.1
- * License:           Proprietary
  * Author:            David Marshall
  * Author URI:        https://github.com/dpegasusm
  * Text Domain:       eventive-integration
