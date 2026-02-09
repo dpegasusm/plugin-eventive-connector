@@ -285,8 +285,8 @@ class Eventive_Sync {
 				'post_type'      => $post_type,
 				'post_status'    => 'any',
 				'posts_per_page' => 1,
-				'meta_key'       => '_eventive_film_id',
-				'meta_value'     => $film_id,
+				'meta_key'       => '_eventive_film_id', // @phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'     => $film_id, // @phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'fields'         => 'ids',
 			)
 		);
@@ -481,7 +481,7 @@ class Eventive_Sync {
 				array(
 					'taxonomy'   => 'eventive_film_tags',
 					'hide_empty' => false,
-					'meta_query' => array(
+					'meta_query' => array( // @phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 						array(
 							'key'     => 'eventive_tag_id',
 							'value'   => $eventive_tag_id,
@@ -556,8 +556,8 @@ class Eventive_Sync {
 				'post_type'      => 'eventive_venue',
 				'post_status'    => 'any',
 				'posts_per_page' => 1,
-				'meta_key'       => '_eventive_venue_id',
-				'meta_value'     => $eventive_venue_id,
+				'meta_key'       => '_eventive_venue_id', // @phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'     => $eventive_venue_id, // @phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'fields'         => 'ids',
 			)
 		);
