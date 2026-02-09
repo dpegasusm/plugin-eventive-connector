@@ -13,20 +13,37 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Create build folder (repo name without plugin-)
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # repo is like "owner/plugin-my-cool-thing"
+        REPO_NAME="${GITHUB_REPOSITORY#*/}"             # => plugin-my-cool-thing
+        BUILD_NAME="${REPO_NAME#plugin-}"               # => my-cool-thing (unchanged if no prefix)
+        echo "BUILD_NAME=$BUILD_NAME" >> "$GITHUB_ENV"
+
+        rm -rf "build/$BUILD_NAME"
+        mkdir -p "build/$BUILD_NAME"
+
+        # Copy everything into build folder, excluding repo/CI-only stuff
+        rsync -a --delete \
+          --exclude=".git/" \
+          --exclude=".github/" \
+          --exclude=".gitignore" \
+          --exclude="node_modules/" \
+          --exclude="vendor/" \
+          ./ "build/$BUILD_NAME/"
+            
     - name: Run plugin check
       uses: wordpress/plugin-check-action@v1
       with:
+          build-dir: build/${{ env.BUILD_NAME }}
           exclude-checks: |
             plugin_header_text_domain
             textdomain_mismatch
             trademarked_term
-            github_directory
-            no_license
             plugin_header_no_license
-            plugin_header_invalid_license
+            no_license
             no_stable_tag
             missing_readme_header_tested
-          exclude-files: |
-            .gitignore
-          exclude-directories: |
-            .github
