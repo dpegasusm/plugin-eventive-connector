@@ -38,12 +38,12 @@ jobs:
     - name: Run plugin check
       uses: wordpress/plugin-check-action@v1
       with:
-          build-dir: build/${{ env.BUILD_NAME }}
-          exclude-checks: |
-            plugin_header_text_domain
-            textdomain_mismatch
-            trademarked_term
-            plugin_header_no_license
-            no_license
-            no_stable_tag
-            missing_readme_header_tested
+        build-dir: build/${{ env.BUILD_NAME }}
+        exclude-checks: |
+          plugin_header_text_domain
+          textdomain_mismatch
+          trademarked_term
+          plugin_header_no_license
+          no_license
+          no_stable_tag
+          missing_readme_header_tested
