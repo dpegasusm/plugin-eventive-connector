@@ -11,8 +11,6 @@ jQuery( document ).ready( function ( $ ) {
 	// Bucket Dropdown Population
 	// ====================
 	const $apiKeyField = $( '#eventive_secret_key' );
-	const $bucketDropdown = $( '#eventive_default_bucket_id' );
-	const $bucketWrapper = $bucketDropdown.closest( 'tr' );
 
 	/**
 	 * Fetch event buckets from WordPress REST API
@@ -20,13 +18,12 @@ jQuery( document ).ready( function ( $ ) {
 	 */
 	function fetchEventBuckets( apiKey ) {
 		if ( ! apiKey || apiKey.trim() === '' ) {
-			disableBucketDropdown( 'Enter API Key to choose a bucket' );
+			disableBucketDropdowns( 'Enter API Key to choose a bucket' );
 			return;
 		}
 
 		// Show loading state
-		$bucketDropdown.prop( 'disabled', true );
-		$bucketDropdown.html( '<option value="">Loading buckets...</option>' );
+		setBucketLoadingState( 'Loading buckets...' );
 
 		// Fetch buckets using WordPress REST API
 		wp.apiFetch( {
@@ -42,14 +39,14 @@ jQuery( document ).ready( function ( $ ) {
 					response.event_buckets &&
 					response.event_buckets.length > 0
 				) {
-					populateBucketDropdown( response.event_buckets );
+					populateBucketDropdowns( response.event_buckets );
 				} else {
-					disableBucketDropdown( 'No buckets found' );
+					disableBucketDropdowns( 'No buckets found' );
 				}
 			} )
 			.catch( function ( error ) {
 				console.error( 'Error fetching event buckets:', error );
-				disableBucketDropdown(
+				disableBucketDropdowns(
 					'Error loading buckets. Check API key.'
 				);
 			} );
@@ -59,42 +56,60 @@ jQuery( document ).ready( function ( $ ) {
 	 * Populate the bucket dropdown with options
 	 * @param buckets
 	 */
-	function populateBucketDropdown( buckets ) {
-		const selectedValue =
-			$bucketDropdown.attr( 'data-selected-value' ) || '';
+	function populateBucketDropdowns( buckets ) {
+		const $bucketDropdowns = getBucketDropdowns();
 
-		// Build options HTML
-		let optionsHtml = '<option value="">Select a bucket</option>';
-		buckets.forEach( function ( bucket ) {
-			const selected = bucket.id === selectedValue ? ' selected' : '';
-			optionsHtml +=
-				'<option value="' +
-				bucket.id +
-				'"' +
-				selected +
-				'>' +
-				bucket.name +
-				'</option>';
+		$bucketDropdowns.each( function () {
+			const $bucketDropdown = $( this );
+			const selectedValue =
+				$bucketDropdown.attr( 'data-selected-value' ) || '';
+
+			// Build options HTML
+			let optionsHtml = '<option value="">Select a bucket</option>';
+			buckets.forEach( function ( bucket ) {
+				const selected =
+					bucket.id === selectedValue ? ' selected' : '';
+				optionsHtml +=
+					'<option value="' +
+					bucket.id +
+					'"' +
+					selected +
+					'>' +
+					bucket.name +
+					'</option>';
+			} );
+
+			// Update dropdown
+			$bucketDropdown.html( optionsHtml ).prop( 'disabled', false );
 		} );
-
-		// Update dropdown
-		$bucketDropdown.html( optionsHtml ).prop( 'disabled', false );
 	}
 
 	/**
 	 * Disable bucket dropdown with message
 	 * @param message
 	 */
-	function disableBucketDropdown( message ) {
-		$bucketDropdown
+	function disableBucketDropdowns( message ) {
+		const $bucketDropdowns = getBucketDropdowns();
+		$bucketDropdowns
 			.html( '<option value="">' + message + '</option>' )
 			.prop( 'disabled', true );
+	}
+
+	function setBucketLoadingState( message ) {
+		const $bucketDropdowns = getBucketDropdowns();
+		$bucketDropdowns
+			.prop( 'disabled', true )
+			.html( '<option value="">' + message + '</option>' );
+	}
+
+	function getBucketDropdowns() {
+		return $( 'select.eventive-bucket-dropdown' );
 	}
 
 	/**
 	 * Initialize bucket dropdown on page load
 	 */
-	function initBucketDropdown() {
+	function initBucketDropdowns() {
 		// Check if API key is available from localization
 		if (
 			typeof EventiveData !== 'undefined' &&
@@ -105,16 +120,16 @@ jQuery( document ).ready( function ( $ ) {
 			fetchEventBuckets( EventiveData.apiKey );
 		} else {
 			// No API key, disable dropdown
-			disableBucketDropdown( 'Enter API Key to choose a bucket' );
+			disableBucketDropdowns( 'Enter API Key to choose a bucket' );
 		}
 	}
 
 	/**
 	 * Watch for API key field changes
 	 */
-	if ( $apiKeyField.length && $bucketDropdown.length ) {
+	if ( $apiKeyField.length ) {
 		// Initialize on page load
-		initBucketDropdown();
+		initBucketDropdowns();
 
 		// Watch for changes to API key field
 		$apiKeyField.on( 'input change', function () {
@@ -122,8 +137,20 @@ jQuery( document ).ready( function ( $ ) {
 			if ( apiKey && apiKey.trim() !== '' ) {
 				fetchEventBuckets( apiKey );
 			} else {
-				disableBucketDropdown( 'Enter API Key to choose a bucket' );
+				disableBucketDropdowns( 'Enter API Key to choose a bucket' );
 			}
+		} );
+	}
+
+	// Watch for dynamically added bucket dropdowns.
+	const bucketObserver = new MutationObserver( function () {
+		initBucketDropdowns();
+	} );
+
+	if ( document.body ) {
+		bucketObserver.observe( document.body, {
+			childList: true,
+			subtree: true,
 		} );
 	}
 
