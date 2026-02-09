@@ -39,7 +39,7 @@ jobs:
       uses: wordpress/plugin-check-action@v1
       with:
         build-dir: build/${{ env.BUILD_NAME }}
-        exclude-checks: |
+        ignore-codes: |
           plugin_header_text_domain
           textdomain_mismatch
           trademarked_term
