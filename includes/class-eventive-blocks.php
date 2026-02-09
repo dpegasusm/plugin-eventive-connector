@@ -33,46 +33,11 @@ class Eventive_Blocks {
 		// Add the eventive category to the block editor.
 		add_filter( 'block_categories_all', array( $this, 'eventive_block_categories' ), 10, 2 );
 
-		// Localize view scripts for frontend blocks.
-		add_action( 'wp_enqueue_scripts', array( $this, 'localize_block_view_scripts' ), 999, 0 );
+		// Output localization data inline in wp_head.
+		add_action( 'wp_head', array( $this, 'output_inline_localization_data' ), 5 );
 
 		// Localize editor scripts for admin blocks.
 		add_action( 'enqueue_block_editor_assets', array( $this, 'localize_block_editor_scripts' ) );
-	}
-
-	/**
-	 * Get the current post type reliably in admin context.
-	 *
-	 * @return string|false The post type or false if not found.
-	 */
-	private function get_current_post_type() {
-		// Try get_post_type() first (works on frontend and later hooks).
-		$post_type = get_post_type();
-		if ( $post_type ) {
-			return $post_type;
-		}
-
-		// In admin, check for post parameter in query string.
-		if ( is_admin() ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			if ( isset( $_GET['post'] ) ) {
-				// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				$post_id   = intval( $_GET['post'] );
-				$post_type = get_post_type( $post_id );
-				if ( $post_type ) {
-					return $post_type;
-				}
-			}
-
-			// Check for post_type parameter (for new posts).
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			if ( isset( $_GET['post_type'] ) ) {
-				// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				return sanitize_key( $_GET['post_type'] );
-			}
-		}
-
-		return false;
 	}
 
 	/**
@@ -132,27 +97,21 @@ class Eventive_Blocks {
 			);
 		}
 
-		// load us a new category for film blocks if on an eventive film post type.
-		// Get the Eventive film post types.
-		$eventive_film_post_types = Eventive::get_eventive_film_post_types();
-
-		// register the folowing blocks to be used on eventive film post types.
-		$current_post_type = $this->get_current_post_type();
-		if ( $current_post_type && in_array( $current_post_type, $eventive_film_post_types, true ) ) {
-			$film_category = array_filter(
-				$categories,
-				function ( $cat ) {
-					return ( 'eventive-films' === $cat['slug'] );
-				}
-			);
-
-			if ( empty( $film_category ) ) {
-				$categories[] = array(
-					'slug'  => 'eventive-films',
-					'title' => __( 'Eventive Film Data', 'eventive' ),
-					'icon'  => 'video-alt3',
-				);
+		// Load us a new category for film blocks if on an eventive film post type.
+		// These are for films that are on an eventive film post type and need to be categorized separately in the block editor.
+		$film_category = array_filter(
+			$categories,
+			function ( $cat ) {
+				return ( 'eventive-films' === $cat['slug'] );
 			}
+		);
+
+		if ( empty( $film_category ) ) {
+			$categories[] = array(
+				'slug'  => 'eventive-films',
+				'title' => __( 'Eventive Film Data', 'eventive' ),
+				'icon'  => 'video-alt3',
+			);
 		}
 
 		return $categories;
@@ -209,11 +168,11 @@ class Eventive_Blocks {
 	}
 
 	/**
-	 * Localize view scripts for blocks with frontend JavaScript.
+	 * Output EventiveBlockData as inline script in wp_head.
 	 *
 	 * @return void
 	 */
-	public function localize_block_view_scripts() {
+	public function output_inline_localization_data() {
 		// Global the API class.
 		global $eventive_api;
 
@@ -239,50 +198,14 @@ class Eventive_Blocks {
 			if ( $venue_id ) {
 				$localization['venueId'] = $venue_id;
 			}
-		} else {
-			$localization['postId'] = '';
 		}
 
-		// List of blocks with view scripts.
-		$blocks_with_views = array(
-			'eventive-account-view-script',
-			'eventive-account-details-view-script',
-			'eventive-calendar-view-script',
-			'eventive-carousel-view-script',
-			'eventive-account-passes-view-script',
-			'eventive-account-tickets-view-script',
-			'eventive-login-view-script',
-			'eventive-native-year-round-view-script',
-			'eventive-events-view-script',
-			'eventive-events-list-view-script',
-			'eventive-events-week-view-script',
-			'eventive-film-details-view-script',
-			'eventive-film-guide-view-script',
-			'eventive-film-meta-view-script',
-			'eventive-film-showtimes-view-script',
-			'eventive-fundraiser-view-script',
-			'eventive-marquee-view-script',
-			'eventive-single-film-view-script',
-			'eventive-venues-view-script',
-		);
-
-		// Allow for the blocks to be filtered with apply filters.
-		$blocks_with_views = apply_filters( 'eventive_blocks_view_scripts_list', $blocks_with_views );
-
-		// Find the first registered script and localize it only once.
-		$localized = false;
-		foreach ( $blocks_with_views as $script_handle ) {
-			if ( ! $localized && wp_script_is( $script_handle, 'enqueued' ) ) {
-				// Add the WP REST API script as a dependency.
-				wp_localize_script(
-					$script_handle,
-					'EventiveBlockData',
-					$localization
-				);
-				$localized = true;
-				break;
-			}
-		}
+		// Output inline script with the data.
+		?>
+		<script type="text/javascript">
+			window.EventiveBlockData = <?php echo wp_json_encode( $localization ); ?>;
+		</script>
+		<?php
 	}
 
 	/**

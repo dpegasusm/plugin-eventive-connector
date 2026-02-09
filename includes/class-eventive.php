@@ -44,7 +44,7 @@ class Eventive {
 	 * @return array
 	 */
 	public static function get_eventive_film_post_types() {
-		return apply_filters( 'eventive_film_block_post_types', self::$eventive_film_post_types );
+		return apply_filters( 'eventive_film_post_types', self::$eventive_film_post_types );
 	}
 
 	/**
