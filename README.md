@@ -1,2 +1,2 @@
-# eventive-integration
+# Eventive Integration
 Eventive Integration for WordPress
