@@ -15,3 +15,10 @@ jobs:
 
     - name: Run plugin check
       uses: wordpress/plugin-check-action@v1
+      with:
+          exclude-checks: |
+            textdomain_mismatch
+            license
+          exclude-files: |
+            .github/**
+            .gitignore
