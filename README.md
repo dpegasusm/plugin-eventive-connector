@@ -11,11 +11,10 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Seamlessly integrate Eventive's Event and Ticketing Services into your WordPress site.
 
 == Description ==
-Eventive Integration brings Eventive events, tickets, and film data into WordPress with dynamic loaders, shortcodes, event bucket overrides, and Gutenberg blocks.
+Eventive Integration brings Eventive events, tickets, and film data into WordPress with dynamic loaders, event bucket overrides, and Gutenberg blocks.
 
 Features include:
-* Dynamic event loaders for lists, calendars, and carousels
-* Shortcodes for fast embedding
+* Dynamic event loaders for lists, calendars, and carousel
 * Event bucket overrides
 * Gutenberg blocks for modern editing
 * Film and venue sync with custom post types
