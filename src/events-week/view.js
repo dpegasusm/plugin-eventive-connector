@@ -206,8 +206,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	}
 
 	function setupEventModal( block ) {
-		const modal = block.querySelector( '.event-modal' );
-		const closeBtn = block.querySelector( '.close-modal' );
+		const modal = block.querySelector( '.eventive-modal-overlay' );
+		const closeBtn = block.querySelector( '.eventive-modal-close-btn' );
 
 		if ( closeBtn ) {
 			closeBtn.addEventListener( 'click', () => {
@@ -225,7 +225,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	}
 
 	function showEventModal( block, event ) {
-		const modal = block.querySelector( '.event-modal' );
+		const modal = block.querySelector( '.eventive-modal-overlay' );
 		const modalDetails = block.querySelector( '#modal-details' );
 
 		if ( ! modal || ! modalDetails ) {
@@ -250,7 +250,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			}">Buy Tickets</button>
 		`;
 
-		modal.style.display = 'block';
+		modal.style.display = 'flex';
 
 		// Rebuild Eventive buttons
 		if ( window.Eventive.rebuild ) {

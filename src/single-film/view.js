@@ -57,7 +57,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 						const tagsHTML = ( film.tags || [] )
 							.map(
 								( tag ) =>
-									`<span class="film-tag">${ tag.name }</span>`
+									`<span class="eventive-tag-pill">${ tag.name }</span>`
 							)
 							.join( '' );
 
@@ -72,7 +72,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 										<div><strong>Year:</strong> ${ film.details?.year || 'N/A' }</div>
 										<div><strong>Language:</strong> ${ film.details?.language || 'N/A' }</div>
 									</div>
-									<div class="film-tags">${ tagsHTML }</div>
+									<div class="eventive-tag-pills">${ tagsHTML }</div>
 								</div>
 								<div id="film-events-container">
 									<h2>Upcoming Screenings</h2>

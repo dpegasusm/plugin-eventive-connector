@@ -415,15 +415,15 @@ function LoginApp( { loginLinkText, bucket } ) {
 
 			{ showModal && (
 				<div
-					className="eventive-login-modal"
+					className="eventive-modal-overlay eventive-login-modal"
 					onClick={ ( e ) =>
-						e.target.classList.contains( 'eventive-login-modal' ) &&
+						e.target.classList.contains( 'eventive-modal-overlay' ) &&
 						closeModal()
 					}
 				>
-					<div className="eventive-login-form">
+					<div className="eventive-modal-panel eventive-modal-panel--small eventive-login-form">
 						<button
-							className="eventive-modal-close"
+							className="eventive-modal-close-btn"
 							onClick={ closeModal }
 							aria-label="Close"
 						>

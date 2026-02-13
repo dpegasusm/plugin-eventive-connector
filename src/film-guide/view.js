@@ -649,12 +649,12 @@ function initInstance( block ) {
 						tagMap.set( id || name, t );
 					} );
 					tagsHTML =
-						'<div class="catalog-film-tags">' +
+						'<div class="eventive-tag-pills">' +
 						Array.from( tagMap.values() )
 							.map( function ( t ) {
 								const fg = textColor( t.color || '#e0e0e0' );
 								return (
-									'<span class="catalog-film-tag-pill" style="background-color:' +
+									'<span class="eventive-tag-pill" style="background-color:' +
 									esc( t.color || '#e0e0e0' ) +
 									';color:' +
 									fg +

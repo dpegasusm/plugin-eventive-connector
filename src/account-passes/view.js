@@ -306,16 +306,16 @@ function AccountPassesApp( { bucket } ) {
 			{ /* Barcode Modal */ }
 			{ showBarcodeModal && barcodePass && (
 				<div
-					className="eventive-show-pass-barcode-modal is-open"
+					className="eventive-modal-overlay eventive-modal-overlay--dark"
 					onClick={ ( e ) =>
 						e.target.classList.contains(
-							'eventive-show-pass-barcode-modal'
+							'eventive-modal-overlay'
 						) && closeModals()
 					}
 				>
-					<div className="show-pass-barcode-modal-content">
+					<div className="eventive-modal-panel eventive-modal-panel--small show-pass-barcode-modal-content">
 						<button
-							className="modal-close-btn"
+							className="eventive-modal-close-btn"
 							onClick={ closeModals }
 							aria-label="Close"
 						>
@@ -361,16 +361,16 @@ function AccountPassesApp( { bucket } ) {
 			{ /* Edit Modal */ }
 			{ showEditModal && editingPass && (
 				<div
-					className="eventive-edit-pass-modal is-open"
+					className="eventive-modal-overlay"
 					onClick={ ( e ) =>
 						e.target.classList.contains(
-							'eventive-edit-pass-modal'
+							'eventive-modal-overlay'
 						) && closeModals()
 					}
 				>
-					<div className="edit-pass-modal-content">
+					<div className="eventive-modal-panel edit-pass-modal-content">
 						<button
-							className="modal-close-btn"
+							className="eventive-modal-close-btn"
 							onClick={ closeModals }
 							aria-label="Close"
 						>

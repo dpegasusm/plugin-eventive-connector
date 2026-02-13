@@ -720,7 +720,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 					.map( ( tag ) => {
 						const fg = getTextColor( tag.color || '#e0e0e0' );
 						return (
-							'<span class="tag-label" style="background-color:' +
+							'<span class="eventive-tag-pill" style="background-color:' +
 							tag.color +
 							';color:' +
 							fg +
@@ -761,7 +761,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				}
 				if ( tagLabels ) {
 					itemHtml +=
-						'<div class="event-tags tag-container eventive-tags">' +
+						'<div class="eventive-tag-pills">' +
 						tagLabels +
 						'</div>';
 				}

@@ -492,16 +492,16 @@ function AccountTicketsApp( { bucket } ) {
 			{ /* Barcode Modal */ }
 			{ showBarcodeModal && selectedTicket && (
 				<div
-					className="eventive-ticket-barcode-modal is-open"
+					className="eventive-modal-overlay eventive-modal-overlay--dark"
 					onClick={ ( e ) =>
 						e.target.classList.contains(
-							'eventive-ticket-barcode-modal'
+							'eventive-modal-overlay'
 						) && closeModal()
 					}
 				>
-					<div className="barcode-modal-inner">
+					<div className="eventive-modal-panel eventive-modal-panel--small barcode-modal-inner">
 						<button
-							className="modal-close-btn"
+							className="eventive-modal-close-btn"
 							onClick={ closeModal }
 							aria-label="Close"
 						>

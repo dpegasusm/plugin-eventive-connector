@@ -109,29 +109,6 @@
 				margin: 0;
 			}
 		}
-
-		.eventive-button {
-			padding: 10px 16px;
-			background-color: var(--button-bg, #0073aa);
-			color: var(--button-text, #fff);
-			border: none;
-			border-radius: 4px;
-			cursor: pointer;
-			font-weight: 600;
-			transition: background-color 0.3s ease;
-
-			&:hover {
-				background-color: var(--hover-color, #005a87);
-			}
-		}
-	}
-
-	.no-events,
-	.error-message {
-		text-align: center;
-		padding: 20px;
-		color: #666;
-		font-style: italic;
 	}
 
 	/* Responsive adjustments */

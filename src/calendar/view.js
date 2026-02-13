@@ -282,14 +282,15 @@ function EventiveCalendar() {
 			{ generateCalendar() }
 
 			{ modalEvent && (
-				<div className="modal" style={ { display: 'block' } }>
-					<div className="modal-content">
-						<span
-							className="close"
+				<div className="eventive-modal-overlay">
+					<div className="eventive-modal-panel">
+						<button
+							className="eventive-modal-close-btn"
 							onClick={ () => setModalEvent( null ) }
+							aria-label="Close"
 						>
 							&times;
-						</span>
+						</button>
 						<div className="event-details">
 							<div className="details-left">
 								<h2>{ modalEvent.name }</h2>
@@ -308,7 +309,7 @@ function EventiveCalendar() {
 								<p>
 									Location:{ ' ' }
 									<span
-										className="venue-tag"
+										className="eventive-venue-tag"
 										style={ {
 											background:
 												getVenueDetails( modalEvent )
@@ -324,11 +325,11 @@ function EventiveCalendar() {
 								</p>
 								{ modalEvent.tags &&
 									modalEvent.tags.length > 0 && (
-										<div className="tags">
+										<div className="eventive-tag-pills">
 											{ modalEvent.tags.map( ( tag ) => (
 												<button
 													key={ tag.id }
-													className="tag-button film-tag"
+													className="eventive-tag-pill"
 													style={ {
 														background:
 															tag.color || '#ccc',
