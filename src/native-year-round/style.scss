@@ -427,8 +427,11 @@
 		color: var(--text-muted, #555);
 		padding: 60px 20px;
 		opacity: 0.85;
-		background: rgba(0, 0, 0, 0.03);
 		border-radius: 8px;
+		background-color: var(--background-color-muted, #f9f9f9);
+		border: 1px solid var(--border-color, #ddd);
+		border-radius: 6px;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
 	}
 
 	.yr-loading {
