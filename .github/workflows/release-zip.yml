@@ -1,0 +1,92 @@
+name: Build release zip
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine package name (repo name as-is)
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"   # owner/repo -> repo
+          echo "PACKAGE_NAME=$REPO_NAME" >> "$GITHUB_ENV"
+          echo "ZIP_NAME=${REPO_NAME}.zip" >> "$GITHUB_ENV"
+
+      - name: Assemble release contents (stage outside workspace)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SRC="${GITHUB_WORKSPACE}"
+          STAGE="/tmp/release_stage"
+          OUTDIR="${STAGE}/${PACKAGE_NAME}"
+
+          rm -rf "$STAGE"
+          mkdir -p "$OUTDIR"
+
+          # Copy repo -> /tmp/release_stage/<repo-name>/, excluding dev/build-only content
+          rsync -a --delete \
+            --exclude=".git/" \
+            --exclude=".github/" \
+            --exclude=".gitignore" \
+            --exclude=".editorconfig" \
+            --exclude=".eslint*" \
+            --exclude=".prettier*" \
+            --exclude="node_modules/" \
+            --exclude="src/" \
+            --exclude="tests/" \
+            --exclude="test/" \
+            --exclude="__tests__/" \
+            --exclude="package.json" \
+            --exclude="package-lock.json" \
+            --exclude="pnpm-lock.yaml" \
+            --exclude="yarn.lock" \
+            --exclude="composer.json" \
+            --exclude="composer.lock" \
+            --exclude="phpunit.xml" \
+            --exclude="phpunit.xml.dist" \
+            --exclude="phpcs.xml" \
+            --exclude="phpcs.xml.dist" \
+            --exclude="webpack.*" \
+            --exclude="vite.*" \
+            --exclude="tsconfig*.json" \
+            --exclude="*.map" \
+            "${SRC}/" "$OUTDIR/"
+
+          # Remove empty directories left behind after exclusions
+          find "$OUTDIR" -type d -empty -delete
+
+      - name: Create zip (single top-level folder)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          STAGE="/tmp/release_stage"
+          cd "$STAGE"
+
+          rm -f "${GITHUB_WORKSPACE}/${ZIP_NAME}"
+          zip -r "${GITHUB_WORKSPACE}/${ZIP_NAME}" "${PACKAGE_NAME}" -x "**/.DS_Store"
+
+          echo "Created $(ls -lh "${GITHUB_WORKSPACE}/${ZIP_NAME}")"
+
+      - name: Upload zip to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ZIP_NAME }}
+
+      - name: Cleanup
+        if: always()
+        shell: bash
+        run: |
+          rm -rf /tmp/release_stage

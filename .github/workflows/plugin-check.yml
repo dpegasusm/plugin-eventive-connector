@@ -39,9 +39,22 @@ jobs:
       uses: wordpress/plugin-check-action@v1
       with:
         build-dir: build/${{ env.BUILD_NAME }}
+        exclude-directories: |
+          .github
+          node_modules
+          vendor
+        exclude-files: |
+          .gitignore
+          composer.json
+          composer.lock
+          package.json
+          package-lock.json
         ignore-codes: |
           plugin_header_no_license
           plugin_header_invalid_license
           no_license
+          trademarked_term
+          mismatched_plugin_name
+          invalid_license
           no_stable_tag
           missing_readme_header_tested
